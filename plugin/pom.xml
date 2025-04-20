@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.jenkins-ci.plugins</groupId>
+    <artifactId>plugin</artifactId>
+    <version>4.85</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>io.jenkins.plugins</groupId>
+  <artifactId>plugin</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>hpi</packaging>
+
+  <name>Core Logic Wrapper Plugin</name>
+  <url>https://github.com/ssafy/plugin</url>
+
+  <properties>
+    <java.level>17</java.level>
+    <core-logic.version>1.0-SNAPSHOT</core-logic.version>
+    <revision>1.0</revision>
+    <changelist>-SNAPSHOT</changelist>
+    <maven-hpi-plugin.version>3.55</maven-hpi-plugin.version>
+  </properties>
+
+  <!-- Import the Jenkins BOM and force Guava to match core-logic -->
+  <dependencyManagement>
+    <dependencies>
+      <!-- Jenkins plugin BOM -->
+      <dependency>
+        <groupId>io.jenkins.tools.bom</groupId>
+        <artifactId>bom-2.440.x</artifactId>
+        <version>3193.v330d8248d39e</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <!-- Override Guava version from BOM (31.1-jre) to 33.4.8-jre -->
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>33.4.8-jre</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <!-- Jenkins repositories for parent POM and HPI plugin -->
+  <pluginRepositories>
+    <pluginRepository>
+      <id>jenkins-releases</id>
+      <name>Jenkins Releases</name>
+      <url>https://repo.jenkins-ci.org/releases/</url>
+      <releases><enabled>true</enabled></releases>
+      <snapshots><enabled>false</enabled></snapshots>
+    </pluginRepository>
+    <pluginRepository>
+      <id>jenkins-public</id>
+      <name>Jenkins Public</name>
+      <url>https://repo.jenkins-ci.org/public/</url>
+      <releases><enabled>true</enabled></releases>
+      <snapshots><enabled>true</enabled></snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <repositories>
+    <repository>
+      <id>jenkins-releases</id>
+      <name>Jenkins Releases</name>
+      <url>https://repo.jenkins-ci.org/releases/</url>
+      <releases><enabled>true</enabled></releases>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+    <repository>
+      <id>jenkins-public</id>
+      <name>Jenkins Public</name>
+      <url>https://repo.jenkins-ci.org/public/</url>
+      <releases><enabled>true</enabled></releases>
+      <snapshots><enabled>true</enabled></snapshots>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <!-- core-logic 라이브러리 -->
+    <dependency>
+      <groupId>com.ssafy</groupId>
+      <artifactId>core-logic</artifactId>
+      <version>${core-logic.version}</version>
+    </dependency>
+    <!-- Jenkins / Stapler dependencies come from the parent POM -->
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <!-- Explicitly set the HPI plugin version -->
+        <plugin>
+          <groupId>org.jenkins-ci.tools</groupId>
+          <artifactId>maven-hpi-plugin</artifactId>
+          <version>${maven-hpi-plugin.version}</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+</project>
