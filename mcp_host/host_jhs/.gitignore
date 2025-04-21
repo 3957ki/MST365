@@ -1,0 +1,57 @@
+# Node.js
+node_modules/
+**/test-results/
+npm-debug.log
+yarn-error.log
+package-lock.json
+dist/
+coverage/
+
+# Java/Maven
+target/
+*.class
+*.jar
+*.war
+.settings/
+.classpath
+.project
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# 환경 변수, 보안 정보
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# 빌드 결과
+/build/
+/out/
+
+# 로그
+*.log
+logs/
+
+# 테스트 결과
+test-results/
+
+# 기타
+.DS_Store
+Thumbs.db
+
+# Python 가상환경
+venv/
+env/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+llmTest/

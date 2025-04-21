@@ -1,0 +1,50 @@
+{
+  "name": "llm-driven-test-core",
+  "version": "0.1.0",
+  "description": "LLM 기반 E2E 테스트 자동화 도구의 코어 모듈",
+  "type": "module",
+  "main": "src/cli.js",
+  "bin": {
+    "llm-test": "src/cli.js"
+  },
+  "scripts": {
+    "start": "node src/cli.js",
+    "setup": "node src/cli.js setup",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "postinstall": "npx playwright install"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^16.5.0",
+    "figlet": "^1.8.1",
+    "fs-extra": "^11.3.0",
+    "inquirer": "^12.5.2",
+    "keytar": "^7.9.0",
+    "openai": "^4.95.1",
+    "playwright": "^1.52.0",
+    "vm2": "^3.9.19"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.86",
+    "jest": "^29.7.0",
+    "expect": "^29.7.0"
+  },
+  "keywords": [
+    "llm",
+    "e2e",
+    "playwright",
+    "automation",
+    "claude",
+    "gpt"
+  ],
+  "license": "MIT",
+  "directories": {
+    "test": "test"
+  }
+}
