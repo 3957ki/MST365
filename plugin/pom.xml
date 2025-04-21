@@ -9,7 +9,8 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.85</version>
+    <!-- 최신 plugin‑pom 5.10 -->
+    <version>5.10</version>
     <relativePath/>
   </parent>
 
@@ -23,85 +24,134 @@
 
   <properties>
     <java.level>17</java.level>
-    <core-logic.version>1.0-SNAPSHOT</core-logic.version>
+    <!-- 주간(weekly) 최신 릴리스: 2.492 -->
+    <jenkins.version>2.492</jenkins.version>
     <revision>1.0</revision>
     <changelist>-SNAPSHOT</changelist>
-    <maven-hpi-plugin.version>3.55</maven-hpi-plugin.version>
+    <maven-hpi-plugin.version>3.63</maven-hpi-plugin.version>
   </properties>
 
-  <!-- Import the Jenkins BOM and force Guava to match core-logic -->
   <dependencyManagement>
     <dependencies>
-      <!-- Jenkins plugin BOM -->
+      <!-- 플러그인 BOM: 주간(bom-weekly) 2.462.x -->
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.440.x</artifactId>
-        <version>3193.v330d8248d39e</version>
+        <artifactId>bom-2.462.x</artifactId>
+        <version>4228.v0a_71308d905b_</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <!-- Override Guava version from BOM (31.1-jre) to 33.4.8-jre -->
+
+      <!-- Core BOM: Jenkins 코어와 핵심 플러그인 관리 -->
+      <dependency>
+        <groupId>org.jenkins-ci.main</groupId>
+        <artifactId>jenkins-bom</artifactId>
+        <version>${jenkins.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- Guava 버전 강제 고정 -->
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
         <version>33.4.8-jre</version>
       </dependency>
+
+      <!-- ErrorProne annotations -->
+      <dependency>
+        <groupId>com.google.errorprone</groupId>
+        <artifactId>error_prone_annotations</artifactId>
+        <version>2.36.0</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
-  <!-- Jenkins repositories for parent POM and HPI plugin -->
+  <repositories>
+    <repository>
+      <id>jenkins-releases</id>
+      <url>https://repo.jenkins-ci.org/releases/</url>
+      <releases><enabled>true</enabled></releases>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+    <repository>
+      <id>jenkins-public</id>
+      <url>https://repo.jenkins-ci.org/public/</url>
+      <releases><enabled>true</enabled></releases>
+      <snapshots><enabled>true</enabled></snapshots>
+    </repository>
+  </repositories>
   <pluginRepositories>
     <pluginRepository>
       <id>jenkins-releases</id>
-      <name>Jenkins Releases</name>
       <url>https://repo.jenkins-ci.org/releases/</url>
       <releases><enabled>true</enabled></releases>
       <snapshots><enabled>false</enabled></snapshots>
     </pluginRepository>
     <pluginRepository>
       <id>jenkins-public</id>
-      <name>Jenkins Public</name>
       <url>https://repo.jenkins-ci.org/public/</url>
       <releases><enabled>true</enabled></releases>
       <snapshots><enabled>true</enabled></snapshots>
     </pluginRepository>
   </pluginRepositories>
 
-  <repositories>
-    <repository>
-      <id>jenkins-releases</id>
-      <name>Jenkins Releases</name>
-      <url>https://repo.jenkins-ci.org/releases/</url>
-      <releases><enabled>true</enabled></releases>
-      <snapshots><enabled>false</enabled></snapshots>
-    </repository>
-    <repository>
-      <id>jenkins-public</id>
-      <name>Jenkins Public</name>
-      <url>https://repo.jenkins-ci.org/public/</url>
-      <releases><enabled>true</enabled></releases>
-      <snapshots><enabled>true</enabled></snapshots>
-    </repository>
-  </repositories>
-
   <dependencies>
-    <!-- core-logic 라이브러리 -->
+    <!-- Pipeline Step API, Core API, CPS, Job 등은 BOM에서 관리되므로 버전 제거 -->
     <dependency>
-      <groupId>com.ssafy</groupId>
-      <artifactId>core-logic</artifactId>
-      <version>${core-logic.version}</version>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-step-api</artifactId>
     </dependency>
-    <!-- Jenkins / Stapler dependencies come from the parent POM -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>credentials</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-job</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-cps</artifactId>
+    </dependency>
+    <!-- 선언이 필요하다면, HPI 타입 및 provided 범위 명시 가능 -->
+    <dependency>
+      <groupId>org.jenkinsci.plugins</groupId>
+      <artifactId>pipeline-model-definition</artifactId>
+    </dependency>
+
+    <!-- Jackson 버전 통일 -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>2.17.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.17.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>2.17.0</version>
+    </dependency>
   </dependencies>
 
   <build>
     <pluginManagement>
       <plugins>
-        <!-- Explicitly set the HPI plugin version -->
         <plugin>
           <groupId>org.jenkins-ci.tools</groupId>
           <artifactId>maven-hpi-plugin</artifactId>
           <version>${maven-hpi-plugin.version}</version>
+          <configuration>
+            <jenkinsVersion>${jenkins.version}</jenkinsVersion>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>

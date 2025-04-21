@@ -12,14 +12,14 @@
       <option name="url" value="https://repo.jenkins-ci.org/public/" />
     </remote-repository>
     <remote-repository>
-      <option name="id" value="jenkins-releases" />
-      <option name="name" value="Jenkins Releases" />
-      <option name="url" value="https://repo.jenkins-ci.org/releases/" />
-    </remote-repository>
-    <remote-repository>
       <option name="id" value="repo.jenkins-ci.org" />
       <option name="name" value="repo.jenkins-ci.org" />
       <option name="url" value="https://repo.jenkins-ci.org/public/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="jenkins-releases" />
+      <option name="name" value="Jenkins Releases" />
+      <option name="url" value="https://repo.jenkins-ci.org/releases/" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="central" />
@@ -40,6 +40,11 @@
       <option name="id" value="jenkins-releases" />
       <option name="name" value="jenkins-releases" />
       <option name="url" value="https://repo.jenkins-ci.org/releases/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="jenkins-incrementals" />
+      <option name="name" value="jenkins-incrementals" />
+      <option name="url" value="https://repo.jenkins-ci.org/incrementals/" />
     </remote-repository>
   </component>
 </project>
