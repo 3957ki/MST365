@@ -5,23 +5,26 @@ import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.kohsuke.stapler.DataBoundConstructor;
 import jenkins.model.RunAction2;
 import java.time.Instant;
+import java.util.Date;
 
 public class BuildReportAction implements RunAction2 {
     private transient Run<?,?> run;
     private final String scriptPath;
     private final String status;
-    private final Instant timestamp;
+    private final long timestamp;
 
     @DataBoundConstructor
     public BuildReportAction(String scriptPath, String status) {
         this.scriptPath = scriptPath;
         this.status     = status;
-        this.timestamp  = Instant.now();
+        this.timestamp  = System.currentTimeMillis();
     }
 
     public String getScriptPath() { return scriptPath; }
     public String getStatus()     { return status; }
-    public Instant getTimestamp(){ return timestamp; }
+    public Date getTimestamp() {
+        return new Date(timestamp);
+    }
 
     @Override
     public String getIconFileName() { return null; }      // 숨겨진 액션

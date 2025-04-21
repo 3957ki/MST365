@@ -9,6 +9,7 @@ import jenkins.model.Jenkins;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Extension
@@ -35,8 +36,8 @@ public class GlobalReportAction implements RootAction {
     public static class BuildEntry {
         public final String url;
         public final String name;
-        public final Instant when;
-        public BuildEntry(String url, String name, Instant when) {
+        public final Date when;
+        public BuildEntry(String url, String name, Date when) {
             this.url = url; this.name = name; this.when = when;
         }
     }
