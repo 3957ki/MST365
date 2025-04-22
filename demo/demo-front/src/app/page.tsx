@@ -10,7 +10,7 @@ export default function Home() {
             src="/microsoft.png"
             alt="Microsoft Logo"
             width={120}
-            height={20}
+            height={120}
             className="mr-6"
           />
           <h1 className="text-4xl font-bold text-blue-700">Demo Web</h1>

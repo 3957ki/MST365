@@ -7,13 +7,15 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col justify-center items-center p-8">
       <div className="max-w-md w-full bg-white p-10 rounded-lg shadow-md">
         <div className="mb-6 flex justify-center items-center">
-          <Image
-            src="/microsoft.png"
-            alt="Microsoft Logo"
-            width={50}
-            height={20}
-            className="mr-6"
-          />
+          <Link href="/">
+            <Image
+              src="/microsoft.png"
+              alt="Microsoft Logo"
+              width={50}
+              height={50}
+              className="mr-3 cursor-pointer"
+            />
+          </Link>
           <h1 className="text-center text-2xl font-bold">로그인</h1>
         </div>
         <div className="mb-4">
@@ -45,20 +47,14 @@ export default function LoginPage() {
           />
         </div>
         <LoginButton />
-        <div className="flex justify-between mt-4 text-sm">
+        <div className="flex justify-center mt-4 text-sm">
           <div>
             <Link href="/signup" className="text-blue-600 hover:underline">
               회원가입
             </Link>
           </div>
-          <div>
-            <Link href="/" className="text-blue-600 hover:underline">
-              메인페이지
-            </Link>
-          </div>
         </div>
-      </div>{" "}
-      {/* End of card container */}
-    </div> // End of outer container
+      </div>
+    </div>
   );
 }
