@@ -18,7 +18,7 @@ export default function SignupPage() {
             src="/microsoft.png"
             alt="Microsoft Logo"
             width={50}
-            height={20}
+            height={50}
             className="mr-3 cursor-pointer"
           />
         </Link>

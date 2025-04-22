@@ -9,8 +9,8 @@ export default function MyPage() {
           <Image
             src="/microsoft.png"
             alt="Microsoft Logo"
-            width={32}
-            height={32}
+            width={50}
+            height={50}
             className="mr-3 cursor-pointer"
           />
         </Link>
