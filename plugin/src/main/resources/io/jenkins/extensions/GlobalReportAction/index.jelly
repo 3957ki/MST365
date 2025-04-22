@@ -7,7 +7,11 @@
                 <tr><th>빌드</th><th>실행 시각</th></tr>
                 <j:forEach items="${it.builds}" var="b">
                     <tr>
-                        <td><a href="${rootURL}${b.url}mcp-report/">${b.name}</a></td>
+                        <td>
+                            <a href="view?build=${b.number}">
+                                ${b.name}
+                            </a>
+                        </td>
                         <td>${b.when}</td>
                     </tr>
                 </j:forEach>

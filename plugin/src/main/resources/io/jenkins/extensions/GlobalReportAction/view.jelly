@@ -1,0 +1,12 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="lib/layout">
+    <l:layout permission="READ">
+        <l:main-panel>
+            <h1>MCP Report: Build ${request.getParameter('build')}</h1>
+            <pre style="white-space: pre-wrap; border:1px solid #ccc; padding:10px;">
+                ${it.getReportContent(Integer.parseInt(request.getParameter('build')))}
+            </pre>
+            <p><a href="mcp-reports">← Back to all reports</a></p>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>
