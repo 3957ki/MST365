@@ -13,13 +13,15 @@ export default function SignupPage() {
     <div className="min-h-screen flex flex-col justify-center items-center p-8">
       <div className="max-w-md w-full bg-white p-10 rounded-lg shadow-md">
         <div className="mb-6 flex justify-center items-center">
+        <Link href="/">
           <Image
             src="/microsoft.png"
             alt="Microsoft Logo"
             width={50}
             height={20}
-            className="mr-6"
+            className="mr-3 cursor-pointer"
           />
+        </Link>
           <h1 className="text-center text-2xl font-bold">회원가입</h1>
         </div>
         <div className="mb-4">
@@ -72,7 +74,7 @@ export default function SignupPage() {
         </button>
         <div className="mt-4 text-center text-sm">
           <Link href="/login" className="text-blue-600 hover:underline">
-            로그인 페이지로 돌아가기
+            로그인
           </Link>
         </div>
       </div>
