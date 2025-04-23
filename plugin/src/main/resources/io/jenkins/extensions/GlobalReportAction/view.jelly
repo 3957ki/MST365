@@ -1,0 +1,42 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="lib/layout">
+    <l:layout permission="READ">
+        <l:main-panel>
+            <j:set var="buildDir" value="${request.getParameter('build')}"/>
+            <j:set var="buildNum">
+                <j:choose>
+                    <j:when test="${buildDir.contains('_')}">
+                        ${buildDir.substring(buildDir.lastIndexOf('_') + 1)}
+                    </j:when>
+                    <j:otherwise>${buildDir}</j:otherwise>
+                </j:choose>
+            </j:set>
+
+            <h1>MCP Report: Build ${buildNum}</h1>
+
+            <j:forEach items="${it.getScenarios(buildDir)}" var="sc">
+                <h2>Scenario ${sc}</h2>
+                <j:set var="d" value="${it.getReportDetail(buildDir, sc)}"/>
+                <dl>
+                    <dt>Title</dt><dd>${d.title}</dd>
+                    <dt>Status</dt><dd>${d.status ? 'Success' : 'Fail'}</dd>
+                    <dt>Duration (s)</dt><dd>${d.duration}</dd>
+                    <dt>Feedback</dt><dd>${d.feedback}</dd>
+                    <j:if test="${d.fail}">
+                        <dt>Fail Reason</dt><dd>${d.fail}</dd>
+                    </j:if>
+                </dl>
+
+                <h3>Screenshots</h3>
+                <div>
+                    <j:forEach items="${d.screenshots}" var="img">
+                        <img style="max-width:300px;margin:5px;"
+                             src="${it.getScreenshotDataUri(buildDir, sc, img)}"/>
+                    </j:forEach>
+                </div>
+            </j:forEach>
+
+            <p><a href="${rootURL}/mcp-reports">← Back to all reports</a></p>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>
