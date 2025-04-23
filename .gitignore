@@ -19,5 +19,4 @@ env
 
 # Data
 data/
-
-.idea/
+.idea
