@@ -1,19 +1,21 @@
 package io.jenkins.extensions;
 
 import hudson.Extension;
-import hudson.model.Job;
 import hudson.model.RootAction;
+import io.jenkins.extensions.dto.BuildEntry;
+import io.jenkins.extensions.dto.ReportDetail;
 import jenkins.model.Jenkins;
-import io.jenkins.actions.BuildReportAction;
+import org.kohsuke.stapler.QueryParameter;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.Base64;
+
+import net.sf.json.JSONObject;
 
 @Extension
 public class GlobalReportAction implements RootAction {
@@ -22,49 +24,103 @@ public class GlobalReportAction implements RootAction {
     @Override public String getUrlName()        { return "mcp-reports"; }
 
     /**
-     * 빌드에 붙은 BuildReportAction을 기준으로 리스트 생성
+     * 'results' 디렉토리에서 빌드 폴더 스캔
+     * 마지막 '_' 뒤 숫자를 빌드 번호로 사용
      */
     public List<BuildEntry> getBuilds() {
-        List<BuildEntry> out = new ArrayList<>();
-        for (Job<?,?> job : Jenkins.get().getAllItems(Job.class)) {
-            job.getBuilds().forEach(run -> {
-                BuildReportAction a = run.getAction(BuildReportAction.class);
-                if (a != null) {
-                    out.add(new BuildEntry(
-                            run.getUrl(),
-                            run.getNumber(),
-                            run.getDisplayName(),
-                            a.getTimestamp()
-                    ));
-                }
-            });
+        File rootDir = new File(Jenkins.get().getRootDir(), "results");
+        if (!rootDir.isDirectory()) {
+            return Collections.emptyList();
         }
-        return out;
+        File[] dirs = rootDir.listFiles(File::isDirectory);
+        if (dirs == null) {
+            return Collections.emptyList();
+        }
+        List<BuildEntry> list = new ArrayList<>();
+        for (File dir : dirs) {
+            String name = dir.getName();
+            String numPart = name;
+            int idx = name.lastIndexOf('_');
+            if (idx >= 0 && idx < name.length() - 1) {
+                numPart = name.substring(idx + 1);
+            }
+            int buildNum;
+            try {
+                buildNum = Integer.parseInt(numPart);
+            } catch (NumberFormatException e) {
+                buildNum = -1;
+            }
+            // result.json 확인
+            File scenarioDir = new File(dir, numPart);
+            File jsonFile = new File(scenarioDir, "result.json");
+            Date when;
+            if (jsonFile.exists()) {
+                when = new Date(jsonFile.lastModified());
+            } else {
+                when = new Date(dir.lastModified());
+            }
+            list.add(new BuildEntry(name, buildNum, "Build " + numPart, when));
+        }
+        list.sort(Comparator.comparingInt(BuildEntry::getNumber).reversed());
+        return list;
     }
 
     /**
-     * buildToken에 대응하는 리포트 파일을 읽어서 문자열로 리턴합니다.
-     * buildToken은 빌드 번호(숫자) 혹은 파일 접미사(예: timestamp)일 수 있습니다.
+     * 특정 빌드 디렉토리와 시나리오로 JSON 읽어오기
      */
-    public String getReportContent(String buildToken) throws IOException {
-        File home = Jenkins.get().getRootDir();
-        Path report = home.toPath().resolve("mcp_report/result" + buildToken + ".txt");
-        if (!Files.exists(report)) {
-            return "Report file not found for build " + buildToken;
+    public ReportDetail getReportDetail(@QueryParameter String build,
+                                        @QueryParameter String scenario) throws IOException {
+        String base = Jenkins.get().getRootDir().getAbsolutePath();
+        String path = String.join(File.separator, base, "results", build, scenario, "result.json");
+        if (!Files.exists(Paths.get(path))) {
+            return null;
         }
-        return Files.readString(report);
+        String content = new String(Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8);
+        JSONObject obj = JSONObject.fromObject(content);
+        ReportDetail d = new ReportDetail();
+        d.setTitle(obj.optString("title"));
+        d.setStatus(obj.optBoolean("status"));
+        d.setDuration(obj.optDouble("duration"));
+        d.setFeedback(obj.optString("feedback"));
+        d.setFail(obj.optString("fail", null));
+        d.setScreenshots(new ArrayList<>());
+        obj.optJSONArray("screenshots").forEach(o -> d.getScreenshots().add(o.toString()));
+        return d;
     }
 
-    public static class BuildEntry {
-        public final String url;
-        public final int    number;
-        public final String name;
-        public final Date   when;
-        public BuildEntry(String url, int number, String name, Date when) {
-            this.url    = url;
-            this.number = number;
-            this.name   = name;
-            this.when   = when;
+    /**
+     * 빌드별 시나리오 목록
+     */
+    public List<String> getScenarios(@QueryParameter String build) {
+        File dir = new File(Jenkins.get().getRootDir(), "results" + File.separator + build);
+        if (!dir.isDirectory()) {
+            return Collections.emptyList();
         }
+        File[] subs = dir.listFiles(File::isDirectory);
+        if (subs == null) {
+            return Collections.emptyList();
+        }
+        List<String> list = new ArrayList<>();
+        for (File sub : subs) {
+            list.add(sub.getName());
+        }
+        Collections.sort(list);
+        return list;
     }
+
+    /**
+     * 스크린샷 base64 반환
+     */
+    public String getScreenshotDataUri(@QueryParameter String build,
+                                       @QueryParameter String scenario,
+                                       @QueryParameter String file) throws IOException {
+        String base = Jenkins.get().getRootDir().getAbsolutePath();
+        String imgPath = String.join(File.separator, base, "results", build, scenario, "screenshots", file);
+        if (!Files.exists(Paths.get(imgPath))) {
+            return "";
+        }
+        byte[] bytes = Files.readAllBytes(Paths.get(imgPath));
+        return "data:image/png;base64," + Base64.getEncoder().encodeToString(bytes);
+    }
+
 }
