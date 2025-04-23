@@ -4,9 +4,10 @@
         <l:main-panel>
             <h1>MCP Report: Build ${request.getParameter('build')}</h1>
             <pre style="white-space: pre-wrap; border:1px solid #ccc; padding:10px;">
-                ${it.getReportContent(Integer.parseInt(request.getParameter('build')))}
+                ${it.getReportContent(request.getParameter('build'))}
             </pre>
-            <p><a href="mcp-reports">← Back to all reports</a></p>
+            <!-- 뒤로 가기 링크는 절대경로로 쓰시는 걸 권장합니다 -->
+            <p><a href="${rootURL}/mcp-reports">← Back to all reports</a></p>
         </l:main-panel>
     </l:layout>
 </j:jelly>
