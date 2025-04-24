@@ -12,8 +12,8 @@ interface BoardTableProps {
 
 const BoardTable: React.FC<BoardTableProps> = ({ posts }) => {
   return (
-    <table className="w-full border-collapse border border-gray-300 mb-4">
-      <thead className="bg-gray-100">
+    <table className="w-full border-collapse border border-gray-300 mb-4 text-black">
+      <thead className="bg-gray-100 ">
         <tr>
           <th className="border p-2 w-16">순번</th>
           <th className="border p-2">제목</th>

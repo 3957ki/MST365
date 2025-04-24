@@ -49,7 +49,7 @@ export default function SignupPage() {
               className="mr-3 cursor-pointer"
             />
           </Link>
-          <h1 className="text-center text-2xl font-bold">회원가입</h1>
+          <h1 className="text-center text-2xl font-bold text-black">회원가입</h1>
         </div>
         <div className="mb-4">
           <label
@@ -62,7 +62,7 @@ export default function SignupPage() {
             type="text"
             id="username"
             name="username"
-            className="w-full p-2 border border-gray-300 rounded box-border"
+            className="w-full p-2 border border-gray-300 rounded box-border text-black"
           />
         </div>
         <div className="mb-4">
@@ -78,13 +78,13 @@ export default function SignupPage() {
             name="password"
             value={password}
             onChange={handlePasswordChange}
-            className="w-full p-2 border border-gray-300 rounded box-border"
+            className="w-full p-2 border border-gray-300 rounded box-border text-black"
           />
         </div>
         <div className="mb-1">
           <label
             htmlFor="confirmPassword"
-            className="block mb-1 text-sm font-medium text-gray-700"
+            className="block mb-1 text-sm font-medium text-gray-700 "
           >
             비밀번호 확인
           </label>
@@ -96,7 +96,7 @@ export default function SignupPage() {
             onChange={handleConfirmPasswordChange}
             className={`w-full p-2 border ${
               passwordError ? "border-red-500" : "border-gray-300"
-            } rounded box-border`}
+            } rounded box-border text-black`}
           />
           {passwordError && (
             <p className="text-red-500 text-xs mt-1">{passwordError}</p>

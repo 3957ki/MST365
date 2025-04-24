@@ -16,7 +16,7 @@ export default function LoginPage() {
               className="mr-3 cursor-pointer"
             />
           </Link>
-          <h1 className="text-center text-2xl font-bold">로그인</h1>
+          <h1 className="text-center text-2xl font-bold text-black">로그인</h1>
         </div>
         <div className="mb-4">
           <label
@@ -29,7 +29,7 @@ export default function LoginPage() {
             type="text"
             id="username"
             name="username"
-            className="w-full p-2 border border-gray-300 rounded box-border"
+            className="w-full p-2 border border-gray-300 rounded box-border text-black"
           />
         </div>
         <div className="mb-5">
@@ -43,7 +43,7 @@ export default function LoginPage() {
             type="password"
             id="password"
             name="password"
-            className="w-full p-2 border border-gray-300 rounded box-border"
+            className="w-full p-2 border border-gray-300 rounded box-border text-black"
           />
         </div>
         <LoginButton />
