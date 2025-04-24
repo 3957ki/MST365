@@ -180,7 +180,7 @@ const BoardPage = () => {
             className="mr-5 cursor-pointer"
           />
         </Link>
-        <h1 className="text-3xl font-bold">자유 게시판</h1>
+        <h1 className="text-3xl font-bold text-black">자유 게시판</h1>
       </div>
 
       <BoardSearch onSearch={handleSearch} />

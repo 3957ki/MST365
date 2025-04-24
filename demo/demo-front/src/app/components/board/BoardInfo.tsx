@@ -10,7 +10,7 @@ const BoardInfo: React.FC<BoardInfoProps> = ({
   totalPages,
 }) => {
   return (
-    <div className="flex justify-between items-center mb-2">
+    <div className="flex justify-between items-center mb-2 text-black">
       <div>
         총 게시물 <span className="font-bold text-red-500">{totalPosts}</span>건
         | 현재 페이지{" "}

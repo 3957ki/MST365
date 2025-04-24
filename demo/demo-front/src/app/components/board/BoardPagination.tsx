@@ -37,7 +37,7 @@ const BoardPagination: React.FC<BoardPaginationProps> = ({
       className={`border px-3 py-1 rounded ${
         currentPage === number
           ? 'bg-blue-600 text-white' // 현재 페이지 스타일
-          : 'hover:bg-gray-100'
+          : 'text-black hover:bg-gray-100'
       }`}
       disabled={currentPage === number} // 현재 페이지는 클릭 비활성화
     >
@@ -46,7 +46,7 @@ const BoardPagination: React.FC<BoardPaginationProps> = ({
   ));
 
   return (
-    <div className="flex justify-center items-center gap-2 mb-4">
+    <div className="flex justify-center items-center gap-2 mb-4 text-black">
       {/* 이전 페이지 버튼 */}
       <button
         onClick={goToPreviousPage}
