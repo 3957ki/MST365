@@ -4,8 +4,8 @@ import Image from "next/image";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-8">
-      <div className="max-w-md w-full bg-white p-10 rounded-lg shadow-md">
+    <div className="min-h-screen flex flex-col justify-center items-center">
+      <div className="max-w-md w-full bg-blue-50 p-10 rounded-lg shadow-md">
         <div className="mb-6 flex justify-center items-center">
           <Link href="/">
             <Image

@@ -3,14 +3,14 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-8">
-      <div className="max-w-2xl w-full text-center bg-white p-10 rounded-lg shadow-md">
+    <div className="min-h-screen flex flex-col justify-center items-center">
+      <div className="max-w-2xl w-full text-center bg-blue-50 p-10 rounded-lg shadow-md">
         <div className="mb-6 flex justify-center items-center">
           <Image
             src="/microsoft.png"
             alt="Microsoft Logo"
-            width={120}
-            height={120}
+            width={80}
+            height={80}
             className="mr-6"
           />
           <h1 className="text-4xl font-bold text-blue-700">Demo Web</h1>
