@@ -11,7 +11,7 @@ export default function MyPage() {
             alt="Microsoft Logo"
             width={50}
             height={50}
-            className="mr-3 cursor-pointer"
+            className="mr-5 cursor-pointer"
           />
         </Link>
         <h1 className="text-3xl font-bold">마이페이지</h1>
