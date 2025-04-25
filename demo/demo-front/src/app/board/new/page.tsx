@@ -42,7 +42,7 @@ const WritePage = () => {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-2"
+            className="w-full border border-gray-300 rounded-lg p-2 text-black"
             placeholder="제목을 입력하세요"
           />
         </div>
@@ -52,7 +52,7 @@ const WritePage = () => {
             type="text"
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-2"
+            className="w-full border border-gray-300 rounded-lg p-2 text-black"
             placeholder="작성자 이름을 입력하세요"
           />
         </div>
@@ -61,7 +61,7 @@ const WritePage = () => {
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-2 h-40"
+            className="w-full border border-gray-300 rounded-lg p-2 h-40 text-black"
             placeholder="내용을 입력하세요"
           />
         </div>
