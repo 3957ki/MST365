@@ -35,13 +35,13 @@ call .venv\Scripts\activate.bat
 
 # 필요한 패키지 설치
 
-uv pip install -r requirements.txt
+uv sync
 ```
 
 ### 🔐 .env 파일 설정
 
 `.env` 파일에 다음과 같이 사용할 LLM API Key를 추가하세요.
-필요한 키만 작성하면 됩니다.
+필요한 키만 작성하면 됩니다. (현재 Claude 사용중입니다.)
 
 ```bash
 ANTHROPIC_API_KEY={Claude Key}
@@ -62,11 +62,18 @@ npx @playwright/mcp@latest --port 8005
 
 서버는 기본적으로 http://localhost:8005에서 실행됩니다.
 
-### ⚠️ Jenkins Pipeline 관련 이슈
+### 테스트 방법
 
-- Jenkins 컨테이너 내에서 직접 명령어로 실행하면 정상 작동합니다.
-- 그러나 Jenkins Pipeline을 통해 MCP 서버를 백그라운드로 실행할 경우 종료되는 문제가 발생합니다.
-- 현재 Jenkins Plugin 내부에서 MCP 서버를 직접 실행하는 방식을 테스트 중입니다.
-- 그리고 메인 로직에서는 테스트 결과만 응답하고, html은 plugin에서 만드는게 좀 더 유연할 것 같습니다.
+- Linux
 
-### 중간 발표용으로 스크린샷과 JSON 파일 PPT 삽입
+```
+. .venv/bin/activate
+python run_test.py --file {시나리오 경로}
+```
+
+- Window
+
+```
+call .venv\Scripts\activate
+python run_test.py --file {시나리오 경로}
+```
