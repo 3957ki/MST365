@@ -68,3 +68,5 @@ npx @playwright/mcp@latest --port 8005
 - 그러나 Jenkins Pipeline을 통해 MCP 서버를 백그라운드로 실행할 경우 종료되는 문제가 발생합니다.
 - 현재 Jenkins Plugin 내부에서 MCP 서버를 직접 실행하는 방식을 테스트 중입니다.
 - 그리고 메인 로직에서는 테스트 결과만 응답하고, html은 plugin에서 만드는게 좀 더 유연할 것 같습니다.
+
+### 중간 발표용으로 스크린샷과 JSON 파일 PPT 삽입
