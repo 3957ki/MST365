@@ -10,7 +10,6 @@ demo/
 ```
 
 ---
-
 ### Spring Boot 설정 기록
 
 #### 1. [start.spring.io] 사이트에서 프로젝트 생성
