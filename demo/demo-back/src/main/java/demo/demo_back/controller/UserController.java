@@ -1,11 +1,14 @@
 package demo.demo_back.controller;
 
 import demo.demo_back.domain.User;
+import demo.demo_back.dto.PasswordChangeRequestDto;
 import demo.demo_back.dto.UserResponseDto;
 import demo.demo_back.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -67,6 +70,52 @@ public class UserController {
             errorResponse.put("details", "사용자 정보 조회 중 예상치 못한 오류가 발생했습니다.");
             // TODO: 로깅 추가
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse); // 500 Internal Server Error와 에러 본문 반환
+        }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody PasswordChangeRequestDto request) {
+        try {
+            // Request validation
+            if (request.getCurrentPassword() == null || request.getNewPassword() == null || 
+                request.getNewPasswordConfirm() == null) {
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "잘못된 요청입니다.");
+                errorResponse.put("details", "필수 필드가 누락되었습니다.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            }
+
+            // Password confirmation check
+            if (!request.getNewPassword().equals(request.getNewPasswordConfirm())) {
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "비밀번호 수정 실패");
+                errorResponse.put("details", "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            }
+
+            // Get authenticated user
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            User user = (User) authentication.getPrincipal();
+
+            // Change password
+            boolean success = userService.changePassword(user.getId(), request.getCurrentPassword(), request.getNewPassword());
+
+            if (success) {
+                Map<String, String> successResponse = new HashMap<>();
+                successResponse.put("message", "비밀번호가 성공적으로 수정되었습니다.");
+                return ResponseEntity.ok(successResponse);
+            } else {
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "비밀번호 수정 실패");
+                errorResponse.put("details", "현재 비밀번호가 올바르지 않습니다.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            }
+
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "서버 오류 발생");
+            errorResponse.put("details", "비밀번호 수정 중 예상치 못한 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 }
