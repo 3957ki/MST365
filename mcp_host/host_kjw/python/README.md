@@ -68,14 +68,14 @@ npx @playwright/mcp@latest --port 8005
 
 ```
 . .venv/bin/activate
-python run_test.py --file {시나리오 경로}
+python main_logic.py --file {시나리오 경로} --build {빌드 넘버} --output_dir {결과가 저장될 base directory}
 ```
 
 - Window
 
 ```
 call .venv\Scripts\activate
-python run_test.py --file {시나리오 경로}
+python main_logic.py --file {시나리오 경로} --build {빌드 넘버} --output_dir {결과가 저장될 base directory}
 ```
 
 ### 토큰 문제 개선에 관한 고찰

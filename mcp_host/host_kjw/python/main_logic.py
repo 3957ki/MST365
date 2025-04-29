@@ -21,15 +21,7 @@ from utils import astream_graph
 load_dotenv(override=True)
 
 # 모델 세팅
-model = ChatAnthropic(model="claude-3-5-sonnet-latest", temperature=0, max_tokens=1000)
-
-# 디렉터리 세팅
-BASE_DIR = "./results"
-build_num = 1
-timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-test_id = f"{timestamp}_report_{build_num}"
-output_dir = os.path.join(BASE_DIR, test_id)
-os.makedirs(output_dir, exist_ok=True)
+model = ChatAnthropic(model="claude-3-5-haiku-latest", temperature=0, max_tokens=1000)
 
 
 # 결과 파서
@@ -138,7 +130,7 @@ def save_result(
 
 
 # 시나리오 실행
-async def run_scenario(agent, scenario: dict, index: int):
+async def run_scenario(agent, scenario: dict, index: int, output_dir: str):
     scenario_dir = os.path.join(output_dir, str(index))
     screenshot_dir = os.path.join(scenario_dir, "screenshots")
     os.makedirs(screenshot_dir, exist_ok=True)
@@ -156,7 +148,14 @@ async def run_scenario(agent, scenario: dict, index: int):
 
 
 # 메인 테스트 함수
-async def run_test(scenarios: List[dict]):
+async def run_test(scenarios: List[dict], build_num: int, base_dir: str):
+
+    # 디렉터리 세팅
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    test_id = f"{timestamp}_report_{build_num}"
+    output_dir = os.path.join(base_dir, test_id)
+    os.makedirs(output_dir, exist_ok=True)
+
     async with MultiServerMCPClient(
         {
             "playwright": {
@@ -169,7 +168,7 @@ async def run_test(scenarios: List[dict]):
 
         for idx, scenario in enumerate(scenarios, 1):
             agent = create_react_agent(model, tools)
-            await run_scenario(agent, scenario, idx)
+            await run_scenario(agent, scenario, idx, output_dir)
 
         print(f"모든 테스트 완료: {output_dir}")
 
@@ -180,10 +179,18 @@ if __name__ == "__main__":
     parser.add_argument(
         "--file", type=str, required=True, help="시나리오 JSON 파일 경로"
     )
+    parser.add_argument("--build", type=int, required=True, help="빌드 번호")
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default="./results",
+        help="결과가 저장될 Base Directory",
+    )
     args = parser.parse_args()
 
     # 파일 읽기
     with open(args.file, "r", encoding="utf-8") as f:
         scenarios = json.load(f)
 
-    asyncio.run(run_test(scenarios))
+    # 사용자로부터 시나리오, 빌드 넘버, 루트 디렉터리를 파라미터로 받기
+    asyncio.run(run_test(scenarios, build_num=args.build, base_dir=args.output_dir))
