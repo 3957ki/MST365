@@ -5,6 +5,8 @@ import demo.demo_back.domain.User;
 import demo.demo_back.dto.BoardCreateRequestDto;
 import demo.demo_back.dto.BoardCreateResponseDto;
 import demo.demo_back.dto.BoardListResponseDto;
+import demo.demo_back.dto.BoardDetailResponseDto;
+import demo.demo_back.exception.BoardNotFoundException;
 import demo.demo_back.service.BoardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,6 +38,24 @@ public class BoardController {
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "서버 오류");
             errorResponse.put("details", "게시물 목록을 불러오는데 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/{boardId}")
+    public ResponseEntity<?> getBoardById(@PathVariable Long boardId) {
+        try {
+            BoardDetailResponseDto response = boardService.getBoardById(boardId);
+            return ResponseEntity.ok(response);
+        } catch (BoardNotFoundException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "게시물을 찾을 수 없습니다.");
+            errorResponse.put("details", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "서버 오류 발생");
+            errorResponse.put("details", "단일 게시물 조회 중 예상치 못한 오류가 발생했습니다.");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
