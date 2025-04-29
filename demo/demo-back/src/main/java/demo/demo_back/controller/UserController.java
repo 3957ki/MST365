@@ -118,4 +118,35 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
+        try {
+            // 현재 인증된 사용자 정보 가져오기
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            User loggedInUser = (User) authentication.getPrincipal();
+
+            // 로그인한 사용자와 삭제 요청 대상이 일치하는지 확인
+            if (!loggedInUser.getId().equals(userId)) {
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "접근 거부");
+                errorResponse.put("details", "자신의 계정만 삭제할 수 있습니다.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+            }
+
+            // 탈퇴 로직 수행
+            userService.deleteUser(userId);
+
+            Map<String, String> successResponse = new HashMap<>();
+            successResponse.put("message", "회원 탈퇴가 완료되었습니다.");
+            return ResponseEntity.ok(successResponse);
+
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "서버 오류 발생");
+            errorResponse.put("details", "회원 탈퇴 중 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
 }

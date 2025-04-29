@@ -20,5 +20,7 @@ public interface UserService {
     // 현재 명세에 없는 일반 정보 수정 및 삭제 관련 메소드는 제거
     // User registerUser(User user); // 회원가입은 AuthService로 이동
     // User updateUser(Long id, User user); // 일반 수정 API 없음
-    // void deleteUser(Long id); // 회원 탈퇴 API 없음
+     void deleteUser(Long id); // 회원 탈퇴 API 없음
+
+
 }
