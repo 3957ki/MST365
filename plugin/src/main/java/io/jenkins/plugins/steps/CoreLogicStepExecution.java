@@ -185,16 +185,36 @@ public class CoreLogicStepExecution extends SynchronousNonBlockingStepExecution<
         }
         listener.getLogger().println("▶ setup 완료");
 
-        // 10) Python 스크립트 직접 실행
+        // 10) Python 스크립트 직접 실행 (빌드 번호 & 출력 디렉터리 인자 포함)
         listener.getLogger().println("▶ Python 테스트 실행: main_logic.py");
         String scenarioPath = scenarioFile.getAbsolutePath();
+
+        // 빌드 번호
+        String buildNumber = String.valueOf(run.getNumber());
+
+        // JENKINS_HOME/results 경로 준비 (없으면 생성)
+        File resultsDir = new File(Jenkins.get().getRootDir(), "results");
+        if (!resultsDir.exists()) {
+            if (!resultsDir.mkdirs()) {
+                listener.getLogger().println("▶ WARNING: results 디렉터리 생성 실패: " + resultsDir);
+            }
+        }
+        String outputDir = resultsDir.getAbsolutePath();
+
+        listener.getLogger().println(
+                String.format("▶ 인자: --file %s --build %s --output_dir %s",
+                        scenarioPath, buildNumber, outputDir)
+        );
+
         ProcessBuilder pbRun = new ProcessBuilder(
                 pythonBin,
                 "main_logic.py",
-                "--file", scenarioPath
+                "--file",       scenarioPath,
+                "--build",      buildNumber,
+                "--output_dir", outputDir
         )
-                .directory(pythonDir)
-                .redirectErrorStream(true);
+        .directory(pythonDir)
+        .redirectErrorStream(true);
 
         Process runProc = pbRun.start();
         try (BufferedReader rdr = new BufferedReader(
