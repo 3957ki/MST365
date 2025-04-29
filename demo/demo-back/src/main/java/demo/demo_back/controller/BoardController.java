@@ -4,6 +4,7 @@ import demo.demo_back.domain.Board;
 import demo.demo_back.domain.User;
 import demo.demo_back.dto.BoardCreateRequestDto;
 import demo.demo_back.dto.BoardCreateResponseDto;
+import demo.demo_back.dto.BoardListResponseDto;
 import demo.demo_back.service.BoardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,19 @@ public class BoardController {
     @Autowired
     public BoardController(BoardService boardService) {
         this.boardService = boardService;
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getAllBoards() {
+        try {
+            BoardListResponseDto response = boardService.getAllBoards();
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "서버 오류");
+            errorResponse.put("details", "게시물 목록을 불러오는데 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
     @PostMapping
