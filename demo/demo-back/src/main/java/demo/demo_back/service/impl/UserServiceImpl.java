@@ -64,5 +64,11 @@ public class UserServiceImpl implements UserService {
         return true; // 비밀번호 변경 성공
     }
 
+    @Override
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
+    }
+
+
     // ERD 및 API 명세에 없는 registerUser, updateUser, deleteUser 메소드는 제거됨
 }
