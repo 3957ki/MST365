@@ -10,17 +10,21 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 def build_prompt(user_prompt: str) -> str:
     suffix = (
-        "\n\n너는 Playwright에 대한 전문가야. 위 내용을 기반으로 Playwright TypeScript 테스트 코드를 작성해줘. 네가 준 테스트 코드로 바로 자동화 테스트를 진행할 거니까 예시 이름과 같은 것은 절대 넣으면 안 돼.\n"
-        "- 특정 div이름이라던지 선택자 같은 것은 이름을 알려준 게 아닌 이상 네 마음대로 지정하지 마.\n"
-        # "- 만약 내가 준 프롬포트가 구체적이지 않다면 구체적으로 수정한 뒤에 그 프롬포트로 테스트 코드를 작성해줘.\n"
-        "- 코드에는 반드시 최상단에 아래 import 문이 있어야 해.\n"
+        "\n\nYou are an expert in Playwright. Based on the content above, write Playwright TypeScript test code."
+        " This test code will be used for actual automation testing, so do NOT include placeholder names like 'example'.\n"
+        "- Do NOT make up arbitrary names for elements like divs or selectors unless I’ve explicitly provided them.\n"
+        "- If the given prompt is not specific enough, revise it to be more concrete first, then write the test code based on that.\n"
+        "- The following import statement must be included at the very top of the code:\n"
         "  import { test, expect } from '@playwright/test';\n"
-        "- 테스트 내용은 test() 함수 안에만 작성해줘.\n"
-        "- 함수 안에는 import 문이 없어야 해.\n"
-        "- 만약 캡쳐를 해달라는 등 파일을 저장해야 하는 명령이 있다면 테스트가 시작된 시각(대한민국 기준)을 이름으로 해서 'YYYY-MM-DD-HH-MM-SS' 를 형식으로 현재 위치에 새로 폴더를 생성하고 그 폴더 안에다가 파일을 저장하도록 해.\n"
-        "- 그리고 버튼을 클릭하거나 텍스트를 입력하라고 할 때는 해당 div나 버튼에 대한 명확한 태그나 이름, 선택자가 주어지지 않으니까 위치 등 명확한 설명이 없어서 다중선택이 될 것 같다면 첫 번째로 감지되는 요소를 선택하게 해.\n"
-        "- 설명 없이 코드만 출력해줘."
+        "- The test logic must be written inside the test() function only.\n"
+        "- Do NOT include any import statements inside the function.\n"
+        "- If there’s a request to capture a screenshot, create a new folder named with the current time in Korea Standard Time"
+        " using the format 'YYYY-MM-DD-HH-MM-SS', and save the file inside that folder.\n"
+        "- If there’s a request to input text and no specific selector or location is provided,"
+        " enter text into the input fields in order starting from the first one.\n"
+        "- Only output the code. Do not include any explanations."
     )
+
     return user_prompt.strip() + suffix
 
 
