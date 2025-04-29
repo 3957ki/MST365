@@ -5,8 +5,10 @@ import demo.demo_back.domain.User;
 import demo.demo_back.dto.BoardListResponseDto;
 import demo.demo_back.dto.BoardDetailResponseDto;
 import demo.demo_back.dto.MessageResponseDto;
+import demo.demo_back.dto.BoardUpdateRequestDto;
 import demo.demo_back.exception.BoardNotFoundException;
 import demo.demo_back.exception.UnauthorizedAccessException;
+import demo.demo_back.exception.InvalidRequestException;
 import demo.demo_back.repository.BoardRepository;
 import demo.demo_back.repository.UserRepository;
 import demo.demo_back.service.BoardService;
@@ -112,5 +114,54 @@ public class BoardServiceImpl implements BoardService {
         boardRepository.save(board);
 
         return new MessageResponseDto("게시물이 성공적으로 삭제되었습니다.");
+    }
+
+    @Override
+    @Transactional
+    public BoardDetailResponseDto updateBoard(Long boardId, Long userId, BoardUpdateRequestDto request) {
+        // 요청 유효성 검사
+        if (!request.isValid()) {
+            throw new InvalidRequestException();
+        }
+
+        // 게시물 조회
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new BoardNotFoundException(boardId));
+
+        // 이미 삭제된 게시물인지 확인
+        if (board.isDeleted()) {
+            throw new BoardNotFoundException(boardId);
+        }
+
+        // 작성자 확인
+        if (!board.getUser().getId().equals(userId)) {
+            throw new UnauthorizedAccessException();
+        }
+
+        // 부분 업데이트 수행
+        if (request.getTitle() != null && !request.getTitle().trim().isEmpty()) {
+            board.setTitle(request.getTitle().trim());
+        }
+        if (request.getContent() != null && !request.getContent().trim().isEmpty()) {
+            board.setContent(request.getContent().trim());
+        }
+
+        // 저장 및 DTO 변환
+        boardRepository.save(board);
+        
+        return new BoardDetailResponseDto(
+            "게시물이 성공적으로 수정되었습니다.",
+            new BoardDetailResponseDto.BoardDetailDto(
+                board.getId(),
+                board.getUser().getId(),
+                board.getTitle(),
+                board.getContent(),
+                board.getView(),
+                board.getCreatedAt(),
+                board.getUpdatedAt(),
+                board.isDeleted(),
+                board.getDeletedAt()
+            )
+        );
     }
 } 

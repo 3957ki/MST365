@@ -7,9 +7,12 @@ import demo.demo_back.dto.BoardCreateResponseDto;
 import demo.demo_back.dto.BoardListResponseDto;
 import demo.demo_back.dto.BoardDetailResponseDto;
 import demo.demo_back.dto.MessageResponseDto;
+import demo.demo_back.dto.BoardUpdateRequestDto;
 import demo.demo_back.exception.BoardNotFoundException;
 import demo.demo_back.exception.UnauthorizedAccessException;
+import demo.demo_back.exception.InvalidRequestException;
 import demo.demo_back.service.BoardService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -139,6 +142,48 @@ public class BoardController {
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "서버 오류 발생");
             errorResponse.put("details", "게시물 삭제 중 예상치 못한 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @PatchMapping("/{boardId}")
+    public ResponseEntity<?> updateBoard(@PathVariable Long boardId, @Valid @RequestBody BoardUpdateRequestDto request) {
+        try {
+            // 현재 인증된 사용자 정보 가져오기
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "인증되지 않은 요청입니다.");
+                errorResponse.put("details", "게시물을 수정하려면 로그인해야 합니다.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+            }
+
+            User user = (User) authentication.getPrincipal();
+            BoardDetailResponseDto response = boardService.updateBoard(boardId, user.getId(), request);
+            return ResponseEntity.ok(response);
+
+        } catch (InvalidRequestException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "잘못된 요청입니다.");
+            errorResponse.put("details", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+
+        } catch (UnauthorizedAccessException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "권한이 없습니다.");
+            errorResponse.put("details", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+
+        } catch (BoardNotFoundException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "게시물을 찾을 수 없습니다.");
+            errorResponse.put("details", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "서버 오류 발생");
+            errorResponse.put("details", "게시물 수정 중 예상치 못한 오류가 발생했습니다.");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
