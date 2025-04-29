@@ -75,6 +75,7 @@ public class HelloController {
 ### 6. ERD
 
 ## ![erd.png](erd.png)
+---
 
 ### 7. API 명세
 
