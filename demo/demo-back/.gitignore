@@ -42,3 +42,6 @@ dist/
 nbdist/
 .nb-gradle/
 nbproject/private/
+
+*.yml
+*.properties
