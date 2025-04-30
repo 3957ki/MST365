@@ -141,3 +141,58 @@ export async function getBoardById(
 
   return successResponse.data; // 성공 시 게시물 상세 정보 객체 반환
 }
+
+// --- 게시물 삭제 ---
+
+// 게시물 삭제 API 호출 함수
+export async function deleteBoard(
+  boardId: number | string,
+  token: string
+): Promise<void> {
+  // 성공 시 반환값 없음 (void)
+  const response = await fetch(
+    `http://localhost:8080/api/v1/boards/${boardId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`, // 인증 헤더 추가
+      },
+    }
+  );
+
+  // 에러 처리 (200 OK가 아닌 경우)
+  if (!response.ok) {
+    let errorMessage = `게시물 삭제 실패 (HTTP ${response.status})`;
+    try {
+      // 오류 응답 본문이 있을 경우 파싱 시도
+      const errorResult = (await response.json()) as ApiErrorResponse;
+      errorMessage =
+        errorResult.details ||
+        errorResult.error ||
+        `게시물 삭제 실패 (HTTP ${response.status})`;
+
+      // 특정 상태 코드에 따른 메시지 커스터마이징 (선택적)
+      if (response.status === 401) {
+        errorMessage = "인증되지 않았습니다. 다시 로그인해주세요.";
+      } else if (response.status === 403) {
+        errorMessage = "이 게시물을 삭제할 권한이 없습니다.";
+      } else if (response.status === 404) {
+        errorMessage = "삭제하려는 게시물을 찾을 수 없거나 이미 삭제되었습니다.";
+      }
+    } catch (e) {
+      // JSON 파싱 실패 등 예외 발생 시 기본 에러 메시지 사용
+      console.error("Error parsing delete error response:", e);
+    }
+    throw new Error(errorMessage); // 에러 throw
+  }
+
+  // 성공 (200 OK) 시에는 별도 작업 없이 함수 종료 (void 반환)
+  // 성공 메시지는 응답 본문에 포함될 수 있으나, 여기서는 확인만 함
+  try {
+    const result = await response.json(); // 성공 메시지 확인 (선택적)
+    console.log("Delete success response:", result);
+  } catch (e) {
+    // 성공 응답 본문 파싱 실패는 무시 가능 (204 No Content 등)
+    console.log("Delete request successful, no response body or parse error.");
+  }
+}

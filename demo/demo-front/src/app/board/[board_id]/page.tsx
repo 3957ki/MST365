@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getToken, getUserId } from "../../api/auth"; // auth API 임포트
-import { getBoardById, BoardDetail } from "../../api/board"; // board API 임포트
+import { getToken, getUserId } from "../../api/auth";
+import { getBoardById, BoardDetail, deleteBoard } from "../../api/board"; // deleteBoard 임포트 추가
 
 interface BoardDetailPageProps {
   params: {
@@ -46,6 +46,40 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
   const [error, setError] = useState<string | null>(null);
   const [isNotFound, setIsNotFound] = useState<boolean>(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false); // 삭제 로딩 상태 추가
+
+  // 게시물 삭제 처리 함수
+  const handleDeleteBoard = async () => {
+    if (!board) return; // 게시물 정보가 없으면 중단
+
+    const confirmDelete = window.confirm(
+      "정말로 이 게시물을 삭제하시겠습니까?"
+    );
+    if (!confirmDelete) {
+      return; // 사용자가 취소하면 중단
+    }
+
+    setIsDeleting(true); // 삭제 시작
+    setError(null); // 이전 에러 메시지 초기화
+
+    try {
+      const token = getToken();
+      if (!token) {
+        throw new Error("삭제 권한이 없습니다. 로그인이 필요합니다.");
+      }
+
+      await deleteBoard(board.id, token); // board.id 사용
+
+      alert("게시물이 성공적으로 삭제되었습니다.");
+      router.push("/board"); // 목록 페이지로 리다이렉션
+    } catch (err: any) {
+      console.error("게시물 삭제 오류:", err);
+      setError(err.message || "게시물 삭제 중 오류가 발생했습니다.");
+      alert(`삭제 실패: ${err.message || "알 수 없는 오류"}`); // 사용자에게 에러 알림
+    } finally {
+      setIsDeleting(false); // 삭제 종료 (성공/실패 무관)
+    }
+  };
 
   useEffect(() => {
     const fetchBoardDetail = async () => {
@@ -199,13 +233,13 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
                     수정
                   </button>
                 </Link>
-                <button
-                  className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg"
-                  // TODO: 삭제 기능 구현 (별도 API 호출 필요)
-                  onClick={() => alert("삭제 기능은 아직 구현되지 않았습니다.")}
-                >
-                  삭제
-                </button>
+                 <button
+                   className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                   onClick={handleDeleteBoard} // 삭제 핸들러 연결
+                   disabled={isDeleting} // 삭제 중 비활성화
+                 >
+                   {isDeleting ? "삭제 중..." : "삭제"}
+                 </button>
               </>
             )}
             <Link href="/board">
