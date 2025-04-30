@@ -2,7 +2,7 @@
 
 import { getToken } from "@/app/api/auth";
 
-// 댓글 1개에 대한 타입 (작성/조회 공통)
+// 댓글 1개에 대한 타입 (작성/조회/수정 공통)
 export interface CommentData {
   id: number;
   userId: number;
@@ -20,8 +20,11 @@ interface CreateCommentResponse {
   data: CommentData;
 }
 
-// 댓글 목록 조회 응답 타입
-// 실제 응답은 배열 그대로 오므로 따로 타입 정의 안 해도 됨
+// 댓글 수정 응답 타입 (작성과 동일 구조)
+interface UpdateCommentResponse {
+  message: string;
+  data: CommentData;
+}
 
 // 댓글 작성 함수
 export async function createComment(
@@ -84,4 +87,29 @@ export async function getComments(boardId: number): Promise<CommentData[]> {
   }
 
   return result; // 배열 그대로 반환
+}
+
+// 댓글 수정 함수 (PATCH로 변경 + boardId 포함)
+export async function updateComment(
+  boardId: number,
+  commentId: number,
+  content: string,
+  token: string
+): Promise<UpdateCommentResponse> {
+  const response = await fetch(`http://localhost:8080/api/v1/boards/${boardId}/comments/${commentId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+    body: JSON.stringify({ content }),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.details || result.error || `댓글 수정 실패 (HTTP ${response.status})`);
+  }
+
+  return result as UpdateCommentResponse;
 }

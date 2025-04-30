@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getToken } from "@/app/api/auth";
-import { createComment, getComments, CommentData } from "@/app/api/comment";
+import { createComment, getComments, updateComment, CommentData } from "@/app/api/comment";
 
 interface BoardDetailPageProps {
   params: {
@@ -19,6 +19,8 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
 
   const [commentContent, setCommentContent] = useState("");
   const [comments, setComments] = useState<CommentData[]>([]);
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingContent, setEditingContent] = useState("");
 
   useEffect(() => {
     const fetchComments = async () => {
@@ -120,7 +122,64 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
                   {new Date(comment.createdAt).toLocaleString()}
                 </span>
               </div>
-              <p className="text-gray-800">{comment.content}</p>
+              {editingCommentId === comment.id ? (
+                <>
+                  <textarea
+                    className="w-full border border-gray-300 rounded-lg p-2 text-black mb-2"
+                    value={editingContent}
+                    onChange={(e) => setEditingContent(e.target.value)}
+                  />
+                  <div className="flex justify-end space-x-2 mt-2">
+                    <button
+                      onClick={async () => {
+                        const token = getToken();
+                        if (!token) return alert("로그인이 필요합니다.");
+                        try {
+                          await updateComment(Number(board_id), comment.id, editingContent, token);
+                          alert("댓글이 수정되었습니다.");
+                          setEditingCommentId(null);
+                          setEditingContent("");
+                          router.refresh();                          
+                        } catch (err: any) {
+                          alert(`수정 실패: ${err.message}`);
+                        }
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
+                    >
+                      저장
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingCommentId(null);
+                        setEditingContent("");
+                      }}
+                      className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded-lg text-sm"
+                    >
+                      취소
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-gray-800">{comment.content}</p>
+                  <div className="flex justify-end space-x-2 mt-2">
+                    <button
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
+                      onClick={() => {
+                        setEditingCommentId(comment.id);
+                        setEditingContent(comment.content);
+                      }}
+                    >
+                      수정
+                    </button>
+                    <button
+                      className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>
