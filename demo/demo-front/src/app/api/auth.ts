@@ -57,5 +57,55 @@ export async function login(userName: string, password: string): Promise<LoginSu
   return loginResponse.data; // 성공 시 accessToken, user.id 등이 포함된 data 객체 반환
 }
 
-// 필요한 경우 회원가입 함수도 여기에 추가하거나 별도 파일로 관리할 수 있습니다.
-// export async function register(userName: string, password: string) { ... }
+// --- Token Utility Functions ---
+
+// localStorage에서 토큰 가져오기
+export function getToken(): string | null {
+  // 클라이언트 사이드에서만 localStorage 접근 가능
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem("authToken");
+  }
+  return null;
+}
+
+// localStorage에서 토큰 및 관련 정보 제거
+export function removeToken(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userId"); // 로그인 시 저장했던 다른 정보도 함께 제거
+    // 필요하다면 다른 사용자 관련 정보도 여기서 제거
+  }
+}
+
+// --- Logout API Function ---
+
+interface LogoutResponse {
+  message: string;
+}
+
+// 로그아웃 API 호출 함수
+export async function logout(token: string): Promise<void> {
+  const response = await fetch("http://localhost:8080/api/v1/auth/session", {
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`, // 인증 헤더 추가
+      // DELETE 요청은 보통 Content-Type 불필요
+    },
+    // DELETE 요청은 보통 body 없음
+  });
+
+  if (!response.ok) {
+    // 로그아웃 실패 시에도 클라이언트에서는 토큰을 제거하는 것이 일반적이지만,
+    // 서버 에러(500 등)는 사용자에게 알릴 수 있도록 에러를 던짐
+    try {
+      const errorResult = await response.json() as ApiErrorResponse;
+      throw new Error(errorResult.details || errorResult.error || `로그아웃 실패 (HTTP ${response.status})`);
+    } catch (e) { // json 파싱 실패 등 예외 처리
+      throw new Error(`로그아웃 실패 (HTTP ${response.status})`);
+    }
+  }
+
+  // 성공 시 (200 OK), 응답 본문은 확인만 하고 별도 반환값 없음
+  const result = await response.json() as LogoutResponse;
+  console.log("로그아웃 성공:", result.message);
+}

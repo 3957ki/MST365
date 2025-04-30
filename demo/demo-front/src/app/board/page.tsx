@@ -9,6 +9,7 @@ import BoardInfo from "../components/board/BoardInfo";
 import BoardTable from "../components/board/BoardTable";
 import BoardPagination from "../components/board/BoardPagination";
 import WriteButton from "../components/board/WriteButton";
+import LogoutButton from "../components/common/LogoutButton"; // LogoutButton 임포트 추가
 
 interface Post {
   id: number;
@@ -183,9 +184,8 @@ const BoardPage = () => {
           </Link>
           <h1 className="text-3xl font-bold text-black">자유 게시판</h1>
         </div>
-        <button className="bg-red-400 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-sm">
-          로그아웃
-        </button>
+        {/* LogoutButton 컴포넌트로 교체 */}
+        <LogoutButton />
       </div>
 
       <BoardSearch onSearch={handleSearch} />

@@ -4,8 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import PasswordChangeModal from "./component/PasswordChangeModal";
-import UserPostsList from "./component/UserPostsList"; // 추가
-import UserCommentsList from "./component/UserCommentsList"; // 추가
+import UserPostsList from "./component/UserPostsList";
+import UserCommentsList from "./component/UserCommentsList";
+import LogoutButton from "../components/common/LogoutButton"; // LogoutButton 임포트 추가
 
 export default function MyPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -25,9 +26,8 @@ export default function MyPage() {
           </Link>
           <h1 className="text-3xl font-bold text-black">마이페이지</h1>
         </div>
-        <button className="bg-red-400 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-sm">
-          로그아웃
-        </button>
+        {/* LogoutButton 컴포넌트로 교체 */}
+        <LogoutButton />
       </div>
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
         <div className="flex items-center">
