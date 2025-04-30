@@ -14,6 +14,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -54,4 +56,76 @@ public class CommentController {
             );
         }
     }
+
+    @GetMapping
+    public ResponseEntity<?> getComments(@PathVariable Long boardId) {
+        List<CommentResponseDto> comments = commentService.getCommentsByBoardId(boardId);
+        return ResponseEntity.ok().body(comments);
+    }
+
+    @PatchMapping("/{commentId}")
+    public ResponseEntity<?> updateComment(
+            @PathVariable Long boardId,
+            @PathVariable Long commentId,
+            @RequestBody @Valid CommentRequestDto requestDto,
+            @AuthenticationPrincipal User userDetails) {
+
+        try {
+            Long userId = userDetails.getId();
+            CommentResponseDto updated = commentService.updateComment(boardId, commentId, userId, requestDto.getContent());
+
+            return ResponseEntity.ok().body(
+                    Map.of("message", "댓글이 성공적으로 수정되었습니다.", "data", updated)
+            );
+
+        } catch (UnauthorizedException e) {
+            return ResponseEntity.status(401).body(
+                    Map.of("error", "수정 권한 없음", "details", e.getMessage())
+            );
+
+        } catch (BoardNotFoundException e) {
+            return ResponseEntity.status(404).body(
+                    Map.of("error", "게시물을 찾을 수 없습니다.", "details", e.getMessage())
+            );
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(
+                    Map.of("error", "서버 오류", "details", "댓글 수정 중 문제가 발생했습니다.")
+            );
+        }
+    }
+
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<?> deleteComment(
+            @PathVariable Long boardId,
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal User userDetails) {
+
+        try {
+            Long userId = userDetails.getId();
+            commentService.deleteComment(boardId, commentId, userId);
+
+            return ResponseEntity.ok().body(
+                    Map.of("message", "댓글이 성공적으로 삭제되었습니다.")
+            );
+
+        } catch (UnauthorizedException e) {
+            return ResponseEntity.status(401).body(
+                    Map.of("error", "삭제 권한 없음", "details", e.getMessage())
+            );
+
+        } catch (BoardNotFoundException e) {
+            return ResponseEntity.status(404).body(
+                    Map.of("error", "게시물을 찾을 수 없습니다.", "details", e.getMessage())
+            );
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(
+                    Map.of("error", "서버 오류", "details", "댓글 삭제 중 문제가 발생했습니다.")
+            );
+        }
+    }
+
+
+
 }
