@@ -44,6 +44,9 @@ public class Board {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
@@ -53,10 +56,14 @@ public class Board {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         view = 0;
+        isDeleted = false;
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+        if (isDeleted && deletedAt == null) {
+            deletedAt = LocalDateTime.now();
+        }
     }
 }
