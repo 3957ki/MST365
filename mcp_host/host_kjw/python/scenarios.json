@@ -1,6 +1,10 @@
 [
   {
     "title": "유튜브 테스트",
-    "steps": ["https://www.youtube.com 에 접속한다", "스크린샷을 찍는다"]
+    "steps": ["https://www.youtube.com 에 접속한다", "유튜브 페이지가 맞는지 확인한다."]
+  },
+  {
+    "title": "SSAFY 테스트",
+    "steps": ["https://edu.ssafy.com/edu/main/index.do 에 접속한다", "다른 화면이 아니라 홈 화면이 뜨는지 확인한다."]
   }
 ]
