@@ -14,6 +14,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -54,4 +56,11 @@ public class CommentController {
             );
         }
     }
+
+    @GetMapping
+    public ResponseEntity<?> getComments(@PathVariable Long boardId) {
+        List<CommentResponseDto> comments = commentService.getCommentsByBoardId(boardId);
+        return ResponseEntity.ok().body(comments);
+    }
+
 }

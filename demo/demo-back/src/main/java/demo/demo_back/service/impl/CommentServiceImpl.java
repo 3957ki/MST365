@@ -13,6 +13,8 @@ import demo.demo_back.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
@@ -49,4 +51,23 @@ public class CommentServiceImpl implements CommentService {
                 .deletedAt(saved.getDeletedAt())
                 .build();
     }
+
+    @Override
+    public List<CommentResponseDto> getCommentsByBoardId(Long boardId) {
+        List<Comment> comments = commentRepository.findByBoardId(boardId);
+
+        return comments.stream()
+                .map(comment -> CommentResponseDto.builder()
+                        .id(comment.getId())
+                        .userId(comment.getUser().getId())
+                        .boardId(comment.getBoard().getId())
+                        .content(comment.getContent())
+                        .createdAt(comment.getCreatedAt())
+                        .updatedAt(comment.getUpdatedAt())
+                        .isDeleted(comment.isDeleted())
+                        .deletedAt(comment.getDeletedAt())
+                        .build())
+                .toList();
+    }
+
 }
