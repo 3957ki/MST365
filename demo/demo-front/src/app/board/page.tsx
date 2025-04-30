@@ -9,6 +9,7 @@ import BoardInfo from "../components/board/BoardInfo";
 import BoardTable from "../components/board/BoardTable";
 import BoardPagination from "../components/board/BoardPagination";
 import WriteButton from "../components/board/WriteButton";
+import LogoutButton from "../components/common/LogoutButton"; // LogoutButton 임포트 추가
 
 interface Post {
   id: number;
@@ -170,17 +171,27 @@ const BoardPage = () => {
 
   return (
     <div className="container mx-auto p-8">
-      <div className="flex items-center mb-6">
-        <Link href="/">
-          <Image
-            src="/microsoft.png"
-            alt="Microsoft Logo"
-            width={50}
-            height={50}
-            className="mr-5 cursor-pointer"
-          />
-        </Link>
-        <h1 className="text-3xl font-bold text-black">자유 게시판</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <Link href="/board">
+            <Image
+              src="/microsoft.png"
+              alt="Microsoft Logo"
+              width={50}
+              height={50}
+              className="mr-5 cursor-pointer"
+            />
+          </Link>
+          <h1 className="text-3xl font-bold text-black">자유 게시판</h1>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Link href="/mypage">
+            <button className="bg-green-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm">
+              마이 페이지
+            </button>
+          </Link>
+          <LogoutButton /> {/* 기존 로그아웃 버튼 */}
+        </div>
       </div>
 
       <BoardSearch onSearch={handleSearch} />
