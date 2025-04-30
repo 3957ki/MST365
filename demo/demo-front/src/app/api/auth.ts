@@ -68,11 +68,20 @@ export function getToken(): string | null {
   return null;
 }
 
-// localStorage에서 토큰 및 관련 정보 제거
+// localStorage에서 userId 가져오기
+export function getUserId(): number | null {
+  if (typeof window !== 'undefined') {
+    const userId = localStorage.getItem("userId");
+    return userId ? parseInt(userId, 10) : null; // 문자열을 숫자로 변환
+  }
+  return null;
+}
+
+// localStorage에서 토큰 및 관련 정보 제거 (userId 제거 확인)
 export function removeToken(): void {
   if (typeof window !== 'undefined') {
     localStorage.removeItem("authToken");
-    localStorage.removeItem("userId"); // 로그인 시 저장했던 다른 정보도 함께 제거
+    localStorage.removeItem("userId");
     // 필요하다면 다른 사용자 관련 정보도 여기서 제거
   }
 }
@@ -108,6 +117,37 @@ export async function logout(token: string): Promise<void> {
   // 성공 시 (200 OK), 응답 본문은 확인만 하고 별도 반환값 없음
   const result = await response.json() as LogoutResponse;
   console.log("로그아웃 성공:", result.message);
+}
+
+// --- Withdraw User API Function ---
+
+interface WithdrawResponse { // 성공 응답 타입 (메시지만 있음)
+  message: string;
+}
+
+// 회원 탈퇴 API 호출 함수
+export async function withdrawUser(userId: number, token: string): Promise<void> {
+  const response = await fetch(`http://localhost:8080/api/v1/users/${userId}`, { // 경로 변수 포함
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`, // 인증 헤더 추가
+    },
+  });
+
+  if (!response.ok) {
+    // 실패 시 에러 처리 (401, 403, 404, 500 등)
+    try {
+      const errorResult = await response.json() as ApiErrorResponse; // 기존 에러 타입 재활용
+      throw new Error(errorResult.details || errorResult.error || `회원 탈퇴 실패 (HTTP ${response.status})`);
+    } catch (e) {
+      throw new Error(`회원 탈퇴 실패 (HTTP ${response.status})`);
+    }
+  }
+
+  // 성공 시 (200 OK)
+  const result = await response.json() as WithdrawResponse;
+  console.log("회원 탈퇴 성공:", result.message);
+  // 반환값 없음 (Promise<void>)
 }
 
 // --- Signup API Function ---

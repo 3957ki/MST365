@@ -3,13 +3,62 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation"; // useRouter 임포트 추가
 import PasswordChangeModal from "./component/PasswordChangeModal";
 import UserPostsList from "./component/UserPostsList";
 import UserCommentsList from "./component/UserCommentsList";
-import LogoutButton from "../components/common/LogoutButton"; // LogoutButton 임포트 추가
+import LogoutButton from "../components/common/LogoutButton";
+import { getToken, getUserId, removeToken, withdrawUser } from "../api/auth"; // auth 유틸리티 및 API 함수 임포트
 
 export default function MyPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [withdrawError, setWithdrawError] = useState<string | null>(null); // 탈퇴 에러 상태
+  const [isWithdrawing, setIsWithdrawing] = useState(false); // 탈퇴 로딩 상태
+  const router = useRouter(); // useRouter 훅 사용
+
+  // 회원 탈퇴 처리 함수
+  const handleWithdraw = async () => {
+    // 1. 탈퇴 확인
+    if (!window.confirm("정말로 회원 탈퇴를 진행하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
+      return; // 사용자가 취소하면 중단
+    }
+
+    setWithdrawError(null); // 이전 에러 초기화
+    setIsWithdrawing(true); // 로딩 시작
+
+    // 2. 스토리지에서 사용자 ID 및 토큰 가져오기
+    const token = getToken();
+    const userId = getUserId();
+
+    if (!token || userId === null) {
+      setWithdrawError("로그인 정보가 유효하지 않습니다. 다시 로그인해주세요.");
+      setIsWithdrawing(false);
+      // 필요시 로그인 페이지로 리다이렉션
+      // removeToken(); // 혹시 모를 잘못된 정보 제거
+      // router.push('/login');
+      return;
+    }
+
+    try {
+      // 3. API 호출
+      await withdrawUser(userId, token);
+
+      // 4. 성공 처리
+      alert("회원 탈퇴가 성공적으로 처리되었습니다.");
+      removeToken(); // 로컬 스토리지 정보 제거
+      router.push("/"); // 홈페이지로 리다이렉션
+
+    } catch (error: any) {
+      // 5. 실패 처리
+      console.error("회원 탈퇴 실패:", error);
+      setWithdrawError(error.message || "회원 탈퇴 중 오류가 발생했습니다.");
+      // 실패 시에도 로컬 토큰은 제거하는 것이 안전할 수 있음 (선택 사항)
+      // removeToken();
+      // router.push('/login');
+    } finally {
+      setIsWithdrawing(false); // 로딩 종료
+    }
+  };
 
   return (
     <div className="container mx-auto p-8">
@@ -49,13 +98,22 @@ export default function MyPage() {
           >
             비밀번호 수정
           </button>
-          <button className="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
-            회원 탈퇴
+          {/* 회원 탈퇴 버튼에 핸들러 연결 및 로딩 상태 반영 */}
+          <button
+            onClick={handleWithdraw}
+            disabled={isWithdrawing}
+            className={`bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded ${isWithdrawing ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {isWithdrawing ? "탈퇴 처리 중..." : "회원 탈퇴"}
           </button>
         </div>
+        {/* 탈퇴 에러 메시지 표시 */}
+        {withdrawError && (
+          <p className="text-red-500 text-sm mt-2 text-right">{withdrawError}</p>
+        )}
       </div>
-      <UserPostsList /> {/* 변경 */}
-      <UserCommentsList /> {/* 변경 */}
+      <UserPostsList />
+      <UserCommentsList />
       <PasswordChangeModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
