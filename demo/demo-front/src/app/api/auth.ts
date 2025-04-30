@@ -353,3 +353,61 @@ export async function getUserPosts(
   }
   return successResponse.data; // data 배열 반환
 }
+
+// --- Get User Comments API Function ---
+
+// 사용자 댓글 아이템 타입 정의 (camelCase 필드명 사용)
+export interface UserCommentItem {
+  id: number;
+  userId: number; // 실제 응답 필드명 확인 필요 (userId vs user_id) - 요청에 따라 userId 사용
+  boardId: number; // 실제 응답 필드명 확인 필요 (boardId vs board_id) - 요청에 따라 boardId 사용
+  content: string;
+  createdAt: string;
+  updatedAt: string | null;
+  deletedAt: string | null;
+  deleted: boolean;
+}
+
+// 사용자 댓글 목록 조회 응답 타입
+interface GetUserCommentsResponse {
+  message: string;
+  data: UserCommentItem[];
+  // pagination 필드는 선택적이므로 타입에 포함하지 않거나 optional로 추가 가능
+}
+
+// 사용자 댓글 목록 조회 API 호출 함수
+export async function getUserComments(
+  userId: number,
+  token: string
+): Promise<UserCommentItem[]> {
+  const response = await fetch(
+    `http://localhost:8080/api/v1/users/${userId}/comments`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`, // 인증 헤더 추가
+      },
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    // 실패 시 에러 처리 (401, 403, 404, 500 등)
+    const errorResponse = result as ApiErrorResponse; // 기존 에러 타입 재활용
+    throw new Error(
+      errorResponse.details ||
+        errorResponse.error ||
+        `사용자 댓글 조회 실패 (HTTP ${response.status})`
+    );
+  }
+
+  // 성공 시 (200 OK)
+  const successResponse = result as GetUserCommentsResponse;
+  // data 필드 및 배열 여부 검증
+  if (!successResponse.data || !Array.isArray(successResponse.data)) {
+    console.error("Invalid user comments response structure:", successResponse);
+    throw new Error("사용자 댓글 응답 형식이 올바르지 않습니다.");
+  }
+  return successResponse.data; // data 배열 반환
+}

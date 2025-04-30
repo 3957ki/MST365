@@ -8,8 +8,8 @@ import PasswordChangeModal from "./component/PasswordChangeModal";
 import UserPostsList from "./component/UserPostsList";
 import UserCommentsList from "./component/UserCommentsList";
 import LogoutButton from "../components/common/LogoutButton";
-// getUserInfo, UserInfoData, getUserPosts, UserPostItem 타입 임포트 추가
-import { getToken, getUserId, removeToken, withdrawUser, getUserInfo, UserInfoData, getUserPosts, UserPostItem } from "../api/auth";
+// getUserInfo, UserInfoData, getUserPosts, UserPostItem, getUserComments, UserCommentItem 타입 임포트 추가
+import { getToken, getUserId, removeToken, withdrawUser, getUserInfo, UserInfoData, getUserPosts, UserPostItem, getUserComments, UserCommentItem } from "../api/auth";
 
 export default function MyPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,7 +27,12 @@ export default function MyPage() {
   const [isUserPostsLoading, setIsUserPostsLoading] = useState(true);
   const [userPostsError, setUserPostsError] = useState<string | null>(null);
 
-  // 컴포넌트 마운트 시 사용자 정보 및 게시물 로드
+  // 사용자 댓글 목록 상태 추가
+  const [userComments, setUserComments] = useState<UserCommentItem[] | null>(null);
+  const [isUserCommentsLoading, setIsUserCommentsLoading] = useState(true);
+  const [userCommentsError, setUserCommentsError] = useState<string | null>(null);
+
+  // 컴포넌트 마운트 시 사용자 정보, 게시물, 댓글 로드
   useEffect(() => {
     let isMounted = true; // 컴포넌트 언마운트 시 비동기 작업 취소 플래그
     const token = getToken();
@@ -38,8 +43,10 @@ export default function MyPage() {
       if (isMounted) {
         setUserInfoError("로그인이 필요합니다.");
         setUserPostsError("로그인이 필요합니다.");
+        setUserCommentsError("로그인이 필요합니다."); // 댓글 에러도 설정
         setIsUserInfoLoading(false);
         setIsUserPostsLoading(false);
+        setIsUserCommentsLoading(false); // 댓글 로딩도 종료
         router.push("/login");
       }
       return; // useEffect 종료
@@ -74,10 +81,10 @@ export default function MyPage() {
 
     // 사용자 게시물 로딩 함수 정의
     const performFetchPosts = async () => {
-      if (!isMounted) return; // 컴포넌트 언마운트 시 중단
+      if (!isMounted || !userId || !token) return; // userId, token 유효성 검사 추가
       try {
         setIsUserPostsLoading(true);
-        const posts = await getUserPosts(userId, token);
+        const posts = await getUserPosts(userId, token); // userId, token 전달 확인
         if (isMounted) {
           setUserPosts(posts);
           setUserPostsError(null);
@@ -95,9 +102,33 @@ export default function MyPage() {
       }
     };
 
+    // 사용자 댓글 로딩 함수 정의
+    const performFetchComments = async () => {
+      if (!isMounted || !userId || !token) return; // userId, token 유효성 검사 추가
+      try {
+        setIsUserCommentsLoading(true);
+        const comments = await getUserComments(userId, token); // getUserComments 호출
+        if (isMounted) {
+          setUserComments(comments);
+          setUserCommentsError(null);
+        }
+      } catch (error: any) {
+        console.error("사용자 댓글 조회 실패:", error);
+        if (isMounted) {
+          setUserCommentsError(error.message || "댓글을 불러오는 데 실패했습니다.");
+          setUserComments(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsUserCommentsLoading(false);
+        }
+      }
+    };
+
     // API 호출 실행
     performFetchUserInfo();
     performFetchPosts();
+    performFetchComments(); // 댓글 로딩 함수 호출 추가
 
     // 클린업 함수: 컴포넌트 언마운트 시 플래그 설정
     return () => {
@@ -229,7 +260,12 @@ export default function MyPage() {
       {/* 로딩 완료 및 에러 없을 때 UserPostsList 렌더링 */}
       {!isUserPostsLoading && !userPostsError && <UserPostsList posts={userPosts} />}
 
-      <UserCommentsList />
+      {/* 사용자 댓글 목록 로딩 및 에러 처리 */}
+      {isUserCommentsLoading && <p className="text-center text-gray-600 my-4">댓글 목록을 불러오는 중...</p>}
+      {userCommentsError && <p className="text-center text-red-500 my-4">댓글 목록 로딩 오류: {userCommentsError}</p>}
+      {/* 로딩 완료 및 에러 없을 때 UserCommentsList 렌더링 */}
+      {!isUserCommentsLoading && !userCommentsError && <UserCommentsList comments={userComments} />}
+
       <PasswordChangeModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
