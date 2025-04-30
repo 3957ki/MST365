@@ -13,17 +13,27 @@ from langgraph.prebuilt import create_react_agent
 from langchain_anthropic import ChatAnthropic
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
+from dotenv import load_dotenv
 
+# 환경변수 불러오기
+load_dotenv(override=True)
 
+# 모델 정의
 model = ChatAnthropic(model="claude-3-5-haiku-latest", temperature=0, max_tokens=1000)
+
+# MCP 서버
+current_file = os.path.abspath(__file__)
+current_dir = os.path.dirname(current_file)
+mcp_path = os.path.join(current_dir, "mcp")
 
 server_params = StdioServerParameters(
     command="node",
     args=["cli.js"],
-    cwd="/SSAFY/S12P31S111/mcp_host/host_kjw/python/mcp",
+    cwd=mcp_path,
 )
 
 
+# Output Parser
 class FailedStep(BaseModel):
     num: int
     message: str
@@ -40,8 +50,9 @@ class WebTestResult(BaseModel):
 output_parser = PydanticOutputParser(pydantic_object=WebTestResult)
 
 
+# 프롬프트
 system_prompt = """너는 아래 시나리오를 테스트하는 AI야.
-각 스텝에서 시키는 대로 행동하고, 실패한 스텝과 이유를 기록해.
+각 스텝에서 시키는 대로 행동하고, 실패한 스텝과 이유를 한글로 기록해.
 스텝에서 시키는 대로 할 수 없거나, 시킨 대로 한 결과가 이상하면 실패로 처리해.
 모든 스텝이 끝난 뒤엔 전체 피드백을 주고, 반드시 아래 형식 그대로 응답해야 해.
 
@@ -59,7 +70,7 @@ prompt = PromptTemplate(
 )
 
 
-# 결과 저장
+# 결과 저장 함수
 def save_result(
     scenario: dict, result: dict, screenshots: List[str], scenario_dir: str
 ):
@@ -75,10 +86,12 @@ def save_result(
         json.dump(result_json, f, ensure_ascii=False, indent=2)
 
 
+# Step 직렬화 함수
 def create_instruction(steps: List[str]) -> str:
     return "\n".join(f"{i+1}. {step}" for i, step in enumerate(steps))
 
 
+# llm 요청 함수
 async def run_logic(agent, steps: List[str], screenshot_dir: str):
 
     agent_response = await agent.ainvoke(
@@ -95,10 +108,12 @@ async def run_logic(agent, steps: List[str], screenshot_dir: str):
 
     parsed = output_parser.parse(json_text)
 
+    print("시나리오 결과: ", parsed)
+
     return parsed
 
 
-# 시나리오 실행 (스크린샷 기능 구현 해야함)
+# 시나리오 실행 함수 (스크린샷 기능 구현 해야함)
 async def run_scenario(agent, scenario: dict, index: int, output_dir: str):
     scenario_dir = os.path.join(output_dir, str(index))
     screenshot_dir = os.path.join(scenario_dir, "screenshots")
@@ -109,6 +124,7 @@ async def run_scenario(agent, scenario: dict, index: int, output_dir: str):
     save_result(scenario, response, [], scenario_dir)
 
 
+# 전체 테스트 실행 함수
 async def run_test(scenarios: List[dict], build_num: int, base_dir: str):
 
     # 디렉터리 세팅
@@ -130,7 +146,9 @@ async def run_test(scenarios: List[dict], build_num: int, base_dir: str):
             print(f"모든 테스트 완료: {output_dir}")
 
 
+# main 함수
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--file", type=str, required=True, help="시나리오 JSON 파일 경로"
@@ -146,7 +164,8 @@ if __name__ == "__main__":
 
     # 파일 읽기
     with open(args.file, "r", encoding="utf-8") as f:
-        scenarios = json.load(f)
+        data = json.load(f)
+    scenarios = data.get("scenarios", [])
 
     # 사용자로부터 시나리오, 빌드 넘버, 루트 디렉터리를 파라미터로 받기
     asyncio.run(run_test(scenarios, build_num=args.build, base_dir=args.output_dir))
