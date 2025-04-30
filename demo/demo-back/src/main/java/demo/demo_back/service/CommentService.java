@@ -11,5 +11,6 @@ public interface CommentService {
 
     CommentResponseDto updateComment(Long boardId, Long commentId, Long userId, String newContent);
 
+    void deleteComment(Long boardId, Long commentId, Long userId);
 
 }

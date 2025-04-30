@@ -104,5 +104,21 @@ public class CommentServiceImpl implements CommentService {
                 .build();
     }
 
+    @Override
+    public void deleteComment(Long boardId, Long commentId, Long userId) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new BoardNotFoundException(boardId));
+
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
+
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new UnauthorizedException("자신의 댓글만 삭제할 수 있습니다.");
+        }
+
+        comment.setDeleted(true);
+        comment.setDeletedAt(LocalDateTime.now());
+        commentRepository.save(comment);
+    }
 
 }
