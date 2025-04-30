@@ -162,7 +162,6 @@ public class CoreLogicStepExecution extends SynchronousNonBlockingStepExecution<
         listener.getLogger().println(scenarioContent);
 
         // 9) MCP 서버 기동 및 대기
-        // 9) setup 스크립트 실행 (Windows: setup.bat, Linux: setup.sh)
         listener.getLogger().println("▶ setup 스크립트 실행...");
         String osName = System.getProperty("os.name").toLowerCase();
         ProcessBuilder pbSetup;
@@ -184,6 +183,41 @@ public class CoreLogicStepExecution extends SynchronousNonBlockingStepExecution<
             throw new IllegalStateException("setup 스크립트 실행 실패");
         }
         listener.getLogger().println("▶ setup 완료");
+
+        // 9.5) NPM 패키지 설치 (resources/python/mcp)
+        listener.getLogger().println("▶ NPM 패키지 설치: npm install (mcp 디렉터리)");
+        // setup.sh 에서 설치한 portable Node.js 사용
+        File nodeDir = new File(pythonDir, "node-v20.8.0-linux-x64");
+        File npmBin = new File(nodeDir, "bin/npm");
+        if (!npmBin.exists()) {
+            throw new IllegalStateException("npm 바이너리를 찾을 수 없습니다: " + npmBin);
+        }
+        // mcp 서브디렉터리로 이동
+        File mcpDir = new File(pythonDir, "mcp");
+        if (!mcpDir.exists() || !mcpDir.isDirectory()) {
+            throw new IllegalStateException("mcp 디렉터리를 찾을 수 없습니다: " + mcpDir);
+        }
+        // portable Node.js의 node 경로를 PATH에 추가
+        String existingPath = System.getenv("PATH");
+        String nodeBinDir = new File(nodeDir, "bin").getAbsolutePath();
+
+        ProcessBuilder pbNpm = new ProcessBuilder(
+                npmBin.getAbsolutePath(), "install"
+        );
+        pbNpm.environment().put("PATH", nodeBinDir + File.pathSeparator + existingPath);
+        pbNpm.directory(mcpDir).redirectErrorStream(true);
+        Process procNpm = pbNpm.start();
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(procNpm.getInputStream(), StandardCharsets.UTF_8))) {
+            String l;
+            while ((l = br.readLine()) != null) {
+                listener.getLogger().println(l);
+            }
+        }
+        if (procNpm.waitFor() != 0) {
+            throw new IllegalStateException("npm install 실패 (mcp 디렉터리)");
+        }
+        listener.getLogger().println("▶ NPM 설치 완료 (mcp 디렉터리)");
 
         // 10) Python 스크립트 직접 실행 (빌드 번호 & 출력 디렉터리 인자 포함)
         listener.getLogger().println("▶ Python 테스트 실행: main_logic.py");
@@ -213,8 +247,8 @@ public class CoreLogicStepExecution extends SynchronousNonBlockingStepExecution<
                 "--build",      buildNumber,
                 "--output_dir", outputDir
         )
-        .directory(pythonDir)
-        .redirectErrorStream(true);
+                .directory(pythonDir)
+                .redirectErrorStream(true);
 
         Process runProc = pbRun.start();
         try (BufferedReader rdr = new BufferedReader(
