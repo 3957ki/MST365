@@ -10,4 +10,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     List<Comment> findByBoard_IdAndIsDeletedFalseOrderByCreatedAtAsc(Long boardId);
 
+    List<Comment> findByUserId(Long userId);
+
 }

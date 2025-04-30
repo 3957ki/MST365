@@ -13,4 +13,7 @@ public interface CommentService {
 
     void deleteComment(Long boardId, Long commentId, Long userId);
 
+    List<CommentResponseDto> getCommentsByUserId(Long userId);
+
+
 }

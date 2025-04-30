@@ -1,8 +1,12 @@
 package demo.demo_back.controller;
 
 import demo.demo_back.domain.User;
+import demo.demo_back.dto.BoardListResponseDto;
+import demo.demo_back.dto.CommentResponseDto;
 import demo.demo_back.dto.PasswordChangeRequestDto;
 import demo.demo_back.dto.UserResponseDto;
+import demo.demo_back.service.BoardService;
+import demo.demo_back.service.CommentService;
 import demo.demo_back.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,8 +14,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -20,11 +27,17 @@ import java.util.Optional;
 public class UserController {
 
     private final UserService userService;
+    private final BoardService boardService;
+    private final CommentService commentService;
+
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, BoardService boardService, CommentService commentService) {
         this.userService = userService;
+        this.boardService = boardService;
+        this.commentService = commentService;
     }
+
 
     @GetMapping("/{userId}")
     public ResponseEntity<?> getUser(@PathVariable Long userId) {
@@ -148,5 +161,61 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
+
+    @GetMapping("/{userId}/boards")
+    public ResponseEntity<?> getBoardsByUser(@PathVariable Long userId) {
+        try {
+            List<BoardListResponseDto.BoardItemDto> boards = boardService.getBoardsByUserId(userId);
+            return ResponseEntity.ok(
+                    new BoardListResponseDto("사용자의 게시물이 성공적으로 조회되었습니다.", boards)
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(
+                    Map.of("error", "서버 오류 발생", "details", "사용자 게시물 목록을 불러오는 중 오류가 발생했습니다.")
+            );
+        }
+    }
+
+    @GetMapping("/{userId}/comments")
+    public ResponseEntity<?> getCommentsByUser(@PathVariable Long userId,
+                                               @AuthenticationPrincipal User userDetails) {
+        try {
+            if (userDetails == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                        Map.of("error", "인증되지 않은 요청입니다.",
+                                "details", "사용자 댓글 목록을 조회하려면 로그인이 필요합니다.")
+                );
+            }
+
+            // 요청한 userId와 로그인한 user의 ID가 다른 경우
+            if (!userDetails.getId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                        Map.of("error", "권한이 없습니다.",
+                                "details", "다른 사용자의 댓글 목록을 조회할 권한이 없습니다.")
+                );
+            }
+
+            Optional<User> user = userService.getUserById(userId);
+            if (user.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                        Map.of("error", "사용자를 찾을 수 없습니다.",
+                                "details", "요청하신 사용자 ID에 해당하는 사용자가 존재하지 않습니다.")
+                );
+            }
+
+            List<CommentResponseDto> comments = commentService.getCommentsByUserId(userId);
+            return ResponseEntity.ok(Map.of(
+                    "message", "사용자의 댓글 목록입니다.",
+                    "data", comments
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    Map.of("error", "서버 오류 발생",
+                            "details", "사용자 댓글 목록을 불러오는데 예상치 못한 오류가 발생했습니다.")
+            );
+        }
+    }
+
 
 }
