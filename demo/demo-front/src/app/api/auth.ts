@@ -109,3 +109,42 @@ export async function logout(token: string): Promise<void> {
   const result = await response.json() as LogoutResponse;
   console.log("로그아웃 성공:", result.message);
 }
+
+// --- Signup API Function ---
+
+// 회원가입 응답 타입 정의 (백엔드 명세 기반)
+interface SignupResponseData {
+  userId: number;
+}
+
+export interface SignupResponse { // export 키워드를 올바른 위치에 추가하고 중복 제거
+  message: string;
+  data: SignupResponseData;
+}
+
+// 회원가입 API 호출 함수
+export async function signup(userName: string, password: string): Promise<SignupResponse> {
+  const response = await fetch("http://localhost:8080/api/v1/auth/register", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      // 회원가입 요청 시 필드 이름 확인 필요 (userName vs user_name)
+      // 이전 요청에서 user_name을 사용했으므로 일관성을 위해 user_name 사용
+      // 만약 오류 발생 시 userName으로 변경 시도 필요
+      user_name: userName,
+      password: password,
+    }),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    const errorResponse = result as ApiErrorResponse; // 기존 오류 타입 재활용
+    throw new Error(errorResponse.details || errorResponse.error || `회원가입 실패 (HTTP ${response.status})`);
+  }
+
+  // 성공 시 전체 응답 반환 (메시지 포함)
+  return result as SignupResponse;
+}

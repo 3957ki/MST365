@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation"; // useRouter 추가
+import { useRouter } from "next/navigation";
+import { signup, SignupResponse } from "../api/auth"; // signup 함수 및 타입 임포트 추가
 
 export default function SignupPage() {
   const [userName, setUserName] = useState(""); // 아이디 상태 추가
@@ -38,36 +39,14 @@ export default function SignupPage() {
     setIsLoading(true); // 로딩 시작
 
     try {
-      const response = await fetch(
-        "http://localhost:8080/api/v1/auth/register",
-        {
-          // API 엔드포인트 수정
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            user_name: userName, // 상태에서 가져온 값 사용
-            password: password, // 상태에서 가져온 값 사용
-          }),
-        }
-      );
+      // API 호출 로직을 auth.ts의 signup 함수 호출로 변경
+      const result: SignupResponse = await signup(userName, password);
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        // API 에러 처리 (백엔드 명세 기반)
-        const errorMessage =
-          result.details ||
-          result.error ||
-          `HTTP error! status: ${response.status}`;
-        throw new Error(errorMessage);
-      }
-
-      // 3. 성공 처리
-      console.log("회원가입 성공:", result);
+      // 3. 성공 처리 (기존 로직 유지)
+      console.log("회원가입 성공:", result.message); // result.message 사용 가능
       alert("회원가입이 성공적으로 완료되었습니다.");
       router.push("/login"); // 로그인 페이지로 리다이렉션
+
     } catch (error: any) {
       // 4. 실패 처리
       console.error("회원가입 실패:", error);
