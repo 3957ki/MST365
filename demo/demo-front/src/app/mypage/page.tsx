@@ -4,23 +4,30 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import PasswordChangeModal from "./component/PasswordChangeModal";
+import UserPostsList from "./component/UserPostsList"; // 추가
+import UserCommentsList from "./component/UserCommentsList"; // 추가
 
 export default function MyPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <div className="container mx-auto p-8">
-      <div className="flex items-center mb-6">
-        <Link href="/">
-          <Image
-            src="/microsoft.png"
-            alt="Microsoft Logo"
-            width={50}
-            height={50}
-            className="mr-5 cursor-pointer"
-          />
-        </Link>
-        <h1 className="text-3xl font-bold text-black">마이페이지</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <Link href="/">
+            <Image
+              src="/microsoft.png"
+              alt="Microsoft Logo"
+              width={50}
+              height={50}
+              className="mr-5 cursor-pointer"
+            />
+          </Link>
+          <h1 className="text-3xl font-bold text-black">마이페이지</h1>
+        </div>
+        <button className="bg-red-400 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-sm">
+          로그아웃
+        </button>
       </div>
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
         <div className="flex items-center">
@@ -35,17 +42,20 @@ export default function MyPage() {
             </p>
           </div>
         </div>
+        <div className="mt-6 text-right">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-5"
+          >
+            비밀번호 수정
+          </button>
+          <button className="bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
+            회원 탈퇴
+          </button>
+        </div>
       </div>
-      {/* 비밀번호 수정 버튼 */}
-      <div className="mt-6 text-right">
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          비밀번호 수정
-        </button>
-      </div>
-
+      <UserPostsList /> {/* 변경 */}
+      <UserCommentsList /> {/* 변경 */}
       <PasswordChangeModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
