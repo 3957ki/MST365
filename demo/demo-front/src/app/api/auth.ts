@@ -150,6 +150,65 @@ export async function withdrawUser(userId: number, token: string): Promise<void>
   // 반환값 없음 (Promise<void>)
 }
 
+// --- Change Password API Function ---
+
+// 비밀번호 변경 요청 타입
+interface PasswordChangeRequest {
+  current_password: string;
+  new_password: string;
+  new_password_confirm: string;
+}
+
+// 비밀번호 변경 성공 응답 타입
+interface PasswordChangeSuccessResponse {
+  message: string;
+}
+
+// 비밀번호 변경 API 호출 함수
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+  newPasswordConfirm: string,
+  token: string
+): Promise<void> { // 성공 시 반환값 없음
+  const response = await fetch("http://localhost:8080/api/v1/users/change-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`, // 인증 헤더 추가
+    },
+    body: JSON.stringify({
+      current_password: currentPassword, // snake_case 필드 이름 사용
+      new_password: newPassword,
+      new_password_confirm: newPasswordConfirm,
+    } as PasswordChangeRequest), // 타입 명시
+  });
+
+  if (!response.ok) {
+    // 실패 시 에러 처리 (400, 401, 500 등)
+    try {
+      const errorResult = await response.json() as ApiErrorResponse; // 기존 에러 타입 재활용
+      // 400 에러의 경우 details 메시지를 우선적으로 사용
+      if (response.status === 400 && errorResult.details) {
+        throw new Error(errorResult.details);
+      }
+      throw new Error(errorResult.details || errorResult.error || `비밀번호 변경 실패 (HTTP ${response.status})`);
+    } catch (e: any) {
+      // JSON 파싱 실패 등 다른 예외 발생 시
+      if (e instanceof Error) { // 잡힌 에러가 Error 인스턴스인지 확인
+          throw e; // 이미 Error 객체면 그대로 던짐
+      }
+      throw new Error(`비밀번호 변경 실패 (HTTP ${response.status})`);
+    }
+  }
+
+  // 성공 시 (200 OK)
+  const result = await response.json() as PasswordChangeSuccessResponse;
+  console.log("비밀번호 변경 성공:", result.message);
+  // 반환값 없음 (Promise<void>)
+}
+
+
 // --- Signup API Function ---
 
 // 회원가입 응답 타입 정의 (백엔드 명세 기반)
