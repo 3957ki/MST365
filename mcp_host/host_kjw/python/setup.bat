@@ -19,7 +19,4 @@ call .venv\Scripts\activate.bat
 echo 📦 패키지 설치
 uv sync
 
-echo 🚀 MCP 서버 실행
-npx -y @playwright/mcp@latest --port 8005
-
 ENDLOCAL
