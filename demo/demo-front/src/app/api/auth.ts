@@ -208,6 +208,51 @@ export async function changePassword(
   // 반환값 없음 (Promise<void>)
 }
 
+// --- Get User Info API Function ---
+
+// 사용자 정보 응답 데이터 타입 (실제 응답 기반, camelCase 주의)
+export interface UserInfoData {
+  id: number;
+  userName: string; // camelCase로 수정
+  createdAt: string; // camelCase로 수정 (실제 응답 확인)
+  updatedAt: string; // camelCase로 수정 (실제 응답 확인)
+}
+
+// 전체 회원 정보 조회 응답 타입
+interface GetUserInfoResponse {
+  message: string;
+  data: UserInfoData;
+}
+
+// 회원 정보 조회 API 호출 함수
+export async function getUserInfo(userId: number, token: string): Promise<UserInfoData> {
+  const response = await fetch(`http://localhost:8080/api/v1/users/${userId}`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`, // 인증 헤더 추가
+    },
+  });
+
+  if (!response.ok) {
+    // 실패 시 에러 처리 (401, 403, 404, 500 등)
+    try {
+      const errorResult = await response.json() as ApiErrorResponse; // 기존 에러 타입 재활용
+      throw new Error(errorResult.details || errorResult.error || `회원 정보 조회 실패 (HTTP ${response.status})`);
+    } catch (e) {
+      throw new Error(`회원 정보 조회 실패 (HTTP ${response.status})`);
+    }
+  }
+
+  // 성공 시 (200 OK)
+  const result = await response.json() as GetUserInfoResponse;
+  // userName 필드 존재 여부 검증으로 수정
+  if (!result.data || !result.data.userName) {
+      console.error("Invalid user info response structure:", result);
+      throw new Error("회원 정보 응답 형식이 올바르지 않습니다.");
+  }
+  return result.data; // data 객체 반환
+}
+
 
 // --- Signup API Function ---
 

@@ -5,7 +5,7 @@ export default function page() {
   return (
     <div className="container mx-auto p-8 ml-56">
       <div className="flex items-center mb-6">
-        <Link href="/">
+        <Link href="/board">
           <Image
             src="/microsoft.png"
             alt="Microsoft Logo"

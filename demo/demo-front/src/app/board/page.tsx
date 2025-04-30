@@ -173,7 +173,7 @@ const BoardPage = () => {
     <div className="container mx-auto p-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <Link href="/">
+          <Link href="/board">
             <Image
               src="/microsoft.png"
               alt="Microsoft Logo"
@@ -184,8 +184,14 @@ const BoardPage = () => {
           </Link>
           <h1 className="text-3xl font-bold text-black">자유 게시판</h1>
         </div>
-        {/* LogoutButton 컴포넌트로 교체 */}
-        <LogoutButton />
+        <div className="flex items-center space-x-3">
+          <Link href="/mypage">
+            <button className="bg-green-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm">
+              마이 페이지
+            </button>
+          </Link>
+          <LogoutButton /> {/* 기존 로그아웃 버튼 */}
+        </div>
       </div>
 
       <BoardSearch onSearch={handleSearch} />

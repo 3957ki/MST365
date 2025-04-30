@@ -13,7 +13,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
   return (
     <div className="container mx-auto p-8 ml-56">
       <div className="flex items-center mb-6">
-        <Link href="/">
+        <Link href="/board">
           <Image
             src="/microsoft.png"
             alt="Microsoft Logo"
@@ -25,42 +25,45 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
       </div>
 
       <>
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h1 className="text-2xl font-bold text-black mb-4 border-b pb-2">
-          더미 게시물 제목입니다.
-        </h1>
+        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+          <h1 className="text-2xl font-bold text-black mb-4 border-b pb-2">
+            더미 게시물 제목입니다.
+          </h1>
 
-        <div className="grid grid-cols-4 gap-4 border-b pb-2 mb-4 text-sm text-gray-600">
-          <div>
-            <span className="font-semibold">작성자:</span> 테스트 사용자
+          <div className="grid grid-cols-4 gap-4 border-b pb-2 mb-4 text-sm text-gray-600">
+            <div>
+              <span className="font-semibold">작성자:</span> 테스트 사용자
+            </div>
+            <div>
+              <span className="font-semibold">조회수:</span> 123
+            </div>
+            <div className="col-span-2 text-right">
+              <span className="font-semibold">등록일:</span> 2025-04-29
+            </div>
           </div>
-          <div>
-            <span className="font-semibold">조회수:</span> 123
-          </div>
-          <div className="col-span-2 text-right">
-            <span className="font-semibold">등록일:</span> 2025-04-29
+
+          <div className="prose max-w-none mb-6">
+            <p>
+              이것은 더미 게시물 내용입니다. 상세 페이지 확인을 위해
+              작성되었습니다.
+            </p>
           </div>
         </div>
-
-        <div className="prose max-w-none mb-6">
-          <p>이것은 더미 게시물 내용입니다. 상세 페이지 확인을 위해 작성되었습니다.</p>
+        <div className="flex justify-end space-x-2 mt-5">
+          <Link href={`/board/${board_id}/edit`}>
+            <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+              수정
+            </button>
+          </Link>
+          <button className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">
+            삭제
+          </button>
+          <Link href="/board">
+            <button className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+              목록
+            </button>
+          </Link>
         </div>
-      </div>
-      <div className="flex justify-end space-x-2 mt-5">
-        <Link href={`/board/${board_id}/edit`}>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-            수정
-          </button>
-        </Link>
-        <button className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">
-          삭제
-        </button>
-        <Link href="/board">
-          <button className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
-            목록
-          </button>
-        </Link>
-      </div>
       </>
 
       <div className="bg-white shadow-md rounded-lg p-6">
@@ -80,7 +83,9 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
               <span className="font-semibold text-blue-600">댓글러2</span>
               <span className="text-sm text-gray-500">8분 전</span>
             </div>
-            <p className="text-gray-800">두 번째 더미 댓글입니다. 내용이 조금 더 길 수 있습니다.</p>
+            <p className="text-gray-800">
+              두 번째 더미 댓글입니다. 내용이 조금 더 길 수 있습니다.
+            </p>
           </div>
           {/* Dummy Comment 3 */}
           <div className="border rounded-md p-4 bg-gray-50">
@@ -96,7 +101,9 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
               <span className="font-semibold text-blue-600">댓글러4</span>
               <span className="text-sm text-gray-500">3분 전</span>
             </div>
-            <p className="text-gray-800">네 번째 댓글입니다. 테스트 중입니다.</p>
+            <p className="text-gray-800">
+              네 번째 댓글입니다. 테스트 중입니다.
+            </p>
           </div>
           {/* Dummy Comment 5 */}
           <div className="border rounded-md p-4 bg-gray-50">
