@@ -170,17 +170,22 @@ const BoardPage = () => {
 
   return (
     <div className="container mx-auto p-8">
-      <div className="flex items-center mb-6">
-        <Link href="/">
-          <Image
-            src="/microsoft.png"
-            alt="Microsoft Logo"
-            width={50}
-            height={50}
-            className="mr-5 cursor-pointer"
-          />
-        </Link>
-        <h1 className="text-3xl font-bold text-black">자유 게시판</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <Link href="/">
+            <Image
+              src="/microsoft.png"
+              alt="Microsoft Logo"
+              width={50}
+              height={50}
+              className="mr-5 cursor-pointer"
+            />
+          </Link>
+          <h1 className="text-3xl font-bold text-black">자유 게시판</h1>
+        </div>
+        <button className="bg-red-400 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-sm">
+          로그아웃
+        </button>
       </div>
 
       <BoardSearch onSearch={handleSearch} />
