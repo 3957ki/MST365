@@ -105,66 +105,61 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    // JWT 토큰 유효성 검증 및 사용자 정보 반환
     public User validateToken(String token) {
         try {
-            // 시크릿 키 생성 (검증 시에도 동일한 키 사용)
             Key signingKey = Keys.hmacShaKeyFor(secret.getBytes());
 
-            // JWT 파싱 및 서명 검증, 클레임 추출
             Jws<Claims> claimsJws = Jwts.parserBuilder()
-                    .setSigningKey(signingKey) // 서명 검증에 사용할 시크릿 키 설정
+                    .setSigningKey(signingKey)
                     .build()
-                    .parseClaimsJws(token); // 토큰 파싱 및 검증
+                    .parseClaimsJws(token);
 
-            // 토큰에서 사용자 ID 클레임 추출
             Claims claims = claimsJws.getBody();
-            Long userId = claims.get("userId", Long.class); // 클레임에서 userId 가져옴
+            Long userId = claims.get("userId", Long.class);
 
             if (userId == null) {
-                // 토큰에 사용자 ID 클레임이 없는 경우 (유효하지 않은 토큰)
-                return null; // 또는 예외 발생
+                return null;
             }
 
-            // 사용자 ID로 DB에서 User Entity 로드
             Optional<User> userOptional = userRepository.findById(userId);
-
-            if (userOptional.isPresent()) {
-                // 사용자가 존재하면 User Entity 반환 (인증 성공)
-                return userOptional.get();
-            } else {
-                // 토큰의 사용자 ID에 해당하는 User가 DB에 없는 경우 (유효하지 않은 토큰)
-                return null; // 또는 예외 발생
+            if (userOptional.isEmpty()) {
+                return null;
             }
+
+            User user = userOptional.get();
+
+            // ✅ roles.claim에서 "authority" 추출해서 User 객체에 role 세팅
+            var roles = claims.get("roles", java.util.List.class);
+            if (roles != null && !roles.isEmpty()) {
+                Object authority = ((Map<?, ?>) roles.get(0)).get("authority");
+                if (authority instanceof String roleStr) {
+                    user.setRole(roleStr); // 예: "ROLE_USER"
+                }
+            }
+
+            return user;
 
         } catch (ExpiredJwtException e) {
-            // 토큰 만료 예외 처리
             logger.error("JWT token is expired: {}", e.getMessage());
-            return null; // 또는 예외 발생
+            return null;
         } catch (UnsupportedJwtException e) {
-            // 지원되지 않는 토큰 예외 처리
             logger.error("JWT token is unsupported: {}", e.getMessage());
             return null;
         } catch (MalformedJwtException e) {
-            // 잘못된 형식 토큰 예외 처리
             logger.error("Invalid JWT token: {}", e.getMessage());
             return null;
         } catch (SignatureException e) {
-            // 서명 검증 실패 예외 처리
             logger.error("Invalid JWT signature: {}", e.getMessage());
             return null;
         } catch (IllegalArgumentException e) {
-            // 잘못된 인자 예외 처리 (예: 빈 문자열 토큰)
             logger.error("JWT token compact of handler are invalid: {}", e.getMessage());
             return null;
         } catch (Exception e) {
-            // 예상치 못한 다른 예외 처리
             logger.error("An error occurred while validating JWT token", e);
             return null;
         }
-        // 토큰이 유효하지 않으면 null 반환 또는 예외 발생
-        // return null;
     }
+
 
     // 예시 토큰 생성 메소드는 이제 필요 없으므로 제거
     // @Override

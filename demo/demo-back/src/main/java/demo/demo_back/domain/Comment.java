@@ -1,6 +1,7 @@
 package demo.demo_back.domain;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @Data // @Data는 @Getter, @Setter, @ToString, @EqualsAndHashCode 등을 포함
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,6 +47,8 @@ public class Comment {
     @Column(name = "is_deleted", nullable = false) // ERD에서 NN이므로 nullable=false 유지
     private boolean isDeleted;
 
+    private LocalDateTime deletedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -55,4 +59,9 @@ public class Comment {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now(); // 수정 시각 업데이트
     }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
 }
