@@ -63,4 +63,37 @@ public class CommentController {
         return ResponseEntity.ok().body(comments);
     }
 
+    @PatchMapping("/{commentId}")
+    public ResponseEntity<?> updateComment(
+            @PathVariable Long boardId,
+            @PathVariable Long commentId,
+            @RequestBody @Valid CommentRequestDto requestDto,
+            @AuthenticationPrincipal User userDetails) {
+
+        try {
+            Long userId = userDetails.getId();
+            CommentResponseDto updated = commentService.updateComment(boardId, commentId, userId, requestDto.getContent());
+
+            return ResponseEntity.ok().body(
+                    Map.of("message", "댓글이 성공적으로 수정되었습니다.", "data", updated)
+            );
+
+        } catch (UnauthorizedException e) {
+            return ResponseEntity.status(401).body(
+                    Map.of("error", "수정 권한 없음", "details", e.getMessage())
+            );
+
+        } catch (BoardNotFoundException e) {
+            return ResponseEntity.status(404).body(
+                    Map.of("error", "게시물을 찾을 수 없습니다.", "details", e.getMessage())
+            );
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(
+                    Map.of("error", "서버 오류", "details", "댓글 수정 중 문제가 발생했습니다.")
+            );
+        }
+    }
+
+
 }

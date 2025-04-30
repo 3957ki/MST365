@@ -9,4 +9,7 @@ public interface CommentService {
     // CommentService.java
     List<CommentResponseDto> getCommentsByBoardId(Long boardId);
 
+    CommentResponseDto updateComment(Long boardId, Long commentId, Long userId, String newContent);
+
+
 }
