@@ -11,4 +11,8 @@ import java.util.Optional;
 public interface BoardRepository extends JpaRepository<Board, Long> {
     List<Board> findAllByIsDeletedFalseOrderByCreatedAtDesc();
     Optional<Board> findByIdAndIsDeletedFalse(Long id);
+
+    List<Board> findByUserId(Long userId);
+
+
 } 
