@@ -13,6 +13,7 @@ from langgraph.prebuilt import create_react_agent
 from langchain_anthropic import ChatAnthropic
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
+from langchain_core.messages import AIMessage
 from dotenv import load_dotenv
 
 # 환경변수 불러오기
@@ -25,6 +26,8 @@ model = ChatAnthropic(model="claude-3-5-haiku-latest", temperature=0, max_tokens
 current_file = os.path.abspath(__file__)
 current_dir = os.path.dirname(current_file)
 mcp_path = os.path.join(current_dir, "mcp")
+
+print(mcp_path)
 
 server_params = StdioServerParameters(
     command="node",
@@ -91,6 +94,33 @@ def create_instruction(steps: List[str]) -> str:
     return "\n".join(f"{i+1}. {step}" for i, step in enumerate(steps))
 
 
+# json만 가져오기
+def extract_json_from_message(msg: AIMessage) -> str:
+    """Claude가 반환한 AIMessage.content에서 JSON 코드 블럭만 추출"""
+    contents = msg.content
+    if isinstance(contents, list):
+        full_text = ""
+        for part in contents:
+            if isinstance(part, dict) and "text" in part:
+                full_text += part["text"]
+            elif isinstance(part, str):
+                full_text += part
+        return extract_json_block(full_text)
+    elif isinstance(contents, str):
+        return extract_json_block(contents)
+    raise ValueError("AIMessage.content 구조를 파싱할 수 없습니다.")
+
+
+def extract_json_block(text: str) -> str:
+    """텍스트 중 ```json ... ``` 블럭만 추출"""
+    import re
+
+    match = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
+    if match:
+        return match.group(1)
+    raise ValueError("JSON 블럭을 찾을 수 없습니다.")
+
+
 # llm 요청 함수
 async def run_logic(agent, steps: List[str], screenshot_dir: str):
 
@@ -104,7 +134,7 @@ async def run_logic(agent, steps: List[str], screenshot_dir: str):
     )
 
     last_message = agent_response["messages"][-1]
-    json_text = last_message.content
+    json_text = extract_json_from_message(last_message)
 
     parsed = output_parser.parse(json_text)
 
@@ -126,7 +156,6 @@ async def run_scenario(agent, scenario: dict, index: int, output_dir: str):
 
 # 전체 테스트 실행 함수
 async def run_test(scenarios: List[dict], build_num: int, base_dir: str):
-
     # 디렉터리 세팅
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     test_id = f"{timestamp}_report_{build_num}"
@@ -148,6 +177,7 @@ async def run_test(scenarios: List[dict], build_num: int, base_dir: str):
 
 # main 함수
 if __name__ == "__main__":
+    print("시작")
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
