@@ -11,7 +11,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
   const { board_id } = params;
 
   return (
-    <div className="container mx-auto p-8 ml-56">
+    <div className="container mx-auto p-8">
       <div className="flex items-center mb-6">
         <Link href="/board">
           <Image
