@@ -67,7 +67,7 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional(readOnly = true)
     public List<BoardListResponseDto.BoardItemDto> getBoardsByUserId(Long userId) {
-        List<Board> boards = boardRepository.findByUserId(userId);
+        List<Board> boards = boardRepository.findByUserIdAndIsDeletedFalse(userId);
 
         return boards.stream()
                 .map(board -> new BoardListResponseDto.BoardItemDto(
@@ -81,7 +81,7 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public BoardDetailResponseDto getBoardById(Long boardId) {
         Board board = boardRepository.findByIdAndIsDeletedFalse(boardId)
                 .orElseThrow(() -> new BoardNotFoundException(boardId));

@@ -243,3 +243,79 @@ export async function createBoard(
 
   return result as CreateBoardResponse;
 }
+
+// --- 게시물 수정 ---
+
+// 게시물 수정 요청 본문 타입 (프론트 기준: camelCase, 선택적 필드)
+interface UpdateBoardInput {
+  title?: string;
+  content?: string;
+}
+
+// 게시물 수정 API 응답 타입 (성공 시 BoardDetail 반환)
+interface UpdateBoardResponse {
+  message: string;
+  data: BoardDetail; // 수정된 게시물 상세 정보
+}
+
+// 게시물 수정 API 호출 함수
+export async function updateBoard(
+  boardId: number | string,
+  updateData: UpdateBoardInput, // { title?: string; content?: string; }
+  token: string
+): Promise<BoardDetail> {
+  // Promise<BoardDetail> -> 성공 시 수정된 게시물 반환
+  const response = await fetch(
+    `http://localhost:8080/api/v1/boards/${boardId}`,
+    {
+      method: "PATCH", // HTTP 메소드: PATCH
+      headers: {
+        "Content-Type": "application/json", // 컨텐츠 타입 명시
+        Authorization: `Bearer ${token}`, // 인증 헤더 추가
+      },
+      // 요청 본문: title, content 필드를 소문자로 전송
+      body: JSON.stringify({
+        title: updateData.title,
+        content: updateData.content,
+      }),
+    }
+  );
+
+  const result = await response.json();
+
+  // 에러 처리 (200 OK가 아닌 경우)
+  if (!response.ok) {
+    const errorResponse = result as ApiErrorResponse;
+    let errorMessage = `게시물 수정 실패 (HTTP ${response.status})`;
+
+    // 400 Bad Request의 경우 details 필드 사용
+    if (response.status === 400 && errorResponse.details) {
+      errorMessage = `입력 값 오류: ${errorResponse.details}`;
+    } else if (response.status === 401) {
+      errorMessage = "인증되지 않았습니다. 다시 로그인해주세요.";
+    } else if (response.status === 403) {
+      errorMessage = "이 게시물을 수정할 권한이 없습니다.";
+    } else if (response.status === 404) {
+      errorMessage = "수정하려는 게시물을 찾을 수 없습니다.";
+    } else if (errorResponse.error) {
+      // 다른 에러 코드지만 error 메시지가 있는 경우
+      errorMessage = errorResponse.error;
+    }
+
+    throw new Error(errorMessage); // 에러 throw
+  }
+
+  // 성공 (200 OK) 처리
+  const successResponse = result as UpdateBoardResponse;
+  // 데이터 구조 유효성 검사 (선택적이지만 권장)
+  if (
+    !successResponse.data ||
+    typeof successResponse.data.id !== "number" ||
+    typeof successResponse.data.title !== "string"
+  ) {
+    console.error("Invalid update board response structure:", successResponse);
+    throw new Error("게시물 수정 응답 형식이 올바르지 않습니다.");
+  }
+
+  return successResponse.data; // 성공 시 수정된 게시물 상세 정보 반환
+}
