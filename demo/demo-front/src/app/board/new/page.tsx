@@ -38,10 +38,16 @@ const WritePage = () => {
   };
 
   return (
-    <div className="container mx-auto p-8 ml-56">
+    <div className="container mx-auto p-8">
       <div className="flex items-center mb-6">
         <Link href="/board">
-          <Image src="/microsoft.png" alt="Microsoft Logo" width={50} height={50} className="mr-5 cursor-pointer" />
+          <Image
+            src="/microsoft.png"
+            alt="Microsoft Logo"
+            width={50}
+            height={50}
+            className="mr-5 cursor-pointer"
+          />
         </Link>
         <h1 className="text-3xl font-bold text-black">게시물 작성</h1>
       </div>
@@ -66,7 +72,10 @@ const WritePage = () => {
             placeholder="내용을 입력하세요"
           />
         </div>
-        <button type="submit" className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
+        <button
+          type="submit"
+          className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+        >
           작성하기
         </button>
       </form>
