@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { getToken } from "./auth"; // getToken 함수 임포트 (필요시)
 
@@ -177,7 +177,8 @@ export async function deleteBoard(
       } else if (response.status === 403) {
         errorMessage = "이 게시물을 삭제할 권한이 없습니다.";
       } else if (response.status === 404) {
-        errorMessage = "삭제하려는 게시물을 찾을 수 없거나 이미 삭제되었습니다.";
+        errorMessage =
+          "삭제하려는 게시물을 찾을 수 없거나 이미 삭제되었습니다.";
       }
     } catch (e) {
       // JSON 파싱 실패 등 예외 발생 시 기본 에러 메시지 사용
@@ -195,4 +196,50 @@ export async function deleteBoard(
     // 성공 응답 본문 파싱 실패는 무시 가능 (204 No Content 등)
     console.log("Delete request successful, no response body or parse error.");
   }
+}
+
+// 게시글 생성 요청용 타입 (프론트 기준: camelCase)
+interface CreateBoardInput {
+  title: string;
+  content: string;
+  userId: number;
+}
+
+// 게시글 생성 응답 타입
+interface CreateBoardResponse {
+  message: string;
+  data: {
+    boardId: number;
+  };
+}
+
+// 게시글 생성 함수
+export async function createBoard(
+  input: CreateBoardInput,
+  token: string
+): Promise<CreateBoardResponse> {
+  const response = await fetch("http://localhost:8080/api/v1/boards", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      title: input.title,
+      content: input.content,
+      user_id: input.userId, // ✅ 여기는 snake_case로 변환
+    }),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.details ||
+        result.error ||
+        `게시글 작성 실패 (HTTP ${response.status})`
+    );
+  }
+
+  return result as CreateBoardResponse;
 }
