@@ -315,7 +315,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
       )}
 
       <div className="bg-white shadow-md rounded-lg p-6">
-        <h3 className="text-xl font-semibold mb-4 border-b pb-2">댓글</h3>
+        <h3 className="text-black text-xl font-semibold mb-4 border-b pb-2">댓글</h3>
         <div className="space-y-4 mb-6">
         {comments.map((comment) => (
           <div key={comment.id} className="border rounded-md p-4 bg-gray-50">
@@ -393,7 +393,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
         ))}
         </div>
         <div>
-          <h4 className="text-lg font-semibold mb-2">댓글 작성</h4>
+          <h4 className="text-black text-lg font-semibold mb-2">댓글 작성</h4>
           <textarea
             className="w-full border border-gray-300 rounded-lg p-2 h-24 text-black mb-2"
             placeholder="댓글을 입력하세요"
