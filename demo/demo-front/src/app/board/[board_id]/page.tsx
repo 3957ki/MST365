@@ -25,7 +25,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
   const fetchComments = async () => {
     try {
       const data = await getComments(Number(board_id));
-      setComments(data.filter((comment) => !comment.deleted));
+      setComments(data.filter((comment) => !comment.deleted)); // 🔥 삭제되지 않은 것만 표시
     } catch (err: any) {
       console.error("댓글 불러오기 실패:", err.message);
     }
@@ -134,8 +134,13 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
               <div className="flex justify-between items-center mb-2">
                 <span className="font-semibold text-blue-600">user {comment.userId}</span>
                 <span className="text-sm text-gray-500">
-                  {new Date(comment.createdAt).toLocaleString()}
+                  {comment.updatedAt && comment.updatedAt !== comment.createdAt ? (
+                    <>수정됨 · {new Date(comment.updatedAt).toLocaleString()}</>
+                  ) : (
+                    new Date(comment.createdAt).toLocaleString()
+                  )}
                 </span>
+
               </div>
               {editingCommentId === comment.id ? (
                 <>
