@@ -1,176 +1,58 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; // useRouter 임포트
 
-import BoardSearch from "../components/board/BoardSearch";
-import BoardInfo from "../components/board/BoardInfo";
 import BoardTable from "../components/board/BoardTable";
-import BoardPagination from "../components/board/BoardPagination";
 import WriteButton from "../components/board/WriteButton";
-import LogoutButton from "../components/common/LogoutButton"; // LogoutButton 임포트 추가
-
-interface Post {
-  id: number;
-  title: string;
-  author: string;
-  createdAt: string;
-  views: number;
-}
-
-// 더미 데이터
-const dummyPosts: Post[] = [
-  {
-    id: 1,
-    title: "첫 번째 게시글입니다.",
-    author: "관리자",
-    createdAt: "2024-04-24",
-    views: 15,
-  },
-  {
-    id: 2,
-    title: "React와 Next.js 공부",
-    author: "개발자",
-    createdAt: "2024-04-23",
-    views: 30,
-  },
-  {
-    id: 3,
-    title: "Tailwind CSS 사용법 질문",
-    author: "디자이너",
-    createdAt: "2024-04-23",
-    views: 22,
-  },
-  {
-    id: 4,
-    title: "자유롭게 글을 작성해주세요.",
-    author: "운영팀",
-    createdAt: "2024-04-22",
-    views: 55,
-  },
-  {
-    id: 5,
-    title: "검색 기능 테스트용 데이터",
-    author: "테스터",
-    createdAt: "2024-04-21",
-    views: 10,
-  },
-  {
-    id: 6,
-    title: "여섯 번째 글",
-    author: "사용자1",
-    createdAt: "2024-04-20",
-    views: 5,
-  },
-  {
-    id: 7,
-    title: "일곱 번째 글: React Hooks",
-    author: "개발자",
-    createdAt: "2024-04-19",
-    views: 45,
-  },
-  {
-    id: 8,
-    title: "여덟 번째 글: 디자인 시스템",
-    author: "디자이너",
-    createdAt: "2024-04-18",
-    views: 33,
-  },
-  {
-    id: 9,
-    title: "아홉 번째 글: 공지사항",
-    author: "운영팀",
-    createdAt: "2024-04-17",
-    views: 102,
-  },
-  {
-    id: 10,
-    title: "열 번째 글: 테스트 완료",
-    author: "테스터",
-    createdAt: "2024-04-16",
-    views: 8,
-  },
-  {
-    id: 11,
-    title: "열한 번째 글",
-    author: "관리자",
-    createdAt: "2024-04-15",
-    views: 12,
-  },
-  {
-    id: 12,
-    title: "열두 번째 글: Next.js 팁",
-    author: "개발자",
-    createdAt: "2024-04-14",
-    views: 60,
-  },
-  {
-    id: 13,
-    title: "열세 번째 글: CSS 질문",
-    author: "디자이너",
-    createdAt: "2024-04-13",
-    views: 18,
-  },
-  {
-    id: 14,
-    title: "열네 번째 글: 이벤트 안내",
-    author: "운영팀",
-    createdAt: "2024-04-12",
-    views: 77,
-  },
-  {
-    id: 15,
-    title: "열다섯 번째 글: 마지막 테스트",
-    author: "테스터",
-    createdAt: "2024-04-11",
-    views: 9,
-  },
-];
-
-const postsPerPage = 10; // 페이지당 게시글 수
+import LogoutButton from "../components/common/LogoutButton";
+import { getToken } from "../api/auth"; // getToken 임포트
+import { getBoards, BoardListItem } from "../api/board"; // API 함수 및 타입 임포트
 
 const BoardPage = () => {
-  // 필터링된 전체 게시글 목록 상태 관리
-  const [filteredPosts, setFilteredPosts] = useState<Post[]>(dummyPosts);
-  // 현재 페이지 상태 관리
-  const [currentPage, setCurrentPage] = useState(1);
+  const [boards, setBoards] = useState<BoardListItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentToken, setCurrentToken] = useState<string | null>(null); // 토큰 상태 추가
+  const router = useRouter();
 
-  // 검색 처리 함수
-  const handleSearch = useCallback((searchTerm: string, searchType: string) => {
-    let results = dummyPosts;
-    if (searchTerm.trim()) {
-      const lowerCaseSearchTerm = searchTerm.toLowerCase();
-      results = dummyPosts.filter((post) => {
-        if (searchType === "title") {
-          return post.title.toLowerCase().includes(lowerCaseSearchTerm);
-        } else if (searchType === "author") {
-          return post.author.toLowerCase().includes(lowerCaseSearchTerm);
-        }
-        return false;
-      });
-    }
-    setFilteredPosts(results);
-    setCurrentPage(1); // 검색 시 첫 페이지로 이동
-  }, []);
+  useEffect(() => {
+    const tokenFromStorage = getToken(); // 컴포넌트 마운트 시 토큰 가져오기
+    setCurrentToken(tokenFromStorage); // 토큰 상태 설정
 
-  // 페이지 변경 처리 함수
-  const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(pageNumber);
-  };
+    const fetchBoardData = async () => {
+      setIsLoading(true);
+      setError(null); // 에러 상태 초기화
+      // const token = getToken(); // 상태에서 토큰 사용
+      const token = tokenFromStorage; // useEffect 스코프 내 변수 사용
 
-  // 현재 페이지에 표시할 게시글 계산 (useMemo로 최적화)
-  const currentPosts = useMemo(() => {
-    const indexOfLastPost = currentPage * postsPerPage;
-    const indexOfFirstPost = indexOfLastPost - postsPerPage;
-    return filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
-  }, [filteredPosts, currentPage]);
+      if (!token) {
+        setError("로그인이 필요합니다.");
+        setIsLoading(false);
+        // 로그인 페이지로 리다이렉션 (약간의 딜레이 후)
+        setTimeout(() => router.push("/login"), 1500);
+        return;
+      }
 
-  // 총 페이지 수 계산
-  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+      try {
+        const fetchedBoards = await getBoards(token);
+        setBoards(fetchedBoards);
+      } catch (err: any) {
+        setError(err.message || "게시물 목록을 불러오는 중 오류가 발생했습니다.");
+        setBoards([]); // 에러 발생 시 빈 배열로 설정
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBoardData();
+  }, [router]); // router를 의존성 배열에 추가 (eslint 경고 방지)
 
   return (
     <div className="container mx-auto p-8">
+      {/* 헤더 부분 */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <Link href="/board">
@@ -190,26 +72,37 @@ const BoardPage = () => {
               마이 페이지
             </button>
           </Link>
-          <LogoutButton /> {/* 기존 로그아웃 버튼 */}
+          <LogoutButton />
         </div>
       </div>
 
-      <BoardSearch onSearch={handleSearch} />
+      {/* 로딩 상태 표시 */}
+      {isLoading && (
+        <div className="text-center py-10">
+          <p>게시물 목록을 불러오는 중...</p>
+          {/* 로딩 스피너 등 추가 가능 */}
+        </div>
+      )}
 
-      <BoardInfo
-        totalPosts={filteredPosts.length} // 전체 필터링된 게시글 수
-        currentPage={currentPage}
-        totalPages={totalPages}
-      />
-      {/* 현재 페이지 게시글만 전달 */}
-      <BoardTable posts={currentPosts} />
-      {/* 페이지네이션 컴포넌트에 필요한 props 전달 */}
-      <BoardPagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />
-      <WriteButton />
+      {/* 에러 상태 표시 */}
+      {error && (
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
+          role="alert"
+        >
+          <strong className="font-bold">오류 발생:</strong>
+          <span className="block sm:inline"> {error}</span>
+        </div>
+      )}
+
+      {/* 로딩 완료 및 에러 없을 때 테이블 표시 */}
+      {/* 로딩 완료 및 에러 없을 때 테이블 표시, token 전달 */}
+      {!isLoading && !error && (
+        <BoardTable boards={boards} token={currentToken} />
+      )}
+
+      {/* 글쓰기 버튼 (로그인 상태 등 조건부 렌더링 가능) */}
+      {!isLoading && !error && <WriteButton />}
     </div>
   );
 };
