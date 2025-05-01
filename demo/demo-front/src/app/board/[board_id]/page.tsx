@@ -317,66 +317,58 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
       <div className="bg-white shadow-md rounded-lg p-6">
         <h3 className="text-xl font-semibold mb-4 border-b pb-2">댓글</h3>
         <div className="space-y-4 mb-6">
-          {comments.map((comment) => (
-            <div key={comment.id} className="border rounded-md p-4 bg-gray-50">
-              <div className="flex justify-between items-center mb-2">
-                <span className="font-semibold text-blue-600">
-                  user {comment.userId}
-                </span>
-                <span className="text-sm text-gray-500">
-                  {comment.updatedAt && comment.updatedAt !== comment.createdAt ? (
-                    <>수정됨 · {new Date(comment.updatedAt).toLocaleString()}</>
-                  ) : (
-                    new Date(comment.createdAt).toLocaleString()
-                  )}
-                </span>
+        {comments.map((comment) => (
+          <div key={comment.id} className="border rounded-md p-4 bg-gray-50">
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-semibold text-blue-600">user {comment.userId}</span>
+              <span className="text-sm text-gray-500">
+                {comment.updatedAt && comment.updatedAt !== comment.createdAt
+                  ? `수정됨 · ${new Date(comment.updatedAt).toLocaleString()}`
+                  : new Date(comment.createdAt).toLocaleString()}
+              </span>
+            </div>
 
-              </div>
-              {editingCommentId === comment.id ? (
-                <>
-                  <textarea
-                    className="w-full border border-gray-300 rounded-lg p-2 text-black mb-2"
-                    value={editingContent}
-                    onChange={(e) => setEditingContent(e.target.value)}
-                  />
-                  <div className="flex justify-end space-x-2 mt-2">
-                    <button
-                      onClick={async () => {
-                        const token = getToken();
-                        if (!token) return alert("로그인이 필요합니다.");
-                        try {
-                          await updateComment(
-                            Number(board_id),
-                            comment.id,
-                            editingContent,
-                            token
-                          );
-                          alert("댓글이 수정되었습니다.");
-                          setEditingCommentId(null);
-                          setEditingContent("");
-                          await fetchComments();
-                        } catch (err: any) {
-                          alert(`수정 실패: ${err.message}`);
-                        }
-                      }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
-                    >
-                      저장
-                    </button>
-                    <button
-                      onClick={() => {
+            {editingCommentId === comment.id ? (
+              <>
+                <textarea
+                  className="w-full border border-gray-300 rounded-lg p-2 text-black mb-2"
+                  value={editingContent}
+                  onChange={(e) => setEditingContent(e.target.value)}
+                />
+                <div className="flex justify-end space-x-2 mt-2">
+                  <button
+                    onClick={async () => {
+                      const token = getToken();
+                      if (!token) return alert("로그인이 필요합니다.");
+                      try {
+                        await updateComment(Number(board_id), comment.id, editingContent, token);
+                        alert("댓글이 수정되었습니다.");
                         setEditingCommentId(null);
                         setEditingContent("");
-                      }}
-                      className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded-lg text-sm"
-                    >
-                      취소
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p className="text-gray-800">{comment.content}</p>
+                        await fetchComments();
+                      } catch (err: any) {
+                        alert(`수정 실패: ${err.message}`);
+                      }
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
+                  >
+                    저장
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingCommentId(null);
+                      setEditingContent("");
+                    }}
+                    className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded-lg text-sm"
+                  >
+                    취소
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-800">{comment.content}</p>
+                {currentUserId === comment.userId && (
                   <div className="flex justify-end space-x-2 mt-2">
                     <button
                       className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
@@ -394,12 +386,12 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
                       삭제
                     </button>
                   </div>
-                </>
-              )}
-            </div>
-          ))}
+                )}
+              </>
+            )}
+          </div>
+        ))}
         </div>
-
         <div>
           <h4 className="text-lg font-semibold mb-2">댓글 작성</h4>
           <textarea
