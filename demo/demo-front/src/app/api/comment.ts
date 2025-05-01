@@ -113,3 +113,24 @@ export async function updateComment(
 
   return result as UpdateCommentResponse;
 }
+
+// 댓글 삭제 함수
+export async function deleteComment(
+  boardId: number,
+  commentId: number,
+  token: string
+): Promise<void> {
+  const response = await fetch(`http://localhost:8080/api/v1/boards/${boardId}/comments/${commentId}`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const result = await response.json();
+    throw new Error(result.details || result.error || `댓글 삭제 실패 (HTTP ${response.status})`);
+  }
+
+  return;
+}

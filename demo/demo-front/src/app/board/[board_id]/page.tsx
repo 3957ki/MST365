@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getToken } from "@/app/api/auth";
-import { createComment, getComments, updateComment, CommentData } from "@/app/api/comment";
+import { createComment, getComments, updateComment, deleteComment, CommentData } from "@/app/api/comment";
 
 interface BoardDetailPageProps {
   params: {
@@ -22,15 +22,16 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingContent, setEditingContent] = useState("");
 
+  const fetchComments = async () => {
+    try {
+      const data = await getComments(Number(board_id));
+      setComments(data.filter((comment) => !comment.deleted));
+    } catch (err: any) {
+      console.error("댓글 불러오기 실패:", err.message);
+    }
+  };
+
   useEffect(() => {
-    const fetchComments = async () => {
-      try {
-        const data = await getComments(Number(board_id));
-        setComments(data);
-      } catch (err: any) {
-        console.error("댓글 불러오기 실패:", err.message);
-      }
-    };
     fetchComments();
   }, [board_id]);
 
@@ -50,9 +51,23 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
       await createComment(Number(board_id), commentContent, token);
       alert("댓글이 작성되었습니다.");
       setCommentContent("");
-      router.refresh();
+      fetchComments();
     } catch (err: any) {
       alert(`댓글 작성 실패: ${err.message}`);
+    }
+  };
+
+  const handleDelete = async (commentId: number) => {
+    const token = getToken();
+    if (!token) return alert("로그인이 필요합니다.");
+    if (!confirm("정말로 삭제하시겠습니까?")) return;
+
+    try {
+      await deleteComment(Number(board_id), commentId, token);
+      alert("댓글이 삭제되었습니다.");
+      fetchComments();
+    } catch (err: any) {
+      alert(`삭제 실패: ${err.message}`);
     }
   };
 
@@ -139,7 +154,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
                           alert("댓글이 수정되었습니다.");
                           setEditingCommentId(null);
                           setEditingContent("");
-                          router.refresh();                          
+                          await fetchComments();
                         } catch (err: any) {
                           alert(`수정 실패: ${err.message}`);
                         }
@@ -174,6 +189,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
                     </button>
                     <button
                       className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
+                      onClick={() => handleDelete(comment.id)}
                     >
                       삭제
                     </button>
