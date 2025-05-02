@@ -58,94 +58,6 @@ public class CoreLogicStepExecution extends SynchronousNonBlockingStepExecution<
         extractResources("python", pythonDir, listener);
         listener.getLogger().println("▶ 스크립트 추출 완료");
 
-        // 3) global virtualenv 설치 확인
-        listener.getLogger().println("▶ global virtualenv 모듈 설치 여부 확인...");
-        ProcessBuilder pbVirtCheck = new ProcessBuilder("python3", "-c", "import virtualenv")
-                .directory(pythonDir).redirectErrorStream(true);
-        Process procVirtCheck = pbVirtCheck.start();
-        if (procVirtCheck.waitFor() != 0) {
-            throw new IllegalStateException("virtualenv 모듈이 없습니다. 에이전트 머신에 'python3-virtualenv' 패키지를 설치하세요.");
-        }
-        listener.getLogger().println("  - virtualenv 이미 설치됨");
-
-        // 4) 가상환경(.venv) 생성 (virtualenv 사용)
-        File venvDir = new File(pythonDir, ".venv");
-        if (venvDir.isDirectory()) {
-            listener.getLogger().println("▶ 가상환경(.venv) 이미 존재, 생성 단계 생략");
-        } else {
-            listener.getLogger().println("▶ 가상환경(.venv) 생성 시작 (virtualenv)");
-            ProcessBuilder pbVirt = new ProcessBuilder("python3", "-m", "virtualenv", ".venv")
-                    .directory(pythonDir).redirectErrorStream(true);
-            Process procVirt = pbVirt.start();
-            if (procVirt.waitFor() != 0) {
-                throw new IllegalStateException("virtualenv 가상환경 생성 실패");
-            }
-            listener.getLogger().println("▶ 가상환경(.venv) 생성 완료");
-        }
-
-        // 5) venv 내부 pip 준비 여부 확인 및 재생성
-        String pythonBin = new File(pythonDir, ".venv/bin/python").getAbsolutePath();
-        listener.getLogger().println("▶ venv 내부 pip 준비 여부 확인");
-        ProcessBuilder pbPipCheck = new ProcessBuilder(pythonBin, "-m", "pip", "--version")
-                .directory(pythonDir).redirectErrorStream(true);
-        Process procPipCheck = pbPipCheck.start();
-        if (procPipCheck.waitFor() != 0) {
-            listener.getLogger().println("  - venv 내부에 pip 모듈이 없습니다. 기존 .venv 삭제 후 virtualenv로 재생성");
-            deleteRecursively(venvDir.toPath());
-            ProcessBuilder pbRecreate = new ProcessBuilder("python3", "-m", "virtualenv", ".venv")
-                    .directory(pythonDir).redirectErrorStream(true);
-            Process procRecreate = pbRecreate.start();
-            if (procRecreate.waitFor() != 0) {
-                throw new IllegalStateException("virtualenv로 가상환경 재생성 실패");
-            }
-            listener.getLogger().println("  - virtualenv로 venv 재생성 완료");
-            pythonBin = new File(pythonDir, ".venv/bin/python").getAbsolutePath();
-        } else {
-            listener.getLogger().println("  - pip 이미 준비됨");
-        }
-
-        // 6) uv 모듈 설치 여부 확인 및 설치
-        listener.getLogger().println("▶ uv 모듈 설치 여부 확인...");
-        ProcessBuilder pbCheck = new ProcessBuilder(pythonBin, "-c", "import uv")
-                .directory(pythonDir).redirectErrorStream(true);
-        Process procCheck = pbCheck.start();
-        if (procCheck.waitFor() != 0) {
-            listener.getLogger().println("  - uv 모듈 미설치, 설치 진행...");
-            ProcessBuilder pbInstall = new ProcessBuilder(pythonBin, "-m", "pip", "install", "uv")
-                    .directory(pythonDir).redirectErrorStream(true);
-            Process procInstall = pbInstall.start();
-            try (BufferedReader br = new BufferedReader(
-                    new InputStreamReader(procInstall.getInputStream(), StandardCharsets.UTF_8))) {
-                String l;
-                while ((l = br.readLine()) != null) {
-                    listener.getLogger().println(l);
-                }
-            }
-            if (procInstall.waitFor() != 0) {
-                throw new IllegalStateException("uv 설치 실패");
-            }
-            listener.getLogger().println("  - uv 설치 완료");
-        } else {
-            listener.getLogger().println("  - uv 모듈 이미 설치됨");
-        }
-
-        // 7) 의존성 설치 (uv sync)
-        listener.getLogger().println("▶ 의존성 설치: uv sync");
-        ProcessBuilder pbSync = new ProcessBuilder(pythonBin, "-m", "uv", "sync")
-                .directory(pythonDir).redirectErrorStream(true);
-        Process syncProc = pbSync.start();
-        try (BufferedReader br = new BufferedReader(
-                new InputStreamReader(syncProc.getInputStream(), StandardCharsets.UTF_8))) {
-            String l;
-            while ((l = br.readLine()) != null) {
-                listener.getLogger().println(l);
-            }
-        }
-        if (syncProc.waitFor() != 0) {
-            throw new IllegalStateException("uv sync 실패");
-        }
-        listener.getLogger().println("▶ 의존성 설치 완료");
-
         // 8) 시나리오 파일 로드 from JENKINS_HOME/scripts
         String scenarioName = step.getInput();
         if (!scenarioName.endsWith(".json")) scenarioName += ".json";
@@ -160,6 +72,14 @@ public class CoreLogicStepExecution extends SynchronousNonBlockingStepExecution<
                 Files.readAllBytes(scenarioFile.toPath()), StandardCharsets.UTF_8
         );
         listener.getLogger().println(scenarioContent);
+
+        // 8) 워크스페이스 FilePath 가져오기
+        FilePath workspaceFilePath = getContext().get(FilePath.class);
+
+        // 9) resources/python/setup.sh 파일 권한 변경 (0755)
+        FilePath setupSh = workspaceFilePath.child("resources/python/setup.sh");
+        listener.getLogger().println("▶ setup.sh chmod 0755 …");
+        setupSh.chmod(0755);
 
         // 9) MCP 서버 기동 및 대기
         listener.getLogger().println("▶ setup 스크립트 실행...");
@@ -183,37 +103,6 @@ public class CoreLogicStepExecution extends SynchronousNonBlockingStepExecution<
             throw new IllegalStateException("setup 스크립트 실행 실패");
         }
         listener.getLogger().println("▶ setup 완료");
-
-        // 9.5) NPM 패키지 설치 (resources/python/mcp)
-        listener.getLogger().println("▶ NPM 패키지 설치: npm install (mcp 디렉터리)");
-        File nodeDir = new File(pythonDir, "node-v20.8.0-linux-x64");
-        File npmBin = new File(nodeDir, "bin/npm");
-        if (!npmBin.exists()) {
-            throw new IllegalStateException("npm 바이너리를 찾을 수 없습니다: " + npmBin);
-        }
-        File mcpDir = new File(pythonDir, "mcp");
-        if (!mcpDir.exists() || !mcpDir.isDirectory()) {
-            throw new IllegalStateException("mcp 디렉터리를 찾을 수 없습니다: " + mcpDir);
-        }
-        String existingPath = System.getenv("PATH");
-        String nodeBinDir = new File(nodeDir, "bin").getAbsolutePath();
-        ProcessBuilder pbNpm = new ProcessBuilder(
-                npmBin.getAbsolutePath(), "install"
-        );
-        pbNpm.environment().put("PATH", nodeBinDir + File.pathSeparator + existingPath);
-        pbNpm.directory(mcpDir).redirectErrorStream(true);
-        Process procNpm = pbNpm.start();
-        try (BufferedReader br = new BufferedReader(
-                new InputStreamReader(procNpm.getInputStream(), StandardCharsets.UTF_8))) {
-            String l;
-            while ((l = br.readLine()) != null) {
-                listener.getLogger().println(l);
-            }
-        }
-        if (procNpm.waitFor() != 0) {
-            throw new IllegalStateException("npm install 실패 (mcp 디렉터리)");
-        }
-        listener.getLogger().println("▶ NPM 설치 완료 (mcp 디렉터리)");
 
         // 10) Python 스크립트 직접 실행: activate venv 후 python 실행
         listener.getLogger().println("▶ Python 테스트 실행: main_logic.py (activate virtualenv)");
