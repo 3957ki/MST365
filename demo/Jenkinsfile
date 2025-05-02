@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Fetch or Clone Repository') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'gitlab-credentials', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                withCredentials([usernamePassword(credentialsId: 'silverline_idpw', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                     sh '''
                     if [ -d "repo/.git" ]; then
                         echo "Repository exists. Fetching changes..."
