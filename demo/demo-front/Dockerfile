@@ -9,7 +9,7 @@ COPY package.json package-lock.json ./
 RUN npm install
 
 # 4. 소스 코드 복사 및 Next.js 앱 빌드
-COPY ./
+COPY . .
 RUN npm run build
 
 # 5. 실행을 위한 경량 Node.js 이미지 사용
