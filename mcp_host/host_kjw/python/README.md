@@ -20,22 +20,27 @@
 - 직접 환경을 구성하려면 아래 명령어를 참고하세요.
 
 ```bash
+# apt 최신화
+sudo apt update
+sudo apt upgrade -y
+
+# python 설치
+sudo apt install python3 python3-venv python3-pip -y
+
+# node 설치
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt install -y nodejs
 
 # uv 설치
-
 pip install uv
 
-# Python 3.12 기반 가상환경 생성
-
-uv venv --python 3.12
-
-# 가상환경 활성화 (Windows)
-
-call .venv\Scripts\activate.bat
-
-# 필요한 패키지 설치
-
+# 가상환경 및 필요한 패키지 설치
 uv sync
+
+# npm install
+cd mcp
+npm install
+cd ..
 ```
 
 ### 🔐 .env 파일 설정
@@ -52,22 +57,12 @@ OPENAI_API_KEY={GPT Key}
   **Claude:** claude-3-7-sonnet-latest, claude-3-5-sonnet-latest, claude-3-haiku-latest
   **GPT:** gpt-4o, gpt-4o-mini
 
-### 🧪 Playwright MCP 서버 실행
-
-다음 명령어로 MCP 서버를 실행합니다:
-
-```bash
-npx @playwright/mcp@latest --port 8005
-```
-
-서버는 기본적으로 http://localhost:8005에서 실행됩니다.
-
 ### 테스트 방법
 
 - Linux
 
 ```
-. .venv/bin/activate
+source .venv/bin/activate
 python main_logic.py --file {시나리오 경로} --build {빌드 넘버} --output_dir {결과가 저장될 base directory}
 ```
 
