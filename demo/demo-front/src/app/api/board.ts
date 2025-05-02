@@ -24,9 +24,19 @@ interface GetBoardsResponse {
   // pagination 정보는 현재 명세에 없으므로 생략하거나 optional로 추가 가능
 }
 
-// 전체 게시물 목록 조회 API 호출 함수
-export async function getBoards(token: string): Promise<BoardListItem[]> {
-  const response = await fetch("http://localhost:8080/api/v1/boards", {
+// 전체 게시물 목록 조회 API 호출 함수 (페이징 추가)
+export async function getBoards(
+  token: string,
+  page: number,
+  size: number
+): Promise<BoardListItem[]> {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    size: size.toString(),
+  });
+  const url = `http://localhost:8080/api/v1/boards?${params.toString()}`;
+
+  const response = await fetch(url, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`, // 인증 헤더 추가
