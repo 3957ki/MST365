@@ -8,8 +8,8 @@ import PasswordChangeModal from "./component/PasswordChangeModal";
 import UserPostsList from "./component/UserPostsList";
 import UserCommentsList from "./component/UserCommentsList";
 import LogoutButton from "../components/common/LogoutButton";
-// getUserInfo와 UserInfoData 타입 임포트 추가
-import { getToken, getUserId, removeToken, withdrawUser, getUserInfo, UserInfoData } from "../api/auth";
+// getUserInfo, UserInfoData, getUserPosts, UserPostItem, getUserComments, UserCommentItem 타입 임포트 추가
+import { getToken, getUserId, removeToken, withdrawUser, getUserInfo, UserInfoData, getUserPosts, UserPostItem, getUserComments, UserCommentItem } from "../api/auth";
 
 export default function MyPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -19,44 +19,124 @@ export default function MyPage() {
 
   // 사용자 정보 상태 추가
   const [user, setUser] = useState<UserInfoData | null>(null);
-  const [isUserInfoLoading, setIsUserInfoLoading] = useState(true); // 초기 로딩 상태 true
+  const [isUserInfoLoading, setIsUserInfoLoading] = useState(true);
   const [userInfoError, setUserInfoError] = useState<string | null>(null);
 
-  // 컴포넌트 마운트 시 사용자 정보 로드
+  // 사용자 게시물 목록 상태 추가
+  const [userPosts, setUserPosts] = useState<UserPostItem[] | null>(null);
+  const [isUserPostsLoading, setIsUserPostsLoading] = useState(true);
+  const [userPostsError, setUserPostsError] = useState<string | null>(null);
+
+  // 사용자 댓글 목록 상태 추가
+  const [userComments, setUserComments] = useState<UserCommentItem[] | null>(null);
+  const [isUserCommentsLoading, setIsUserCommentsLoading] = useState(true);
+  const [userCommentsError, setUserCommentsError] = useState<string | null>(null);
+
+  // 컴포넌트 마운트 시 사용자 정보, 게시물, 댓글 로드
   useEffect(() => {
-    const fetchUserInfo = async () => {
-      const token = getToken();
-      const userId = getUserId();
+    let isMounted = true; // 컴포넌트 언마운트 시 비동기 작업 취소 플래그
+    const token = getToken();
+    const userId = getUserId();
 
-      if (!token || userId === null) {
+    // 로그인 상태 확인 및 리다이렉션
+    if (!token || userId === null) {
+      if (isMounted) {
         setUserInfoError("로그인이 필요합니다.");
+        setUserPostsError("로그인이 필요합니다.");
+        setUserCommentsError("로그인이 필요합니다."); // 댓글 에러도 설정
         setIsUserInfoLoading(false);
-        // 로그인 페이지로 리다이렉션 (토큰/ID 없으면 접근 불가)
+        setIsUserPostsLoading(false);
+        setIsUserCommentsLoading(false); // 댓글 로딩도 종료
         router.push("/login");
-        return;
       }
+      return; // useEffect 종료
+    }
 
+    // 사용자 정보 로딩 함수 정의
+    const performFetchUserInfo = async () => {
+      if (!isMounted) return; // 컴포넌트 언마운트 시 중단
       try {
-        setIsUserInfoLoading(true); // 명시적 로딩 시작
+        setIsUserInfoLoading(true);
         const userInfo = await getUserInfo(userId, token);
-        setUser(userInfo);
-        setUserInfoError(null); // 성공 시 에러 초기화
+        if (isMounted) {
+          setUser(userInfo);
+          setUserInfoError(null);
+        }
       } catch (error: any) {
         console.error("사용자 정보 조회 실패:", error);
-        setUserInfoError(error.message || "사용자 정보를 불러오는 데 실패했습니다.");
-        setUser(null); // 에러 시 사용자 정보 초기화
-        // 401/403 에러 시 로그인 페이지로 보낼 수 있음
-        if (error.message.includes("401") || error.message.includes("403")) {
-          removeToken(); // 잘못된 토큰 제거
-          router.push("/login");
+        if (isMounted) {
+          setUserInfoError(error.message || "사용자 정보를 불러오는 데 실패했습니다.");
+          setUser(null);
+          if (error.message.includes("401") || error.message.includes("403")) {
+            removeToken();
+            router.push("/login");
+          }
         }
       } finally {
-        setIsUserInfoLoading(false); // 로딩 종료
+        if (isMounted) {
+          setIsUserInfoLoading(false);
+        }
       }
     };
 
-    fetchUserInfo();
-  }, [router]); // router를 의존성 배열에 추가 (eslint 경고 방지)
+    // 사용자 게시물 로딩 함수 정의
+    const performFetchPosts = async () => {
+      if (!isMounted || !userId || !token) return; // userId, token 유효성 검사 추가
+      try {
+        setIsUserPostsLoading(true);
+        const posts = await getUserPosts(userId, token); // userId, token 전달 확인
+        if (isMounted) {
+          setUserPosts(posts);
+          setUserPostsError(null);
+        }
+      } catch (error: any) {
+        console.error("사용자 게시물 조회 실패:", error);
+        if (isMounted) {
+          setUserPostsError(error.message || "게시물을 불러오는 데 실패했습니다.");
+          setUserPosts(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsUserPostsLoading(false);
+        }
+      }
+    };
+
+    // 사용자 댓글 로딩 함수 정의
+    const performFetchComments = async () => {
+      if (!isMounted || !userId || !token) return; // userId, token 유효성 검사 추가
+      try {
+        setIsUserCommentsLoading(true);
+        const comments = await getUserComments(userId, token); // getUserComments 호출
+        if (isMounted) {
+          setUserComments(comments);
+          setUserCommentsError(null);
+        }
+      } catch (error: any) {
+        console.error("사용자 댓글 조회 실패:", error);
+        if (isMounted) {
+          setUserCommentsError(error.message || "댓글을 불러오는 데 실패했습니다.");
+          setUserComments(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsUserCommentsLoading(false);
+        }
+      }
+    };
+
+    // API 호출 실행
+    performFetchUserInfo();
+    performFetchPosts();
+    performFetchComments(); // 댓글 로딩 함수 호출 추가
+
+    // 클린업 함수: 컴포넌트 언마운트 시 플래그 설정
+    return () => {
+      isMounted = false;
+    };
+    // 의존성 배열: router는 일반적으로 안정적이므로 빈 배열 사용 가능.
+    // 또는 userId, token을 상태로 관리한다면 해당 상태를 추가.
+  }, [router]); // router를 의존성으로 유지 (Next.js 권장 사항)
 
 
   // 회원 탈퇴 처리 함수
@@ -173,8 +253,19 @@ export default function MyPage() {
           </p>
         )}
       </div>
-      <UserPostsList />
-      <UserCommentsList />
+
+      {/* 사용자 게시물 목록 로딩 및 에러 처리 */}
+      {isUserPostsLoading && <p className="text-center text-gray-600 my-4">게시글 목록을 불러오는 중...</p>}
+      {userPostsError && <p className="text-center text-red-500 my-4">게시글 목록 로딩 오류: {userPostsError}</p>}
+      {/* 로딩 완료 및 에러 없을 때 UserPostsList 렌더링 */}
+      {!isUserPostsLoading && !userPostsError && <UserPostsList posts={userPosts} />}
+
+      {/* 사용자 댓글 목록 로딩 및 에러 처리 */}
+      {isUserCommentsLoading && <p className="text-center text-gray-600 my-4">댓글 목록을 불러오는 중...</p>}
+      {userCommentsError && <p className="text-center text-red-500 my-4">댓글 목록 로딩 오류: {userCommentsError}</p>}
+      {/* 로딩 완료 및 에러 없을 때 UserCommentsList 렌더링 */}
+      {!isUserCommentsLoading && !userCommentsError && <UserCommentsList comments={userComments} />}
+
       <PasswordChangeModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
