@@ -61,7 +61,7 @@ pipeline {
                 docker stop ${SPRING_CONTAINER} || true
                 docker rm ${SPRING_CONTAINER} || true
                 docker run -d --name ${SPRING_CONTAINER} \
-		                -p 8083:8081 \
+		                -p 43817:8080 \
                     --network my_network \
                     -v ${SPRING_CONFIG_PATH}:/app/config/application.properties \
                     -e SPRING_CONFIG_LOCATION=file:/app/config/application.properties \
@@ -87,7 +87,7 @@ pipeline {
                 docker run -d --name ${REACT_CONTAINER} \
                     --network my_network \
                     --env-file ${ENV_FILE_PATH} \
-                    -p 8082:80 \
+                    -p 51329:80 \
                     ${REACT_IMAGE}
                 '''
             }

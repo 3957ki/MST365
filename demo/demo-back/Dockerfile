@@ -26,7 +26,7 @@ ENV JAVA_TOOL_OPTIONS="-Duser.timezone=Asia/Seoul"
 COPY --from=build /app/build/libs/*.jar app.jar
 
 # 10. 컨테이너에서 사용할 포트 노출
-EXPOSE 8081
+EXPOSE 8080
 
 # 11. 애플리케이션 실행
 ENTRYPOINT ["java", "-jar", "app.jar"]
