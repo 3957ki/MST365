@@ -1,0 +1,96 @@
+pipeline {
+    agent any
+    environment {
+        GIT_REPO = "https://lab.ssafy.com/s12-final/S12P31S111"
+        SPRING_IMAGE = "spring:latest"
+        SPRING_CONTAINER = "spring"
+        REACT_IMAGE = "react:latest"
+        REACT_CONTAINER = "react"
+        SPRING_CONFIG_PATH = "/home/ubuntu/application.properties"
+        ENV_FILE_PATH = "/home/ubuntu/.env"
+    }
+    stages {
+        stage('Fetch or Clone Repository') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'gitlab-credentials', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                    sh '''
+                    if [ -d "repo/.git" ]; then
+                        echo "Repository exists. Fetching changes..."
+                        cd repo
+                        git fetch origin
+                        git reset --hard origin/develop
+                    else
+                        echo "Repository does not exist. Cloning..."
+                        git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@lab.ssafy.com/s12-final/S12P31S111 repo
+                    fi
+                    '''
+                }
+            }
+        }
+        stage('Copy Static Files to EC2') {
+            steps {
+                sh '''
+                echo "Copying static files from repo to /home/ubuntu/app/static/..."
+                
+                mkdir -p /home/ubuntu/app/static/
+                cp -r repo/demo/demo-back/src/main/resources/static/. /home/ubuntu/app/static/
+                
+                echo "Static files copied successfully."
+                '''
+            }
+        }
+        stage('Setup Docker Network') {
+            steps {
+                sh '''
+                docker network create my_network || true
+                '''
+            }
+        }
+        stage('Build Spring Docker Image') {
+            steps {
+                sh '''
+                docker image rm -f ${SPRING_IMAGE} || true
+                cd demo-back
+                docker build -t ${SPRING_IMAGE} .
+                '''
+            }
+        }
+        stage('Run Spring Docker Container') {
+            steps {
+                sh '''
+                docker stop ${SPRING_CONTAINER} || true
+                docker rm ${SPRING_CONTAINER} || true
+                docker run -d --name ${SPRING_CONTAINER} \
+		                -p 43817:8080 \
+                    --network my_network \
+                    -v ${SPRING_CONFIG_PATH}:/app/config/application.properties \
+                    -e SPRING_CONFIG_LOCATION=file:/app/config/application.properties \
+                    ${SPRING_IMAGE}
+                '''
+            }
+        }
+        stage('Build React Docker Image') {
+            steps {
+                sh '''
+                docker image rm -f ${REACT_IMAGE} || true
+                cd repo/demo/demo-front
+                cp ${ENV_FILE_PATH} .env
+                docker build -t ${REACT_IMAGE} .
+                '''
+            }
+        }
+        stage('Run React Docker Container') {
+            steps {
+                sh '''
+                docker stop ${REACT_CONTAINER} || true
+                docker rm ${REACT_CONTAINER} || true
+                docker run -d --name ${REACT_CONTAINER} \
+                    --network my_network \
+                    --env-file ${ENV_FILE_PATH} \
+                    -p 51329:80 \
+                    ${REACT_IMAGE}
+                '''
+            }
+        }
+    }
+}
