@@ -82,9 +82,9 @@ public class CoreLogicStepExecution extends SynchronousNonBlockingStepExecution<
             }
             listener.getLogger().println("▶ 가상환경(.venv) 생성 완료");
         }
-        String pythonBin = new File(pythonDir, ".venv/bin/python").getAbsolutePath();
 
         // 5) venv 내부 pip 준비 여부 확인 및 재생성
+        String pythonBin = new File(pythonDir, ".venv/bin/python").getAbsolutePath();
         listener.getLogger().println("▶ venv 내부 pip 준비 여부 확인");
         ProcessBuilder pbPipCheck = new ProcessBuilder(pythonBin, "-m", "pip", "--version")
                 .directory(pythonDir).redirectErrorStream(true);
@@ -162,7 +162,6 @@ public class CoreLogicStepExecution extends SynchronousNonBlockingStepExecution<
         listener.getLogger().println(scenarioContent);
 
         // 9) MCP 서버 기동 및 대기
-        // 9) setup 스크립트 실행 (Windows: setup.bat, Linux: setup.sh)
         listener.getLogger().println("▶ setup 스크립트 실행...");
         String osName = System.getProperty("os.name").toLowerCase();
         ProcessBuilder pbSetup;
@@ -185,37 +184,59 @@ public class CoreLogicStepExecution extends SynchronousNonBlockingStepExecution<
         }
         listener.getLogger().println("▶ setup 완료");
 
-        // 10) Python 스크립트 직접 실행 (빌드 번호 & 출력 디렉터리 인자 포함)
-        listener.getLogger().println("▶ Python 테스트 실행: main_logic.py");
-        String scenarioPath = scenarioFile.getAbsolutePath();
-
-        // 빌드 번호
-        String buildNumber = String.valueOf(run.getNumber());
-
-        // JENKINS_HOME/results 경로 준비 (없으면 생성)
-        File resultsDir = new File(Jenkins.get().getRootDir(), "results");
-        if (!resultsDir.exists()) {
-            if (!resultsDir.mkdirs()) {
-                listener.getLogger().println("▶ WARNING: results 디렉터리 생성 실패: " + resultsDir);
+        // 9.5) NPM 패키지 설치 (resources/python/mcp)
+        listener.getLogger().println("▶ NPM 패키지 설치: npm install (mcp 디렉터리)");
+        File nodeDir = new File(pythonDir, "node-v20.8.0-linux-x64");
+        File npmBin = new File(nodeDir, "bin/npm");
+        if (!npmBin.exists()) {
+            throw new IllegalStateException("npm 바이너리를 찾을 수 없습니다: " + npmBin);
+        }
+        File mcpDir = new File(pythonDir, "mcp");
+        if (!mcpDir.exists() || !mcpDir.isDirectory()) {
+            throw new IllegalStateException("mcp 디렉터리를 찾을 수 없습니다: " + mcpDir);
+        }
+        String existingPath = System.getenv("PATH");
+        String nodeBinDir = new File(nodeDir, "bin").getAbsolutePath();
+        ProcessBuilder pbNpm = new ProcessBuilder(
+                npmBin.getAbsolutePath(), "install"
+        );
+        pbNpm.environment().put("PATH", nodeBinDir + File.pathSeparator + existingPath);
+        pbNpm.directory(mcpDir).redirectErrorStream(true);
+        Process procNpm = pbNpm.start();
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(procNpm.getInputStream(), StandardCharsets.UTF_8))) {
+            String l;
+            while ((l = br.readLine()) != null) {
+                listener.getLogger().println(l);
             }
         }
-        String outputDir = resultsDir.getAbsolutePath();
+        if (procNpm.waitFor() != 0) {
+            throw new IllegalStateException("npm install 실패 (mcp 디렉터리)");
+        }
+        listener.getLogger().println("▶ NPM 설치 완료 (mcp 디렉터리)");
 
+        // 10) Python 스크립트 직접 실행: activate venv 후 python 실행
+        listener.getLogger().println("▶ Python 테스트 실행: main_logic.py (activate virtualenv)");
+        String scenarioPath = scenarioFile.getAbsolutePath();
+        String buildNumber = String.valueOf(run.getNumber());
+        File resultsDir = new File(Jenkins.get().getRootDir(), "results");
+        if (!resultsDir.exists() && !resultsDir.mkdirs()) {
+            listener.getLogger().println("▶ WARNING: results 디렉터리 생성 실패: " + resultsDir);
+        }
+        String outputDir = resultsDir.getAbsolutePath();
         listener.getLogger().println(
                 String.format("▶ 인자: --file %s --build %s --output_dir %s",
                         scenarioPath, buildNumber, outputDir)
         );
-
-        ProcessBuilder pbRun = new ProcessBuilder(
-                pythonBin,
-                "main_logic.py",
-                "--file",       scenarioPath,
-                "--build",      buildNumber,
-                "--output_dir", outputDir
-        )
-        .directory(pythonDir)
-        .redirectErrorStream(true);
-
+        String activateScript = new File(pythonDir, ".venv/bin/activate").getAbsolutePath();
+        String command = String.join(" && ",
+                String.format("source %s", activateScript),
+                String.format("python main_logic.py --file '%s' --build %s --output_dir '%s'",
+                        scenarioPath, buildNumber, outputDir)
+        );
+        ProcessBuilder pbRun = new ProcessBuilder("bash", "-c", command)
+                .directory(pythonDir)
+                .redirectErrorStream(true);
         Process runProc = pbRun.start();
         try (BufferedReader rdr = new BufferedReader(
                 new InputStreamReader(runProc.getInputStream(), StandardCharsets.UTF_8))) {
@@ -226,12 +247,9 @@ public class CoreLogicStepExecution extends SynchronousNonBlockingStepExecution<
         }
         int runExit = runProc.waitFor();
         listener.getLogger().println("▶ 테스트 종료 (exit=" + runExit + ")");
-
-        // 11) 결과 액션 등록
         String result = runExit == 0 ? "SUCCESS" : "FAIL";
         run.addAction(new BuildReportAction(scenarioName, result));
         run.save();
-
         return null;
     }
 

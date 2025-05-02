@@ -24,9 +24,9 @@ python -m pip install --upgrade pip uv
 echo "📦 패키지 설치"
 uv sync
 
-# 5) MCP 서버 백그라운드 실행
-echo "🚀 MCP 서버 백그라운드 실행"
-# npx 는 포터블 Node.js의 bin 에 포함된 것을 사용
-nohup npx -y @playwright/mcp@latest --port 8005 > /dev/null 2>&1 &
-
-echo "▶ setup.sh 완료: MCP 서버가 백그라운드에서 구동 중"
+## 5) MCP 서버 백그라운드 실행
+#echo "🚀 MCP 서버 백그라운드 실행"
+## npx 는 포터블 Node.js의 bin 에 포함된 것을 사용
+#nohup npx -y @playwright/mcp@latest --port 8005 > /dev/null 2>&1 &
+#
+#echo "▶ setup.sh 완료: MCP 서버가 백그라운드에서 구동 중"
