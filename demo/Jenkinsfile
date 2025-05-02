@@ -6,7 +6,7 @@ pipeline {
         SPRING_CONTAINER = "spring"
         REACT_IMAGE = "react:latest"
         REACT_CONTAINER = "react"
-        SPRING_CONFIG_PATH = "/home/ubuntu/application.yml"
+        SPRING_CONFIG_PATH = "/home/ubuntu/application.properties"
         ENV_FILE_PATH = "/home/ubuntu/.env"
     }
     stages {
@@ -63,8 +63,8 @@ pipeline {
                 docker run -d --name ${SPRING_CONTAINER} \
 		                -p 8083:8081 \
                     --network my_network \
-                    -v ${SPRING_CONFIG_PATH}:/app/config/application.yml \
-                    -e SPRING_CONFIG_LOCATION=file:/app/config/application.yml \
+                    -v ${SPRING_CONFIG_PATH}:/app/config/application.properties \
+                    -e SPRING_CONFIG_LOCATION=file:/app/config/application.properties \
                     ${SPRING_IMAGE}
                 '''
             }
