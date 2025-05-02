@@ -21,31 +21,31 @@ load_dotenv(override=True)
 model = ChatAnthropic(model="claude-3-5-haiku-latest", temperature=0, max_tokens=1000)
 
 # 이 파일이 있는 디렉터리(=resources/python) 기준으로 경로 계산
-BASE_DIR = os.path.dirname(__file__)
-NODE_BIN = os.path.join(BASE_DIR, "node-v20.8.0-linux-x64", "bin", "node")
-MCP_DIR  = os.path.join(BASE_DIR, "mcp")  # mcp 패키지가 설치된 디렉터리
-
-print(f"MCP 디렉터리: {MCP_DIR}")
-
-# stdio_client에 넘겨줄 파라미터 정의
-server_params = StdioServerParameters(
-    command="nohup",              # nohup으로 실행
-    args=[NODE_BIN, "cli.js"],    # 뒤에 실제 실행할 node 바이너리와 스크립트
-    cwd=MCP_DIR                   # 작업 디렉터리는 mcp 폴더
-)
+# BASE_DIR = os.path.dirname(__file__)
+# NODE_BIN = os.path.join(BASE_DIR, "node-v20.8.0-linux-x64", "bin", "node")
+# MCP_DIR  = os.path.join(BASE_DIR, "mcp")  # mcp 패키지가 설치된 디렉터리
+#
+# print(f"MCP 디렉터리: {MCP_DIR}")
+#
+# # stdio_client에 넘겨줄 파라미터 정의
+# server_params = StdioServerParameters(
+#     command="nohup",              # nohup으로 실행
+#     args=[NODE_BIN, "cli.js"],    # 뒤에 실제 실행할 node 바이너리와 스크립트
+#     cwd=MCP_DIR                   # 작업 디렉터리는 mcp 폴더
+# )
 
 # MCP 서버
-# current_file = os.path.abspath(__file__)
-# current_dir = os.path.dirname(current_file)
-# mcp_path = os.path.join(current_dir, "mcp")
-#
-# print(mcp_path)
-#
-# server_params = StdioServerParameters(
-#     command="node",
-#     args=["cli.js"],
-#     cwd=mcp_path,
-# )
+current_file = os.path.abspath(__file__)
+current_dir = os.path.dirname(current_file)
+mcp_path = os.path.join(current_dir, "mcp")
+
+print(mcp_path)
+
+server_params = StdioServerParameters(
+    command="node",
+    args=["cli.js"],
+    cwd=mcp_path,
+)
 
 
 # Output Parser
