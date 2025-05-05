@@ -43,7 +43,7 @@ npm install
 cd ..
 ```
 
-### config.json 파일 생성
+### config.json 파일 생성 (현재 openai만 정상 작동)
 
 ```json
 {
@@ -56,7 +56,7 @@ cd ..
 ```
 
 - 지원 모델 목록:
-  **Claude:** claude-3-7-sonnet-latest, claude-3-5-sonnet-latest, claude-3-haiku-latest
+  **Claude:** claude-3-7-sonnet-latest, claude-3-5-sonnet-latest, claude-3-5-haiku-latest
   **GPT:** gpt-4o, gpt-4o-mini
 
 ### 테스트 방법
@@ -122,3 +122,6 @@ generic, ref와 같은 태그들은 필요없어보였다.
 
 스크린샷을 찍고난 이미지정보가 response로 오는데 너무 양이 많다.
 이게 그대로 input으로 들어가는지 의문이고 직접 LangGraph를 커스텀해서 사용해야할 필요성이 커진 것 같다.
+
+그리고 GPT로는 속도도 나름 괜찮고 준수했으나 Claude로 바꾸니까 시간도오래걸리고 limit를 초과하는 경우가 생겼다.
+이유를 찾아봐야한다.
