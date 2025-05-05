@@ -43,14 +43,16 @@ npm install
 cd ..
 ```
 
-### 🔐 .env 파일 설정
+### config.json 파일 생성
 
-`.env` 파일에 다음과 같이 사용할 LLM API Key를 추가하세요.
-필요한 키만 작성하면 됩니다. (현재 Claude 사용중입니다.)
-
-```bash
-ANTHROPIC_API_KEY={Claude Key}
-OPENAI_API_KEY={GPT Key}
+```json
+{
+  "provider": "openai 혹은 anthropic",
+  "llm_model": "모델명",
+  "api_key": "API Key",
+  "build": "빌드번호",
+  "output_dir": "결과파일 경로"
+}
 ```
 
 - 지원 모델 목록:
@@ -63,14 +65,14 @@ OPENAI_API_KEY={GPT Key}
 
 ```
 source .venv/bin/activate
-python main_logic.py --file {시나리오 경로} --build {빌드 넘버} --output_dir {결과가 저장될 base directory}
+python .\main_logic.py --config {사용자 Secret json 경로} --scenarios {사용자 시나리오 json 경로}
 ```
 
 - Window
 
 ```
 call .venv\Scripts\activate
-python main_logic.py --file {시나리오 경로} --build {빌드 넘버} --output_dir {결과가 저장될 base directory}
+python .\main_logic.py --config {사용자 Secret json 경로} --scenarios {사용자 시나리오 json 경로}
 ```
 
 ### 토큰 문제 개선에 관한 고찰
@@ -117,3 +119,6 @@ generic, ref와 같은 태그들은 필요없어보였다.
 이건 의외로 훨씬 괜찮았다.
 같은 코드로 실행했지만 사용한 토큰이 절반정도이며 가격도 약 7배정도 저렴했다.
 일단 이 모델이 최선이다.
+
+스크린샷을 찍고난 이미지정보가 response로 오는데 너무 양이 많다.
+이게 그대로 input으로 들어가는지 의문이고 직접 LangGraph를 커스텀해서 사용해야할 필요성이 커진 것 같다.
