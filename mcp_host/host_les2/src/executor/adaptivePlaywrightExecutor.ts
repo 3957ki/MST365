@@ -4,7 +4,11 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 import Anthropic from '@anthropic-ai/sdk';
 import * as dotenv from 'dotenv';
+import * as os from 'os';
+import * as childProcess from 'child_process';
+import { promisify } from 'util';
 
+const exec = promisify(childProcess.exec);
 dotenv.config();
 
 interface StepResult {
@@ -29,20 +33,33 @@ interface TestReport {
   failedSteps: number;
   steps: StepResult[];
   finalComment?: string;
+  htmlReportURL?: string; // HTML 리포트 경로 추가
 }
 
 export class AdaptivePlaywrightExecutor {
   private browser: Browser | null = null;
   private page: Page | null = null;
   private outputDir: string;
+  private testRunDir: string; // 테스트 실행별 디렉토리
+  private screenshotsDir: string; // 스크린샷 디렉토리
   private testReport: TestReport;
   private anthropic: Anthropic;
 
   constructor() {
+    // 기본 출력 디렉토리
     this.outputDir = path.join(process.cwd(), 'test-results');
+    
+    // 타임스탬프가 포함된 테스트 실행 폴더 생성
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    this.testRunDir = path.join(this.outputDir, `test-run-${timestamp}`);
+    
+    // 스크린샷 디렉토리
+    this.screenshotsDir = path.join(this.testRunDir, 'screenshots');
+    
     this.anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
+    
     this.testReport = {
       testName: 'Natural Language Test',
       startTime: '',
@@ -56,7 +73,13 @@ export class AdaptivePlaywrightExecutor {
   }
 
   async initialize() {
-    await fs.mkdir(this.outputDir, { recursive: true });
+    // 디렉토리 구조 생성
+    await fs.mkdir(this.testRunDir, { recursive: true });
+    await fs.mkdir(this.screenshotsDir, { recursive: true });
+    
+    console.log(`테스트 실행 디렉토리: ${this.testRunDir}`);
+    console.log(`스크린샷 디렉토리: ${this.screenshotsDir}`);
+    
     this.browser = await chromium.launch({
       headless: false,
       args: ['--start-maximized'],
@@ -103,7 +126,7 @@ export class AdaptivePlaywrightExecutor {
     pageSnapshot: string
   ): Promise<string> {
     const response = await this.anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-haiku-20240307',
       max_tokens: 500,
       messages: [
         {
@@ -161,7 +184,7 @@ YouTube의 경우:
 
   async executeSteps(steps: TestStep[]) {
     console.log('Starting adaptive test execution...');
-    console.log(`Results will be saved to: ${this.outputDir}`);
+    console.log(`Results will be saved to: ${this.testRunDir}`);
 
     this.testReport.startTime = new Date().toISOString();
     this.testReport.totalSteps = steps.length;
@@ -291,9 +314,10 @@ YouTube의 경우:
             break;
 
           case 'screenshot':
+            // 스크린샷 시간 타임스탬프
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const screenshotPath = path.join(
-              this.outputDir,
+              this.screenshotsDir,
               `step-${i + 1}-${timestamp}.png`
             );
             await this.page!.screenshot({
@@ -314,7 +338,7 @@ YouTube의 경우:
         // 각 단계 후 스크린샷 캡처
         if (step.action !== 'screenshot') {
           const autoScreenshotPath = path.join(
-            this.outputDir,
+            this.screenshotsDir,
             `auto-step-${i + 1}-${new Date()
               .toISOString()
               .replace(/[:.]/g, '-')}.png`
@@ -334,7 +358,7 @@ YouTube의 경우:
 
         // 에러 발생 시 스크린샷
         const errorScreenshotPath = path.join(
-          this.outputDir,
+          this.screenshotsDir,
           `error-step-${i + 1}-${new Date()
             .toISOString()
             .replace(/[:.]/g, '-')}.png`
@@ -364,12 +388,13 @@ YouTube의 경우:
     this.testReport.finalComment = await this.getFinalTestComment();
 
     // Playwright HTML 리포트 생성
-    await this.generatePlaywrightReport();
+    const htmlReportPath = await this.generatePlaywrightReport();
+    this.testReport.htmlReportURL = htmlReportPath;
 
     // 테스트 리포트 저장
     const reportPath = path.join(
-      this.outputDir,
-      `test-report-${new Date().toISOString().replace(/[:.]/g, '-')}.json`
+      this.testRunDir,
+      `test-report.json`
     );
     await fs.writeFile(reportPath, JSON.stringify(this.testReport, null, 2));
 
@@ -381,24 +406,200 @@ YouTube의 경우:
     console.log(`Passed: ${this.testReport.passedSteps}`);
     console.log(`Failed: ${this.testReport.failedSteps}`);
     console.log(`Duration: ${this.testReport.duration}ms`);
+    console.log(`HTML Report: ${this.testReport.htmlReportURL}`);
     console.log('\nAI Final Comment:');
     console.log(this.testReport.finalComment);
   }
 
-  private async generatePlaywrightReport() {
-    // Playwright HTML 리포트 생성
-    const { test } = require('@playwright/test');
-    const { chromium } = require('playwright');
-
-    // Playwright 테스트 스타일의 리포트 생성
-    const playwrightReportPath = path.join(this.outputDir, 'playwright-report');
-
-    // HTML 리포트 설정
-    process.env.PLAYWRIGHT_HTML_REPORT = playwrightReportPath;
-
-    console.log(
-      `Playwright HTML report will be generated at: ${playwrightReportPath}`
-    );
+  private async generatePlaywrightReport(): Promise<string> {
+    const htmlReportDir = path.join(this.testRunDir, 'html-report');
+    await fs.mkdir(htmlReportDir, { recursive: true });
+    
+    console.log(`Generating Playwright HTML report at: ${htmlReportDir}`);
+    
+    try {
+      // 테스트 실행 결과를 HTML 파일로 변환
+      const stepsHtml = this.testReport.steps.map((step, index) => {
+        const statusClass = step.status === 'success' ? 'success' : 'failure';
+        const screenshotHtml = step.screenshot 
+          ? `<div class="screenshot"><img src="${path.relative(htmlReportDir, step.screenshot)}" alt="Screenshot" width="800" /></div>` 
+          : '';
+          
+        return `
+          <div class="test-step ${statusClass}">
+            <h3>Step ${index + 1}: ${step.step.description}</h3>
+            <div class="step-details">
+              <p><strong>Action:</strong> ${step.step.action}</p>
+              <p><strong>Target:</strong> ${step.step.target || 'N/A'}</p>
+              <p><strong>Value:</strong> ${step.step.value || 'N/A'}</p>
+              <p><strong>Status:</strong> ${step.status}</p>
+              <p><strong>Duration:</strong> ${step.duration}ms</p>
+              ${step.error ? `<p class="error"><strong>Error:</strong> ${step.error}</p>` : ''}
+            </div>
+            ${screenshotHtml}
+            <div class="ai-comment">
+              <h4>AI Analysis:</h4>
+              <p>${step.aiComment || 'No analysis available'}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // HTML 템플릿 생성
+      const htmlTemplate = `
+      <!DOCTYPE html>
+      <html lang="ko">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${this.testReport.testName} - 테스트 결과</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          h1, h2, h3 {
+            color: #2c3e50;
+          }
+          .test-summary {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 30px;
+          }
+          .test-step {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+          }
+          .success {
+            border-left: 5px solid #28a745;
+          }
+          .failure {
+            border-left: 5px solid #dc3545;
+          }
+          .step-details {
+            margin-bottom: 15px;
+          }
+          .screenshot {
+            margin: 15px 0;
+            text-align: center;
+          }
+          .screenshot img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+          }
+          .ai-comment {
+            background-color: #f0f7ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+          }
+          .error {
+            color: #dc3545;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+          table, th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+          }
+          th {
+            background-color: #f2f2f2;
+            text-align: left;
+          }
+          tr:nth-child(even) {
+            background-color: #f9f9f9;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>${this.testReport.testName}</h1>
+        
+        <div class="test-summary">
+          <h2>테스트 요약</h2>
+          <table>
+            <tr>
+              <th>시작 시간</th>
+              <td>${new Date(this.testReport.startTime).toLocaleString()}</td>
+            </tr>
+            <tr>
+              <th>종료 시간</th>
+              <td>${new Date(this.testReport.endTime).toLocaleString()}</td>
+            </tr>
+            <tr>
+              <th>실행 시간</th>
+              <td>${this.testReport.duration}ms</td>
+            </tr>
+            <tr>
+              <th>총 단계</th>
+              <td>${this.testReport.totalSteps}</td>
+            </tr>
+            <tr>
+              <th>성공</th>
+              <td>${this.testReport.passedSteps}</td>
+            </tr>
+            <tr>
+              <th>실패</th>
+              <td>${this.testReport.failedSteps}</td>
+            </tr>
+          </table>
+          
+          <h3>최종 분석</h3>
+          <div class="ai-comment">
+            <p>${this.testReport.finalComment || '분석 정보가 없습니다.'}</p>
+          </div>
+        </div>
+        
+        <h2>테스트 단계</h2>
+        <div class="test-steps">
+          ${stepsHtml}
+        </div>
+      </body>
+      </html>
+      `;
+      
+      // HTML 파일 저장
+      const htmlFilePath = path.join(htmlReportDir, 'index.html');
+      await fs.writeFile(htmlFilePath, htmlTemplate);
+      
+      // 스크린샷 파일 복사 - 상대 경로 처리를 위해
+      // 실제 운영 환경에서는 이미지를 복사하거나 심볼릭 링크를 만드는 것이 좋음
+      // 여기서는 상대 경로로 참조하는 예시만 포함
+      
+      // 브라우저에서 HTML 보고서 열기 (선택 사항)
+      const openReport = async () => {
+        const url = `file://${htmlFilePath}`;
+        const command = os.platform() === 'win32' 
+          ? `start "${url}"` 
+          : os.platform() === 'darwin' 
+            ? `open "${url}"` 
+            : `xdg-open "${url}"`;
+            
+        try {
+          await exec(command);
+          console.log(`HTML report opened in default browser: ${url}`);
+        } catch (error) {
+          console.error('Failed to open HTML report in browser:', error);
+        }
+      };
+      
+      // 선택적으로 브라우저에서 열기
+      // await openReport();
+      
+      return htmlFilePath;
+    } catch (error) {
+      console.error('HTML 리포트 생성 실패:', error);
+      return `Failed to generate HTML report: ${error}`;
+    }
   }
 
   private async getAIComment(

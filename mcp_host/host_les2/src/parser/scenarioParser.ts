@@ -21,7 +21,7 @@ export class ScenarioParser {
 
   async parseScenario(scenarioText: string): Promise<TestStep[]> {
     const response = await this.anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022', // 모델 이름 변경
+      model: 'claude-3-5-haiku-20241022', // 모델 이름 변경
       max_tokens: 1000,
       messages: [
         {

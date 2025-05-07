@@ -1,0 +1,290 @@
+
+      <!DOCTYPE html>
+      <html lang="ko">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Natural Language Test - 테스트 결과</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          h1, h2, h3 {
+            color: #2c3e50;
+          }
+          .test-summary {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 30px;
+          }
+          .test-step {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+          }
+          .success {
+            border-left: 5px solid #28a745;
+          }
+          .failure {
+            border-left: 5px solid #dc3545;
+          }
+          .step-details {
+            margin-bottom: 15px;
+          }
+          .screenshot {
+            margin: 15px 0;
+            text-align: center;
+          }
+          .screenshot img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+          }
+          .ai-comment {
+            background-color: #f0f7ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+          }
+          .error {
+            color: #dc3545;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+          table, th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+          }
+          th {
+            background-color: #f2f2f2;
+            text-align: left;
+          }
+          tr:nth-child(even) {
+            background-color: #f9f9f9;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Natural Language Test</h1>
+        
+        <div class="test-summary">
+          <h2>테스트 요약</h2>
+          <table>
+            <tr>
+              <th>시작 시간</th>
+              <td>2025. 5. 7. 오후 12:04:37</td>
+            </tr>
+            <tr>
+              <th>종료 시간</th>
+              <td>2025. 5. 7. 오후 12:06:28</td>
+            </tr>
+            <tr>
+              <th>실행 시간</th>
+              <td>111331ms</td>
+            </tr>
+            <tr>
+              <th>총 단계</th>
+              <td>4</td>
+            </tr>
+            <tr>
+              <th>성공</th>
+              <td>3</td>
+            </tr>
+            <tr>
+              <th>실패</th>
+              <td>1</td>
+            </tr>
+          </table>
+          
+          <h3>최종 분석</h3>
+          <div class="ai-comment">
+            <p>테스트 결과 분석 및 평가:
+
+1. 전반적인 성과:
+- 75%의 성공률 (4단계 중 3단계 성공)
+- 실행 시간이 111초로 다소 길음
+
+2. 주요 문제점:
+- 검색 버튼 클릭 단계에서 실패가 발생
+- 이는 페이지 로딩 타이밍 또는 요소 식별 문제일 가능성이 높음
+
+3. 개선 권장사항:
+
+a) 안정성 향상을 위한 조치:
+- 검색 버튼 클릭 전 명시적 대기 시간 추가
+- 요소 가시성 확인 로직 추가
+- 다양한 선택자(XPath, CSS) 대체 옵션 준비
+
+b) 성능 최적화:
+- 불필요한 대기 시간 제거
+- 페이지 로드 조건 최적화
+- 명시적 대기와 암묵적 대기의 적절한 조합 사용
+
+c) 테스트 안정성:
+- 재시도 메커니즘 구현
+- 오류 처리 로직 강화
+- 검색 버튼 클릭 실패에 대한 대체 방안 마련
+
+4. 후속 조치:
+- 실패한 단계에 대한 상세 로그 분석
+- 테스트 환경 검토
+- 주기적인 테스트 실행으로 안정성 모니터링
+
+이러한 개선사항을 적용하면 테스트의 신뢰성과 성능이 향상될 것으로 </p>
+          </div>
+        </div>
+        
+        <h2>테스트 단계</h2>
+        <div class="test-steps">
+          
+          <div class="test-step success">
+            <h3>Step 1: YouTube 메인 페이지로 이동</h3>
+            <div class="step-details">
+              <p><strong>Action:</strong> navigate</p>
+              <p><strong>Target:</strong> https://www.youtube.com/</p>
+              <p><strong>Value:</strong> N/A</p>
+              <p><strong>Status:</strong> success</p>
+              <p><strong>Duration:</strong> 19011ms</p>
+              
+            </div>
+            <div class="screenshot"><img src="..\screenshots\auto-step-1-2025-05-07T03-04-42-389Z.png" alt="Screenshot" width="800" /></div>
+            <div class="ai-comment">
+              <h4>AI Analysis:</h4>
+              <p>해당 테스트 단계를 분석해드리겠습니다.
+
+테스트 결과 평가:
+✅ 성공적으로 실행됨 (결과: success)
+- YouTube 메인 페이지로의 네비게이션이 정상적으로 수행됨
+- 기본적인 페이지 접근성 테스트가 통과됨
+
+실행 단계의 특징:
+- 기본 URL을 사용한 직접 접근 방식
+- 단순하고 명확한 테스트 케이스
+- 웹 애플리케이션의 시작점 검증에 적합
+
+추가 고려사항:
+1. 페이지 로드 시간 모니터링 추가
+2. 필요한 경우 지역/언어 설정 확인
+3. 리다이렉션 처리 검증
+
+현재는 성공적으로 수행되었으므로 특별한 개선이 필요하지 않습니다.</p>
+            </div>
+          </div>
+        
+          <div class="test-step success">
+            <h3>Step 2: 검색어 '리쥬라이크' 입력</h3>
+            <div class="step-details">
+              <p><strong>Action:</strong> fill</p>
+              <p><strong>Target:</strong> input[name='search_query']</p>
+              <p><strong>Value:</strong> 리쥬라이크</p>
+              <p><strong>Status:</strong> success</p>
+              <p><strong>Duration:</strong> 8652ms</p>
+              
+            </div>
+            <div class="screenshot"><img src="..\screenshots\auto-step-2-2025-05-07T03-04-58-420Z.png" alt="Screenshot" width="800" /></div>
+            <div class="ai-comment">
+              <h4>AI Analysis:</h4>
+              <p>테스트 단계 분석 결과:
+
+✅ 성공적으로 실행됨
+
+실행 내용:
+- 검색창(input[name='search_query'])에 '리쥬라이크' 텍스트를 입력
+- fill 액션이 정상적으로 수행됨
+
+성공 요인:
+- 올바른 선택자(input[name='search_query'])를 사용
+- 검색창 요소가 페이지에 존재하고 상호작용 가능한 상태
+- 입력값 '리쥬라이크'가 유효한 텍스트
+
+이 테스트 단계는 기본적인 입력 기능을 정확하게 검증했습니다.</p>
+            </div>
+          </div>
+        
+          <div class="test-step failure">
+            <h3>Step 3: 검색 버튼 클릭</h3>
+            <div class="step-details">
+              <p><strong>Action:</strong> click</p>
+              <p><strong>Target:</strong> button#search-icon-legacy</p>
+              <p><strong>Value:</strong> N/A</p>
+              <p><strong>Status:</strong> failed</p>
+              <p><strong>Duration:</strong> 44319ms</p>
+              <p class="error"><strong>Error:</strong> page.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('button[id=\'search-icon-legacy\']')[22m
+</p>
+            </div>
+            <div class="screenshot"><img src="..\screenshots\error-step-3-2025-05-07T03-05-44-313Z.png" alt="Screenshot" width="800" /></div>
+            <div class="ai-comment">
+              <h4>AI Analysis:</h4>
+              <p>이 테스트 단계를 분석해보겠습니다:
+
+실패 원인:
+- 30초 동안 검색 버튼(#search-icon-legacy)을 찾지 못해 타임아웃이 발생했습니다.
+- 이는 버튼이 페이지에 존재하지 않거나, 동적으로 로드되는 과정에서 지연이 있었을 수 있습니다.
+
+개선 방안:
+1. 페이지 로딩 대기:
+```javascript
+await page.waitForLoadState('networkidle');
+```
+
+2. 버튼의 가시성 확인:
+```javascript
+await page.waitForSelector('button#search-icon-legacy', {state: 'visible'});
+```
+
+3. 선택자 재확인:
+- 실제 버튼의 ID가 정확한지 확인
+- 다른 선택자(XPath, class 등) 사용 고려
+
+4. 타임아웃 시간 조정:
+```javascript
+await page.click('button#search-</p>
+            </div>
+          </div>
+        
+          <div class="test-step success">
+            <h3>Step 4: 검색 결과의 첫 번째 동영상 클릭</h3>
+            <div class="step-details">
+              <p><strong>Action:</strong> click</p>
+              <p><strong>Target:</strong> ytd-video-renderer:first-child</p>
+              <p><strong>Value:</strong> N/A</p>
+              <p><strong>Status:</strong> success</p>
+              <p><strong>Duration:</strong> 35316ms</p>
+              
+            </div>
+            <div class="screenshot"><img src="..\screenshots\auto-step-4-2025-05-07T03-06-13-301Z.png" alt="Screenshot" width="800" /></div>
+            <div class="ai-comment">
+              <h4>AI Analysis:</h4>
+              <p>테스트 단계 분석:
+
+✓ 성공 (Success)
+- 의도한 동작: 검색 결과 목록에서 첫 번째 동영상을 클릭
+- 결과: 정상적으로 실행됨
+
+평가:
+- 선택자(ytd-video-renderer:first-child)가 정확하게 첫 번째 동영상을 타겟팅
+- 클릭 액션이 성공적으로 수행됨
+
+권장사항:
+- 안정성을 위해 동영상 로딩 대기 조건 추가 검토
+- 더 구체적인 선택자 사용 고려 (예: [id] 또는 [data-*] 속성 활용)
+
+전반적으로 테스트가 의도대로 잘 수행되었습니다.</p>
+            </div>
+          </div>
+        
+        </div>
+      </body>
+      </html>
+      
