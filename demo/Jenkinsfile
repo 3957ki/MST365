@@ -10,30 +10,6 @@ pipeline {
         ENV_FILE_PATH = "/var/jenkins_home/.env"
     }
     stages {
-        stage('Fetch or Clone Repository') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'silverline_idpw', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                    sh '''
-                    if [ -d "S12P31S111" ]; then
-                        echo "Repository exists. Fetching changes..."
-                        cd S12P31S111
-                        git fetch origin
-                        git reset --hard origin/develop
-                    else
-                        echo "Repository does not exist. Cloning..."
-                        git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@lab.ssafy.com/s12-final/S12P31S111
-                    fi
-                    '''
-                }
-            }
-        }
-        stage('Setup Docker Network') {
-            steps {
-                sh '''
-                docker network create my-network || true
-                '''
-            }
-        }
         stage('Build Spring Docker Image') {
             steps {
                 sh '''
