@@ -38,7 +38,9 @@ export default function UserCommentsList({ comments }: UserCommentsListProps) {
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h3 className="text-xl font-semibold mb-4 text-black">내가 쓴 댓글</h3>
       {/* Display message if comments is null or empty */}
-      {(!comments || comments.length === 0) && <p className="text-gray-600">작성한 댓글이 없습니다.</p>}
+      {(!comments || comments.length === 0) && (
+        <p className="text-gray-600">작성한 댓글이 없습니다.</p>
+      )}
       {/* Render list if comments array exists and is not empty */}
       {comments && comments.length > 0 && (
         <ul className="space-y-3">
@@ -56,18 +58,29 @@ export default function UserCommentsList({ comments }: UserCommentsListProps) {
                     {(() => {
                       try {
                         const datePart = comment.createdAt.split("T")[0];
-                        const [year, month, day] = datePart.split("-").map(Number);
-                        if (!year || !month || !day) throw new Error("Invalid date parts");
+                        const [year, month, day] = datePart
+                          .split("-")
+                          .map(Number);
+                        if (!year || !month || !day)
+                          throw new Error("Invalid date parts");
                         const date = new Date(year, month - 1, day);
-                        if (isNaN(date.getTime())) throw new Error("Invalid Date object");
-                        return date.toLocaleDateString();
+                        if (isNaN(date.getTime()))
+                          throw new Error("Invalid Date object");
+                        // Format date as YYYY. MM. DD
+                        return `${year}. ${month}. ${day}`;
                       } catch (e) {
-                        console.error("Error parsing comment date:", comment.createdAt, e);
+                        console.error(
+                          "Error parsing comment date:",
+                          comment.createdAt,
+                          e
+                        );
                         return "날짜 형식 오류";
                       }
-                    })()}
-                    {/* Link to the original post using boardId */}|{" "}
-                    <Link href={`/board/${comment.boardId}`} className="text-blue-600 hover:underline">
+                    })()}{" "}
+                    <Link
+                      href={`/board/${comment.boardId}`}
+                      className="text-blue-600 hover:underline"
+                    >
                       원본 게시글 보기
                     </Link>
                   </p>

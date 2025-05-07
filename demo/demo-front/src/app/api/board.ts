@@ -1,6 +1,5 @@
 "use client";
-
-import { getToken } from "./auth"; // getToken 함수 임포트 (필요시)
+import { baseURL } from "./config";
 
 // API 오류 응답 타입 (auth.ts에서 가져오거나 동일하게 정의)
 interface ApiErrorResponse {
@@ -34,7 +33,7 @@ export async function getBoards(
     page: page.toString(),
     size: size.toString(),
   });
-  const url = `http://localhost:8080/api/v1/boards?${params.toString()}`;
+  const url = `${baseURL}/api/v1/boards?${params.toString()}`;
 
   const response = await fetch(url, {
     method: "GET",
@@ -101,7 +100,7 @@ export async function getBoardById(
 ): Promise<BoardDetail | null> {
   // Promise<BoardDetail | null> -> 404 시 null 반환
   const response = await fetch(
-    `http://localhost:8080/api/v1/boards/${boardId}`,
+    `${baseURL}/api/v1/boards/${boardId}`,
     {
       method: "GET",
       headers: {
@@ -161,7 +160,7 @@ export async function deleteBoard(
 ): Promise<void> {
   // 성공 시 반환값 없음 (void)
   const response = await fetch(
-    `http://localhost:8080/api/v1/boards/${boardId}`,
+    `${baseURL}/api/v1/boards/${boardId}`,
     {
       method: "DELETE",
       headers: {
@@ -228,7 +227,7 @@ export async function createBoard(
   input: CreateBoardInput,
   token: string
 ): Promise<CreateBoardResponse> {
-  const response = await fetch("http://localhost:8080/api/v1/boards", {
+  const response = await fetch(`${baseURL}/api/v1/boards`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -276,7 +275,7 @@ export async function updateBoard(
 ): Promise<BoardDetail> {
   // Promise<BoardDetail> -> 성공 시 수정된 게시물 반환
   const response = await fetch(
-    `http://localhost:8080/api/v1/boards/${boardId}`,
+    `${baseURL}/api/v1/boards/${boardId}`,
     {
       method: "PATCH", // HTTP 메소드: PATCH
       headers: {

@@ -70,7 +70,8 @@ export default function UserPostsList({ posts }: UserPostsListProps) {
                       if (isNaN(date.getTime())) {
                          throw new Error("Invalid Date object");
                       }
-                      return date.toLocaleDateString(); // Format using locale settings
+                      // Format date as YYYY. MM. DD
+                      return `${year}. ${month}. ${day}`;
                     } catch (e) {
                       // Use post.createdAt in error log
                       console.error("Error parsing date:", post.createdAt, e);

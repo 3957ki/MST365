@@ -1,3 +1,5 @@
+import { baseURL } from "./config";
+
 // API 응답 타입 정의 (실제 응답 기반)
 interface UserData {
   id: number;
@@ -27,7 +29,7 @@ export async function login(
   userName: string,
   password: string
 ): Promise<LoginSuccessData> {
-  const response = await fetch("http://localhost:8080/api/v1/auth/session", {
+  const response = await fetch(`${baseURL}/api/v1/auth/session`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -110,7 +112,7 @@ interface LogoutResponse {
 
 // 로그아웃 API 호출 함수
 export async function logout(token: string): Promise<void> {
-  const response = await fetch("http://localhost:8080/api/v1/auth/session", {
+  const response = await fetch(`${baseURL}/api/v1/auth/session`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`, // 인증 헤더 추가
@@ -152,7 +154,7 @@ export async function withdrawUser(
   userId: number,
   token: string
 ): Promise<void> {
-  const response = await fetch(`http://localhost:8080/api/v1/users/${userId}`, {
+  const response = await fetch(`${baseURL}/api/v1/users/${userId}`, {
     // 경로 변수 포함
     method: "DELETE",
     headers: {
@@ -203,7 +205,7 @@ export async function changePassword(
 ): Promise<void> {
   // 성공 시 반환값 없음
   const response = await fetch(
-    "http://localhost:8080/api/v1/users/change-password",
+    `${baseURL}/api/v1/users/change-password`,
     {
       method: "POST",
       headers: {
@@ -268,7 +270,7 @@ export async function getUserInfo(
   userId: number,
   token: string
 ): Promise<UserInfoData> {
-  const response = await fetch(`http://localhost:8080/api/v1/users/${userId}`, {
+  const response = await fetch(`${baseURL}/api/v1/users/${userId}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`, // 인증 헤더 추가
@@ -323,7 +325,7 @@ export async function getUserPosts(
   token: string
 ): Promise<UserPostItem[]> {
   const response = await fetch(
-    `http://localhost:8080/api/v1/users/${userId}/boards`,
+    `${baseURL}/api/v1/users/${userId}/boards`,
     {
       method: "GET",
       headers: {
@@ -381,7 +383,7 @@ export async function getUserComments(
   token: string
 ): Promise<UserCommentItem[]> {
   const response = await fetch(
-    `http://localhost:8080/api/v1/users/${userId}/comments`,
+    `${baseURL}/api/v1/users/${userId}/comments`,
     {
       method: "GET",
       headers: {
@@ -430,7 +432,7 @@ export async function signup(
   userName: string,
   password: string
 ): Promise<SignupResponse> {
-  const response = await fetch("http://localhost:8080/api/v1/auth/register", {
+  const response = await fetch(`${baseURL}/api/v1/auth/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
