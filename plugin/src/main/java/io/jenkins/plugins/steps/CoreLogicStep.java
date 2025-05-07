@@ -8,10 +8,23 @@ import hudson.model.TaskListener;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.workflow.steps.*;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+
 import java.util.Set;
 
 public class CoreLogicStep extends Step {
     private final String input;
+
+    /** .env 파일을 저장해 둔 File Credential 의 ID */
+    private String envFileCredentialsId;
+
+    public String getEnvFileCredentialsId() {
+        return envFileCredentialsId;
+    }
+    @DataBoundSetter
+    public void setEnvFileCredentialsId(String envFileCredentialsId) {
+        this.envFileCredentialsId = envFileCredentialsId;
+    }
 
     @DataBoundConstructor
     public CoreLogicStep(String input) {
