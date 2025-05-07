@@ -1,4 +1,3 @@
-import { chromium, Browser, Page } from 'playwright';
 import { TestStep } from '../parser/scenarioParser';
 import * as path from 'path';
 import * as fs from 'fs/promises';
@@ -7,6 +6,8 @@ import * as dotenv from 'dotenv';
 import * as os from 'os';
 import * as childProcess from 'child_process';
 import { promisify } from 'util';
+import { MCPClient } from '../mcp/mcpClient';
+
 
 const exec = promisify(childProcess.exec);
 dotenv.config();
@@ -33,17 +34,92 @@ interface TestReport {
   failedSteps: number;
   steps: StepResult[];
   finalComment?: string;
-  htmlReportURL?: string; // HTML 리포트 경로 추가
+  htmlReportURL?: string;
+}
+
+// 스크린샷 저장을 위한 유틸리티 함수
+async function saveScreenshot(screenshotResult: any, filePath: string): Promise<boolean> {
+  try {
+    // 결과가 없거나 binary 데이터가 없는 경우
+    if (!screenshotResult) {
+      console.error('스크린샷 데이터가 없습니다.');
+      return false;
+    }
+
+    // 첫 번째 방법: binary 속성 사용
+    if (screenshotResult.binary) {
+      let imageData = screenshotResult.binary;
+
+      // 스크린샷 데이터 형식 확인
+      if (typeof imageData === 'string') {
+        // base64 접두사 제거 (예: 'data:image/jpeg;base64,' 또는 'data:image/png;base64,')
+        const base64Prefix = /^data:image\/[a-zA-Z]+;base64,/;
+        if (base64Prefix.test(imageData)) {
+          imageData = imageData.replace(base64Prefix, '');
+        }
+
+        // base64 디코딩 및 파일 저장
+        await fs.writeFile(filePath, Buffer.from(imageData, 'base64'));
+        console.log(`스크린샷 저장됨 (binary 방식): ${filePath}`);
+        return true;
+      }
+    }
+    
+    // 두 번째 방법: content 배열에서 이미지 찾기
+    if (screenshotResult.content && screenshotResult.content.length > 0) {
+      const imageContent = screenshotResult.content.find(
+        (item: any) => item.type === 'image' && item.data
+      );
+
+      if (imageContent && imageContent.data) {
+        let data = imageContent.data;
+        
+        // base64 접두사 제거
+        const base64Prefix = /^data:image\/[a-zA-Z]+;base64,/;
+        if (base64Prefix.test(data)) {
+          data = data.replace(base64Prefix, '');
+        }
+
+        await fs.writeFile(filePath, Buffer.from(data, 'base64'));
+        console.log(`스크린샷 저장됨 (content 방식): ${filePath}`);
+        return true;
+      }
+    }
+
+    // 세 번째 방법: 동적으로 내용 검색
+    const stringifiedResult = JSON.stringify(screenshotResult);
+    const base64Match = stringifiedResult.match(/"data":"([A-Za-z0-9+/=]+)"/);
+    if (base64Match && base64Match[1]) {
+      await fs.writeFile(filePath, Buffer.from(base64Match[1], 'base64'));
+      console.log(`스크린샷 저장됨 (동적 검색 방식): ${filePath}`);
+      return true;
+    }
+
+    console.error('지원되지 않는 스크린샷 데이터 형식:', typeof screenshotResult);
+    // 디버깅을 위해 구조 일부만 출력 (너무 큰 경우 메모리 문제 방지)
+    console.log('스크린샷 결과 구조 미리보기:', JSON.stringify(screenshotResult, null, 2).substring(0, 200) + '...');
+    
+    // 마지막 방법: 디버깅용 파일로 저장
+    const debugPath = filePath + '.debug.json';
+    await fs.writeFile(debugPath, JSON.stringify(screenshotResult, null, 2));
+    console.log(`디버깅 정보 저장됨: ${debugPath}`);
+    
+    return false;
+  } catch (error) {
+    console.error('스크린샷 저장 실패:', error);
+    return false;
+  }
 }
 
 export class AdaptivePlaywrightExecutor {
-  private browser: Browser | null = null;
-  private page: Page | null = null;
+  private mcpClient: MCPClient;
   private outputDir: string;
   private testRunDir: string; // 테스트 실행별 디렉토리
   private screenshotsDir: string; // 스크린샷 디렉토리
   private testReport: TestReport;
   private anthropic: Anthropic;
+  private browserContextId: string | null = null;
+  private pageId: string | null = null;
 
   constructor() {
     // 기본 출력 디렉토리
@@ -55,6 +131,8 @@ export class AdaptivePlaywrightExecutor {
     
     // 스크린샷 디렉토리
     this.screenshotsDir = path.join(this.testRunDir, 'screenshots');
+    
+    this.mcpClient = new MCPClient();
     
     this.anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,
@@ -80,45 +158,92 @@ export class AdaptivePlaywrightExecutor {
     console.log(`테스트 실행 디렉토리: ${this.testRunDir}`);
     console.log(`스크린샷 디렉토리: ${this.screenshotsDir}`);
     
-    this.browser = await chromium.launch({
-      headless: false,
-      args: ['--start-maximized'],
-    });
-    this.page = await this.browser.newPage();
+    try {
+      // MCP 클라이언트 연결
+      await this.mcpClient.connect();
+      
+      // 브라우저 시작
+      const launchResult = await this.mcpClient.executeAction('browserLaunch', {
+        name: 'chromium',
+        headless: false,
+        args: ['--start-maximized']
+      });
+      
+      // 브라우저 컨텍스트 생성
+      const contextResult = await this.mcpClient.executeAction('browserNewContext', {
+        browser: launchResult.browserId
+      });
+      this.browserContextId = contextResult.contextId;
+      
+      // 페이지 생성
+      const pageResult = await this.mcpClient.executeAction('contextNewPage', {
+        context: this.browserContextId
+      });
+      this.pageId = pageResult.pageId;
+      
+      console.log('브라우저와 페이지 초기화 완료');
+    } catch (error) {
+      console.error('브라우저 초기화 실패:', error);
+      throw error;
+    }
   }
 
   private async getPageSnapshot(): Promise<string> {
-    // 페이지의 현재 상태를 분석하기 위한 정보 수집
-    const url = this.page!.url();
-    const title = await this.page!.title();
-
-    // 모든 인터렉티브 요소 찾기
-    const elements = await this.page!.evaluate(() => {
-      const interactive = Array.from(
-        document.querySelectorAll('input, button, textarea, select, a')
+    try {
+      // 현재 URL 가져오기
+      const urlResult = await this.mcpClient.executeAction('pageUrl', {
+        page: this.pageId
+      });
+      const url = urlResult.url;
+      
+      // 페이지 제목 가져오기
+      const titleResult = await this.mcpClient.executeAction('pageTitle', {
+        page: this.pageId
+      });
+      const title = titleResult.title;
+      
+      // 페이지의 인터랙티브 요소 가져오기
+      const elementsResult = await this.mcpClient.executeAction('pageEvaluate', {
+        page: this.pageId,
+        expression: `() => {
+          const interactive = Array.from(
+            document.querySelectorAll('input, button, textarea, select, a')
+          );
+          return interactive.map(el => ({
+            tagName: el.tagName.toLowerCase(),
+            type: el.type || '',
+            name: el.name || '',
+            id: el.id || '',
+            className: el.className || '',
+            placeholder: el.placeholder || '',
+            text: el.textContent?.trim() || '',
+            value: el.value || '',
+            visible: el.getBoundingClientRect().height > 0,
+          }));
+        }`
+      });
+      
+      return JSON.stringify(
+        {
+          url,
+          title,
+          elements: elementsResult.result
+        },
+        null,
+        2
       );
-      return interactive.map((el) => ({
-        tagName: el.tagName.toLowerCase(),
-        type: (el as HTMLInputElement).type || '',
-        name: (el as HTMLInputElement).name || '',
-        id: el.id || '',
-        className: el.className || '',
-        placeholder: (el as HTMLInputElement).placeholder || '',
-        text: el.textContent?.trim() || '',
-        value: (el as HTMLInputElement).value || '',
-        visible: el.getBoundingClientRect().height > 0,
-      }));
-    });
-
-    return JSON.stringify(
-      {
-        url,
-        title,
-        elements,
-      },
-      null,
-      2
-    );
+    } catch (error) {
+      console.error('페이지 스냅샷 가져오기 실패:', error);
+      return JSON.stringify(
+        {
+          url: 'unknown',
+          title: 'unknown',
+          elements: []
+        },
+        null,
+        2
+      );
+    }
   }
 
   private async getSelectorForElement(
@@ -126,7 +251,7 @@ export class AdaptivePlaywrightExecutor {
     pageSnapshot: string
   ): Promise<string> {
     const response = await this.anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 500,
       messages: [
         {
@@ -183,15 +308,15 @@ YouTube의 경우:
   }
 
   async executeSteps(steps: TestStep[]) {
-    console.log('Starting adaptive test execution...');
-    console.log(`Results will be saved to: ${this.testRunDir}`);
+    console.log('테스트 실행을 시작합니다...');
+    console.log(`결과는 다음 위치에 저장됩니다: ${this.testRunDir}`);
 
     this.testReport.startTime = new Date().toISOString();
     this.testReport.totalSteps = steps.length;
 
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
-      console.log(`\nExecuting Step ${i + 1}: ${step.description}`);
+      console.log(`\n단계 ${i + 1} 실행: ${step.description}`);
 
       const stepResult: StepResult = {
         step: step,
@@ -212,10 +337,21 @@ YouTube의 경우:
             if (!url) {
               throw new Error('URL이 지정되지 않았습니다.');
             }
-            await this.page!.goto(url);
-            await this.page!.waitForLoadState('networkidle');
-            // YouTube 로딩 대기
-            await this.page!.waitForTimeout(2000);
+            
+            console.log(`${url}로 이동 중...`);
+            await this.mcpClient.executeAction('pageGoto', {
+              page: this.pageId,
+              url: url
+            });
+            
+            await this.mcpClient.executeAction('pageWaitForLoadState', {
+              page: this.pageId,
+              state: 'networkidle'
+            });
+            
+            // 페이지 로딩 대기
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            console.log(`페이지 이동 완료: ${url}`);
             break;
 
           case 'fill':
@@ -225,7 +361,7 @@ YouTube의 경우:
             }
 
             // YouTube 특별 처리
-            if (this.page!.url().includes('youtube.com')) {
+            if (pageSnapshot.includes('youtube.com')) {
               try {
                 // YouTube 검색창 선택자들
                 const youtubeSelectors = [
@@ -236,14 +372,65 @@ YouTube의 경우:
                   'input[placeholder*="Search"]',
                 ];
 
-                let element = null;
+                let selectorFound = false;
                 for (const selector of youtubeSelectors) {
                   try {
-                    element = await this.page!.waitForSelector(selector, {
-                      timeout: 3000,
+                    // 요소 존재 확인
+                    const visibleResult = await this.mcpClient.executeAction('pageIsVisible', {
+                      page: this.pageId,
+                      selector: selector,
+                      timeout: 3000
                     });
-                    if (element) {
+                    
+                    if (visibleResult.visible) {
                       console.log(`YouTube 검색창 찾음: ${selector}`);
+                      
+                      // 요소 클릭
+                      await this.mcpClient.executeAction('pageClick', {
+                        page: this.pageId,
+                        selector: selector
+                      });
+                      
+                      // 대기
+                      await new Promise(resolve => setTimeout(resolve, 500));
+                      
+                      // 필드 채우기
+                      await this.mcpClient.executeAction('pageFill', {
+                        page: this.pageId,
+                        selector: selector,
+                        value: fillValue
+                      });
+                      
+                      // 대기
+                      await new Promise(resolve => setTimeout(resolve, 500));
+                      
+                      // 검색 버튼 클릭 시도
+                      const searchButtonVisible = await this.mcpClient.executeAction('pageIsVisible', {
+                        page: this.pageId,
+                        selector: 'button[id="search-icon-legacy"]',
+                        timeout: 1000
+                      });
+                      
+                      if (searchButtonVisible.visible) {
+                        await this.mcpClient.executeAction('pageClick', {
+                          page: this.pageId,
+                          selector: 'button[id="search-icon-legacy"]'
+                        });
+                      } else {
+                        // Enter 키 입력
+                        await this.mcpClient.executeAction('pagePress', {
+                          page: this.pageId,
+                          selector: selector,
+                          key: 'Enter'
+                        });
+                      }
+                      
+                      await this.mcpClient.executeAction('pageWaitForLoadState', {
+                        page: this.pageId,
+                        state: 'networkidle'
+                      });
+                      
+                      selectorFound = true;
                       break;
                     }
                   } catch {
@@ -251,22 +438,7 @@ YouTube의 경우:
                   }
                 }
 
-                if (element) {
-                  await element.click();
-                  await this.page!.waitForTimeout(500);
-                  await element.fill(fillValue);
-                  await this.page!.waitForTimeout(500);
-                  // Enter 키 대신 검색 버튼 클릭 시도
-                  const searchButton = await this.page!.$(
-                    'button[id="search-icon-legacy"]'
-                  );
-                  if (searchButton) {
-                    await searchButton.click();
-                  } else {
-                    await this.page!.keyboard.press('Enter');
-                  }
-                  await this.page!.waitForLoadState('networkidle');
-                } else {
+                if (!selectorFound) {
                   throw new Error('YouTube 검색창을 찾을 수 없습니다.');
                 }
               } catch (error) {
@@ -281,15 +453,42 @@ YouTube의 경우:
               );
               console.log(`AI가 찾은 선택자: ${selector}`);
 
-              const element = await this.page!.waitForSelector(selector, {
-                timeout: 5000,
+              // 요소 기다리기
+              await this.mcpClient.executeAction('pageWaitForSelector', {
+                page: this.pageId,
+                selector: selector,
+                timeout: 5000
               });
-              if (element) {
-                await element.click();
-                await element.fill(fillValue);
-                await this.page!.keyboard.press('Enter');
-                await this.page!.waitForLoadState('networkidle');
+              
+              // 요소 클릭
+              await this.mcpClient.executeAction('pageClick', {
+                page: this.pageId,
+                selector: selector
+              });
+              
+              // 값 입력
+              await this.mcpClient.executeAction('pageFill', {
+                page: this.pageId,
+                selector: selector,
+                value: fillValue
+              });
+              console.log(`입력 완료: "${fillValue}"`);
+              
+              // Enter 키 입력이 필요한 경우
+              if (step.description.includes('검색') || step.description.includes('로그인')) {
+                await this.mcpClient.executeAction('pagePress', {
+                  page: this.pageId,
+                  selector: selector,
+                  key: 'Enter'
+                });
+                console.log('Enter 키 입력 완료');
               }
+              
+              // 페이지 로딩 대기
+              await this.mcpClient.executeAction('pageWaitForLoadState', {
+                page: this.pageId,
+                state: 'networkidle'
+              });
             }
             break;
 
@@ -298,18 +497,37 @@ YouTube의 경우:
               step,
               pageSnapshot
             );
-            console.log(`AI가 찾은 선택자: ${selector}`);
+            console.log(`클릭할 선택자: ${selector}`);
 
-            await this.page!.click(selector);
-            await this.page!.waitForLoadState('networkidle');
+            // 요소 클릭
+            await this.mcpClient.executeAction('pageClick', {
+              page: this.pageId,
+              selector: selector
+            });
+            console.log(`선택자 ${selector} 클릭 완료`);
+            
+            // 페이지 로딩 대기
+            await this.mcpClient.executeAction('pageWaitForLoadState', {
+              page: this.pageId,
+              state: 'networkidle'
+            });
             break;
 
           case 'wait':
             // wait 액션 구현
             if (step.target) {
-              await this.page!.waitForSelector(step.target, { timeout: 10000 });
+              console.log(`요소 대기 중: ${step.target}`);
+              await this.mcpClient.executeAction('pageWaitForSelector', {
+                page: this.pageId,
+                selector: step.target,
+                timeout: 10000
+              });
+              console.log(`요소 발견: ${step.target}`);
             } else {
-              await this.page!.waitForTimeout(2000);
+              console.log(`${step.value || 2000}ms 동안 대기 중...`);
+              const waitTime = step.value ? parseInt(step.value) : 2000;
+              await new Promise(resolve => setTimeout(resolve, waitTime));
+              console.log(`대기 완료`);
             }
             break;
 
@@ -320,22 +538,34 @@ YouTube의 경우:
               this.screenshotsDir,
               `step-${i + 1}-${timestamp}.png`
             );
-            await this.page!.screenshot({
-              path: screenshotPath,
-              fullPage: true,
+            
+            console.log('스크린샷 촬영 중...');
+            
+            // 스크린샷 촬영
+            const screenshotResult = await this.mcpClient.executeAction('pageScreenshot', {
+              page: this.pageId,
+              fullPage: true
             });
-            stepResult.screenshot = screenshotPath;
-            console.log(`Screenshot saved: ${screenshotPath}`);
+            
+            // 향상된 스크린샷 저장 함수 사용
+            const saved = await saveScreenshot(screenshotResult, screenshotPath);
+            if (saved) {
+              stepResult.screenshot = screenshotPath;
+              console.log(`스크린샷 저장됨: ${screenshotPath}`);
+            } else {
+              console.error('스크린샷 저장 실패');
+            }
             break;
 
           default:
-            console.warn(`Unknown action: ${step.action}`);
+            console.warn(`알 수 없는 액션: ${step.action}`);
         }
 
         stepResult.status = 'success';
         this.testReport.passedSteps++;
+        console.log(`단계 성공: ${step.description}`);
 
-        // 각 단계 후 스크린샷 캡처
+        // 각 단계 후 스크린샷 캡처 (screenshot 액션이 아닌 경우)
         if (step.action !== 'screenshot') {
           const autoScreenshotPath = path.join(
             this.screenshotsDir,
@@ -343,14 +573,26 @@ YouTube의 경우:
               .toISOString()
               .replace(/[:.]/g, '-')}.png`
           );
-          await this.page!.screenshot({ path: autoScreenshotPath });
-          stepResult.screenshot = autoScreenshotPath;
+          
+          // 스크린샷 촬영 (로그 출력 없이)
+          const autoScreenshotResult = await this.mcpClient.executeAction('pageScreenshot', {
+            page: this.pageId,
+            fullPage: true
+          });
+          
+          // 향상된 스크린샷 저장 함수 사용
+          const saved = await saveScreenshot(autoScreenshotResult, autoScreenshotPath);
+          if (saved) {
+            stepResult.screenshot = autoScreenshotPath;
+          } else {
+            console.error('자동 스크린샷 저장 실패');
+          }
         }
 
         // AI에게 결과 분석 요청
         stepResult.aiComment = await this.getAIComment(step, stepResult);
       } catch (error) {
-        console.error(`Error executing step "${step.description}":`, error);
+        console.error(`단계 "${step.description}" 실행 오류:`, error);
         stepResult.status = 'failed';
         stepResult.error =
           error instanceof Error ? error.message : String(error);
@@ -363,8 +605,24 @@ YouTube의 경우:
             .toISOString()
             .replace(/[:.]/g, '-')}.png`
         );
-        await this.page!.screenshot({ path: errorScreenshotPath });
-        stepResult.screenshot = errorScreenshotPath;
+        
+        try {
+          // 스크린샷 촬영
+          const errorScreenshotResult = await this.mcpClient.executeAction('pageScreenshot', {
+            page: this.pageId,
+            fullPage: true
+          });
+          
+          // 향상된 스크린샷 저장 함수 사용
+          const saved = await saveScreenshot(errorScreenshotResult, errorScreenshotPath);
+          if (saved) {
+            stepResult.screenshot = errorScreenshotPath;
+          } else {
+            console.error('오류 스크린샷 저장 실패');
+          }
+        } catch (screenshotError) {
+          console.error('에러 발생 후 스크린샷 촬영 실패:', screenshotError);
+        }
 
         stepResult.aiComment = await this.getAIComment(step, stepResult);
       }
@@ -376,7 +634,7 @@ YouTube의 경우:
       this.testReport.steps.push(stepResult);
 
       // 각 단계 사이에 대기
-      await this.page!.waitForTimeout(1000);
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     this.testReport.endTime = new Date().toISOString();
@@ -385,9 +643,11 @@ YouTube의 경우:
       new Date(this.testReport.startTime).getTime();
 
     // 최종 테스트 결과에 대한 AI 코멘트
+    console.log('\n테스트 실행 완료, AI 분석 결과 생성 중...');
     this.testReport.finalComment = await this.getFinalTestComment();
 
-    // Playwright HTML 리포트 생성
+    // HTML 리포트 생성
+    console.log('HTML 보고서 생성 중...');
     const htmlReportPath = await this.generatePlaywrightReport();
     this.testReport.htmlReportURL = htmlReportPath;
 
@@ -398,16 +658,16 @@ YouTube의 경우:
     );
     await fs.writeFile(reportPath, JSON.stringify(this.testReport, null, 2));
 
-    console.log(`\nTest report saved to: ${reportPath}`);
+    console.log(`\n테스트 보고서 저장 완료: ${reportPath}`);
 
     // 콘솔에 요약 출력
-    console.log('\n=== Test Summary ===');
-    console.log(`Total steps: ${this.testReport.totalSteps}`);
-    console.log(`Passed: ${this.testReport.passedSteps}`);
-    console.log(`Failed: ${this.testReport.failedSteps}`);
-    console.log(`Duration: ${this.testReport.duration}ms`);
-    console.log(`HTML Report: ${this.testReport.htmlReportURL}`);
-    console.log('\nAI Final Comment:');
+    console.log('\n=== 테스트 요약 ===');
+    console.log(`총 단계: ${this.testReport.totalSteps}`);
+    console.log(`성공: ${this.testReport.passedSteps}`);
+    console.log(`실패: ${this.testReport.failedSteps}`);
+    console.log(`소요 시간: ${this.testReport.duration}ms`);
+    console.log(`HTML 보고서: ${this.testReport.htmlReportURL}`);
+    console.log('\nAI 최종 분석:');
     console.log(this.testReport.finalComment);
   }
 
@@ -415,14 +675,14 @@ YouTube의 경우:
     const htmlReportDir = path.join(this.testRunDir, 'html-report');
     await fs.mkdir(htmlReportDir, { recursive: true });
     
-    console.log(`Generating Playwright HTML report at: ${htmlReportDir}`);
+    console.log(`HTML 리포트 생성 위치: ${htmlReportDir}`);
     
     try {
       // 테스트 실행 결과를 HTML 파일로 변환
       const stepsHtml = this.testReport.steps.map((step, index) => {
         const statusClass = step.status === 'success' ? 'success' : 'failure';
         const screenshotHtml = step.screenshot 
-          ? `<div class="screenshot"><img src="${path.relative(htmlReportDir, step.screenshot)}" alt="Screenshot" width="800" /></div>` 
+          ? `<div class="screenshot"><img src="${path.basename(step.screenshot)}" alt="Screenshot" width="800" /></div>` 
           : '';
           
         return `
@@ -571,9 +831,19 @@ YouTube의 경우:
       const htmlFilePath = path.join(htmlReportDir, 'index.html');
       await fs.writeFile(htmlFilePath, htmlTemplate);
       
-      // 스크린샷 파일 복사 - 상대 경로 처리를 위해
-      // 실제 운영 환경에서는 이미지를 복사하거나 심볼릭 링크를 만드는 것이 좋음
-      // 여기서는 상대 경로로 참조하는 예시만 포함
+      // 스크린샷 파일을 HTML 리포트 디렉토리에 복사 (상대 경로 문제 해결)
+      for (const step of this.testReport.steps) {
+        if (step.screenshot) {
+          const screenshotFileName = path.basename(step.screenshot);
+          const destPath = path.join(htmlReportDir, screenshotFileName);
+          
+          try {
+            await fs.copyFile(step.screenshot, destPath);
+          } catch (error) {
+            console.error(`스크린샷 파일 복사 실패: ${screenshotFileName}`, error);
+          }
+        }
+      }
       
       // 브라우저에서 HTML 보고서 열기 (선택 사항)
       const openReport = async () => {
@@ -586,9 +856,9 @@ YouTube의 경우:
             
         try {
           await exec(command);
-          console.log(`HTML report opened in default browser: ${url}`);
+          console.log(`HTML 보고서가 기본 브라우저에서 열렸습니다: ${url}`);
         } catch (error) {
-          console.error('Failed to open HTML report in browser:', error);
+          console.error('HTML 보고서를 브라우저에서 열지 못했습니다:', error);
         }
       };
       
@@ -598,7 +868,7 @@ YouTube의 경우:
       return htmlFilePath;
     } catch (error) {
       console.error('HTML 리포트 생성 실패:', error);
-      return `Failed to generate HTML report: ${error}`;
+      return `HTML 리포트 생성 실패: ${error}`;
     }
   }
 
@@ -656,24 +926,40 @@ ${this.testReport.steps
   .join('\n')}
 
 전체 테스트에 대한 종합적인 평가와 개선 사항을 제시해주세요.`,
-          },
-        ],
-      });
-
-      const content = response.content[0];
-      if (content.type === 'text') {
-        return content.text;
+          },],
+        });
+  
+        const content = response.content[0];
+        if (content.type === 'text') {
+          return content.text;
+        }
+        return '평가를 생성할 수 없습니다.';
+      } catch (error) {
+        console.error('최종 평가 생성 실패:', error);
+        return '평가를 생성할 수 없습니다.';
       }
-      return '평가를 생성할 수 없습니다.';
-    } catch (error) {
-      console.error('최종 평가 생성 실패:', error);
-      return '평가를 생성할 수 없습니다.';
+    }
+  
+    async cleanup() {
+      try {
+        if (this.pageId && this.browserContextId) {
+          // 페이지 닫기
+          await this.mcpClient.executeAction('pageClose', {
+            page: this.pageId
+          });
+          
+          // 브라우저 컨텍스트 닫기
+          await this.mcpClient.executeAction('contextClose', {
+            context: this.browserContextId
+          });
+        }
+        
+        // MCP 클라이언트 연결 해제
+        await this.mcpClient.disconnect();
+        
+        console.log('브라우저 및 MCP 클라이언트 정리 완료');
+      } catch (error) {
+        console.error('정리 과정에서 오류 발생:', error);
+      }
     }
   }
-
-  async cleanup() {
-    if (this.browser) {
-      await this.browser.close();
-    }
-  }
-}
