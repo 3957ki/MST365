@@ -1,5 +1,5 @@
 "use client";
-import { baseURL } from "./config";
+const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
 
 // API 오류 응답 타입 (auth.ts에서 가져오거나 동일하게 정의)
 interface ApiErrorResponse {

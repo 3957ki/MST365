@@ -1,7 +1,7 @@
 // src/app/api/comment.ts
 
 import { getToken } from "@/app/api/auth";
-import { baseURL } from "./config";
+const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
 
 // 댓글 1개에 대한 타입 (작성/조회/수정 공통)
 export interface CommentData {

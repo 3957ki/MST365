@@ -1,4 +1,4 @@
-import { baseURL } from "./config";
+const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
 
 // API 응답 타입 정의 (실제 응답 기반)
 interface UserData {
