@@ -1,8 +1,8 @@
 "use client";
 
-import React from 'react'; // Removed useState, useEffect
-import Link from 'next/link'; // Added Link import
-import { UserCommentItem } from '../../api/auth'; // Added UserCommentItem import
+import React from "react"; // Removed useState, useEffect
+import Link from "next/link"; // Added Link import
+import { UserCommentItem } from "../../api/auth"; // Added UserCommentItem import
 
 // Define the structure for component props
 interface UserCommentsListProps {
@@ -44,31 +44,51 @@ export default function UserCommentsList({ comments }: UserCommentsListProps) {
       {/* Render list if comments array exists and is not empty */}
       {comments && comments.length > 0 && (
         <ul className="space-y-3">
-          {comments.map((comment: UserCommentItem) => ( // Added type annotation
-            <li key={comment.id} className="border-b pb-3 text-black">
-              <p className="mb-1">"{comment.content}"</p>
-              <p className="text-sm text-gray-600">
-                {/* Format createdAt date safely */}
-                작성일: {(() => {
-                  try {
-                    const datePart = comment.createdAt.split('T')[0];
-                    const [year, month, day] = datePart.split('-').map(Number);
-                    if (!year || !month || !day) throw new Error("Invalid date parts");
-                    const date = new Date(year, month - 1, day);
-                    if (isNaN(date.getTime())) throw new Error("Invalid Date object");
-                    return date.toLocaleDateString();
-                  } catch (e) {
-                    console.error("Error parsing comment date:", comment.createdAt, e);
-                    return "날짜 형식 오류";
-                  }
-                })()}
-                {/* Link to the original post using boardId */}
-                 | <Link href={`/board/${comment.boardId}`} className="text-blue-600 hover:underline">원본 게시글 보기</Link>
-              </p>
-              {/* Optionally display deleted status */}
-              {/* {comment.deleted && <p className="text-xs text-red-500">(삭제된 댓글)</p>} */}
-            </li>
-          ))}
+          {comments
+            .filter((comment) => !comment.deleted) // 삭제되지 않은 댓글만 필터링
+            .map(
+              (
+                comment: UserCommentItem // Added type annotation
+              ) => (
+                <li key={comment.id} className="border-b pb-3 text-black">
+                  <p className="mb-1">"{comment.content}"</p>
+                  <p className="text-sm text-gray-600">
+                    {/* Format createdAt date safely */}
+                    작성일:{" "}
+                    {(() => {
+                      try {
+                        const datePart = comment.createdAt.split("T")[0];
+                        const [year, month, day] = datePart
+                          .split("-")
+                          .map(Number);
+                        if (!year || !month || !day)
+                          throw new Error("Invalid date parts");
+                        const date = new Date(year, month - 1, day);
+                        if (isNaN(date.getTime()))
+                          throw new Error("Invalid Date object");
+                        // Format date as YYYY. MM. DD
+                        return `${year}. ${month}. ${day}`;
+                      } catch (e) {
+                        console.error(
+                          "Error parsing comment date:",
+                          comment.createdAt,
+                          e
+                        );
+                        return "날짜 형식 오류";
+                      }
+                    })()}{" "}
+                    <Link
+                      href={`/board/${comment.boardId}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      원본 게시글 보기
+                    </Link>
+                  </p>
+                  {/* Optionally display deleted status */}
+                  {/* {comment.deleted && <p className="text-xs text-red-500">(삭제된 댓글)</p>} */}
+                </li>
+              )
+            )}
         </ul>
       )}
       {/* Add pagination if needed */}

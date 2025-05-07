@@ -1,6 +1,7 @@
 // src/app/api/comment.ts
 
 import { getToken } from "@/app/api/auth";
+const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
 
 // 댓글 1개에 대한 타입 (작성/조회/수정 공통)
 export interface CommentData {
@@ -32,7 +33,7 @@ export async function createComment(
   content: string,
   token: string
 ): Promise<CreateCommentResponse> {
-  const response = await fetch(`http://localhost:8080/api/v1/boards/${boardId}/comments`, {
+  const response = await fetch(`${baseURL}/api/v1/boards/${boardId}/comments`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -62,7 +63,7 @@ export async function getComments(boardId: number): Promise<CommentData[]> {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`http://localhost:8080/api/v1/boards/${boardId}/comments`, {
+  const response = await fetch(`${baseURL}/api/v1/boards/${boardId}/comments`, {
     method: "GET",
     headers,
   });
@@ -96,7 +97,7 @@ export async function updateComment(
   content: string,
   token: string
 ): Promise<UpdateCommentResponse> {
-  const response = await fetch(`http://localhost:8080/api/v1/boards/${boardId}/comments/${commentId}`, {
+  const response = await fetch(`${baseURL}/api/v1/boards/${boardId}/comments/${commentId}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -120,7 +121,7 @@ export async function deleteComment(
   commentId: number,
   token: string
 ): Promise<void> {
-  const response = await fetch(`http://localhost:8080/api/v1/boards/${boardId}/comments/${commentId}`, {
+  const response = await fetch(`${baseURL}/api/v1/boards/${boardId}/comments/${commentId}`, {
     method: "DELETE",
     headers: {
       "Authorization": `Bearer ${token}`,

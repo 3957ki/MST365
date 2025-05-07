@@ -1,6 +1,5 @@
 "use client";
-
-import { getToken } from "./auth"; // getToken 함수 임포트 (필요시)
+const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
 
 // API 오류 응답 타입 (auth.ts에서 가져오거나 동일하게 정의)
 interface ApiErrorResponse {
@@ -24,9 +23,19 @@ interface GetBoardsResponse {
   // pagination 정보는 현재 명세에 없으므로 생략하거나 optional로 추가 가능
 }
 
-// 전체 게시물 목록 조회 API 호출 함수
-export async function getBoards(token: string): Promise<BoardListItem[]> {
-  const response = await fetch("http://localhost:8080/api/v1/boards", {
+// 전체 게시물 목록 조회 API 호출 함수 (페이징 추가)
+export async function getBoards(
+  token: string,
+  page: number,
+  size: number
+): Promise<BoardListItem[]> {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    size: size.toString(),
+  });
+  const url = `${baseURL}/api/v1/boards?${params.toString()}`;
+
+  const response = await fetch(url, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`, // 인증 헤더 추가
@@ -91,7 +100,7 @@ export async function getBoardById(
 ): Promise<BoardDetail | null> {
   // Promise<BoardDetail | null> -> 404 시 null 반환
   const response = await fetch(
-    `http://localhost:8080/api/v1/boards/${boardId}`,
+    `${baseURL}/api/v1/boards/${boardId}`,
     {
       method: "GET",
       headers: {
@@ -151,7 +160,7 @@ export async function deleteBoard(
 ): Promise<void> {
   // 성공 시 반환값 없음 (void)
   const response = await fetch(
-    `http://localhost:8080/api/v1/boards/${boardId}`,
+    `${baseURL}/api/v1/boards/${boardId}`,
     {
       method: "DELETE",
       headers: {
@@ -218,7 +227,7 @@ export async function createBoard(
   input: CreateBoardInput,
   token: string
 ): Promise<CreateBoardResponse> {
-  const response = await fetch("http://localhost:8080/api/v1/boards", {
+  const response = await fetch(`${baseURL}/api/v1/boards`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -266,7 +275,7 @@ export async function updateBoard(
 ): Promise<BoardDetail> {
   // Promise<BoardDetail> -> 성공 시 수정된 게시물 반환
   const response = await fetch(
-    `http://localhost:8080/api/v1/boards/${boardId}`,
+    `${baseURL}/api/v1/boards/${boardId}`,
     {
       method: "PATCH", // HTTP 메소드: PATCH
       headers: {
