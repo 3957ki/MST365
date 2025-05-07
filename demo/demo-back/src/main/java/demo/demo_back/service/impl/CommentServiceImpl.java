@@ -94,14 +94,16 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional(readOnly = true)
     public List<CommentResponseDto> getCommentsByUserId(Long userId) {
-        List<Comment> comments = commentRepository.findByUserIdAndIsDeletedFalse(userId);
+        List<Comment> comments = commentRepository
+                .findByUserIdAndIsDeletedFalseAndBoard_IsDeletedFalse(userId); // 게시글까지 고려
 
         return comments.stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
-    // ✅ 중복 제거용 private 메서드
+
+    // 중복 제거용 private 메서드
     private CommentResponseDto toDto(Comment comment) {
         return CommentResponseDto.builder()
                 .id(comment.getId())
