@@ -1,7 +1,6 @@
 pipeline {
     agent any
     environment {
-        GIT_REPO = "https://lab.ssafy.com/s12-final/S12P31S111"
         SPRING_IMAGE = "spring:latest"
         SPRING_CONTAINER = "spring"
         REACT_IMAGE = "react:latest"
@@ -10,35 +9,11 @@ pipeline {
         ENV_FILE_PATH = "/var/jenkins_home/.env"
     }
     stages {
-        stage('Fetch or Clone Repository') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'silverline_idpw', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                    sh '''
-                    if [ -d "S12P31S111" ]; then
-                        echo "Repository exists. Fetching changes..."
-                        cd S12P31S111
-                        git fetch origin
-                        git reset --hard origin/develop
-                    else
-                        echo "Repository does not exist. Cloning..."
-                        git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@lab.ssafy.com/s12-final/S12P31S111
-                    fi
-                    '''
-                }
-            }
-        }
-        stage('Setup Docker Network') {
-            steps {
-                sh '''
-                docker network create my-network || true
-                '''
-            }
-        }
         stage('Build Spring Docker Image') {
             steps {
                 sh '''
                 docker image rm -f ${SPRING_IMAGE} || true
-                cd S12P31S111/demo/demo-back
+                cd demo/demo-back
                 mkdir -p src/main/resources
                 cp ${SPRING_CONFIG_PATH} src/main/resources/application.properties
                 docker build -t ${SPRING_IMAGE} .
@@ -61,7 +36,7 @@ pipeline {
             steps {
                 sh '''
                 docker image rm -f ${REACT_IMAGE} || true
-                cd S12P31S111/demo/demo-front
+                cd demo/demo-front
                 cp ${ENV_FILE_PATH} .env
                 docker build -t ${REACT_IMAGE} .
                 '''
@@ -70,7 +45,6 @@ pipeline {
         stage('Run React Docker Container') {
             steps {
                 sh '''
-                cd S12P31S111/demo
                 docker stop ${REACT_CONTAINER} || true
                 docker rm ${REACT_CONTAINER} || true
                 docker run -d --name ${REACT_CONTAINER} \
