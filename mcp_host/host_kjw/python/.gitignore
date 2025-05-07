@@ -9,6 +9,7 @@ __pycache__
 
 # Virtual environments
 .venv
+node_modules
 
 # Environment variables
 .env
@@ -18,3 +19,4 @@ __pycache__
 
 # Data
 results/
+config.json
