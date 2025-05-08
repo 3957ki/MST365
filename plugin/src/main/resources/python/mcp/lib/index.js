@@ -62,6 +62,7 @@ const screenshotTools = [
     ...(0, tabs_1.default)(false),
 ];
 const packageJSON = require('../package.json');
+
 async function createServer(options) {
     let browserName;
     let channel;
@@ -95,6 +96,11 @@ async function createServer(options) {
         headless: !!(options?.headless ?? (os_1.default.platform() === 'linux' && !process.env.DISPLAY)),
         channel,
         executablePath: options?.executablePath,
+        args: [
+            '--disable-features=PasswordLeakDetection',
+            '--disable-features=PasswordManagerOnboarding',
+            ...(options?.launchOptions?.args || [])
+        ],
     };
     const allTools = options?.vision ? screenshotTools : snapshotTools;
     const tools = allTools.filter(tool => !options?.capabilities || tool.capability === 'core' || options.capabilities.includes(tool.capability));
@@ -109,6 +115,7 @@ async function createServer(options) {
         cdpEndpoint: options?.cdpEndpoint,
     });
 }
+
 async function createUserDataDir(browserName) {
     let cacheDirectory;
     if (process.platform === 'linux')
