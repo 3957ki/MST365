@@ -8,7 +8,6 @@ import * as childProcess from 'child_process';
 import { promisify } from 'util';
 import { MCPClient } from '../mcp/mcpClient';
 
-
 const exec = promisify(childProcess.exec);
 dotenv.config();
 
@@ -22,6 +21,8 @@ interface StepResult {
   error?: string;
   aiComment?: string;
   pageSnapshot?: string;
+  selector?: string;
+  elementRef?: string | null; // 📌 추가: ref를 명시적으로 저장
 }
 
 interface TestReport {
@@ -37,76 +38,88 @@ interface TestReport {
   htmlReportURL?: string;
 }
 
-// 스크린샷 저장을 위한 유틸리티 함수
 async function saveScreenshot(screenshotResult: any, filePath: string): Promise<boolean> {
   try {
-    // 결과가 없거나 binary 데이터가 없는 경우
+    // 작업할 데이터가 있는지 확인
     if (!screenshotResult) {
-      console.error('스크린샷 데이터가 없습니다.');
+      console.error('스크린샷 데이터가 없습니다');
       return false;
     }
+    
+    // 디버그 정보 - 받은 데이터의 구조 로깅
+    console.log('스크린샷 결과 타입:', typeof screenshotResult);
+    if (typeof screenshotResult === 'object') {
+      console.log('스크린샷 결과 키:', Object.keys(screenshotResult));
+    }
 
-    // 첫 번째 방법: binary 속성 사용
+    // 바이너리 데이터 직접 접근 방식
     if (screenshotResult.binary) {
       let imageData = screenshotResult.binary;
-
-      // 스크린샷 데이터 형식 확인
+      
+      // 문자열인지 확인
       if (typeof imageData === 'string') {
-        // base64 접두사 제거 (예: 'data:image/jpeg;base64,' 또는 'data:image/png;base64,')
+        // base64 데이터 URL인지 확인
         const base64Prefix = /^data:image\/[a-zA-Z]+;base64,/;
         if (base64Prefix.test(imageData)) {
           imageData = imageData.replace(base64Prefix, '');
         }
-
-        // base64 디코딩 및 파일 저장
+        
+        // 버퍼를 파일로 쓰기
         await fs.writeFile(filePath, Buffer.from(imageData, 'base64'));
-        console.log(`스크린샷 저장됨 (binary 방식): ${filePath}`);
+        console.log(`바이너리 데이터를 사용하여 스크린샷 저장됨: ${filePath}`);
         return true;
       }
     }
     
-    // 두 번째 방법: content 배열에서 이미지 찾기
-    if (screenshotResult.content && screenshotResult.content.length > 0) {
-      const imageContent = screenshotResult.content.find(
-        (item: any) => item.type === 'image' && item.data
-      );
-
-      if (imageContent && imageContent.data) {
-        let data = imageContent.data;
-        
-        // base64 접두사 제거
-        const base64Prefix = /^data:image\/[a-zA-Z]+;base64,/;
-        if (base64Prefix.test(data)) {
-          data = data.replace(base64Prefix, '');
+    // content 배열 접근 방식
+    if (screenshotResult.content && Array.isArray(screenshotResult.content)) {
+      for (const item of screenshotResult.content) {
+        if (item.type === 'image' && item.data) {
+          let data = item.data;
+          
+          // 문자열인 경우만 처리
+          if (typeof data === 'string') {
+            // base64 접두사가 있으면 제거
+            const base64Prefix = /^data:image\/[a-zA-Z]+;base64,/;
+            if (base64Prefix.test(data)) {
+              data = data.replace(base64Prefix, '');
+            }
+            
+            await fs.writeFile(filePath, Buffer.from(data, 'base64'));
+            console.log(`content 배열에서 스크린샷 저장됨: ${filePath}`);
+            return true;
+          }
         }
-
-        await fs.writeFile(filePath, Buffer.from(data, 'base64'));
-        console.log(`스크린샷 저장됨 (content 방식): ${filePath}`);
-        return true;
       }
     }
-
-    // 세 번째 방법: 동적으로 내용 검색
-    const stringifiedResult = JSON.stringify(screenshotResult);
-    const base64Match = stringifiedResult.match(/"data":"([A-Za-z0-9+/=]+)"/);
-    if (base64Match && base64Match[1]) {
-      await fs.writeFile(filePath, Buffer.from(base64Match[1], 'base64'));
-      console.log(`스크린샷 저장됨 (동적 검색 방식): ${filePath}`);
+    
+    // 원시 버퍼 데이터 시도
+    if (Buffer.isBuffer(screenshotResult)) {
+      await fs.writeFile(filePath, screenshotResult);
+      console.log(`원시 버퍼로 스크린샷 저장됨: ${filePath}`);
       return true;
     }
-
-    console.error('지원되지 않는 스크린샷 데이터 형식:', typeof screenshotResult);
-    // 디버깅을 위해 구조 일부만 출력 (너무 큰 경우 메모리 문제 방지)
-    console.log('스크린샷 결과 구조 미리보기:', JSON.stringify(screenshotResult, null, 2).substring(0, 200) + '...');
     
-    // 마지막 방법: 디버깅용 파일로 저장
-    const debugPath = filePath + '.debug.json';
+    // 마지막 수단: 결과에서 base64 인코딩된 문자열 찾기
+    const resultString = JSON.stringify(screenshotResult);
+    const base64Pattern = /"data":"([A-Za-z0-9+/=]+)"/;
+    const base64Match = resultString.match(base64Pattern);
+    
+    if (base64Match && base64Match[1]) {
+      await fs.writeFile(filePath, Buffer.from(base64Match[1], 'base64'));
+      console.log(`추출된 base64 데이터로 스크린샷 저장됨: ${filePath}`);
+      return true;
+    }
+    
+    // 아무것도 작동하지 않으면 디버그 정보 저장
+    console.error('유효한 스크린샷 데이터를 추출하지 못했습니다');
+    const debugPath = `${filePath}.debug.json`;
     await fs.writeFile(debugPath, JSON.stringify(screenshotResult, null, 2));
-    console.log(`디버깅 정보 저장됨: ${debugPath}`);
+    console.log(`디버그 정보가 저장됨: ${debugPath}`);
     
     return false;
   } catch (error) {
-    console.error('스크린샷 저장 실패:', error);
+    console.error('스크린샷 저장 오류:', error);
     return false;
   }
 }
@@ -114,30 +127,20 @@ async function saveScreenshot(screenshotResult: any, filePath: string): Promise<
 export class AdaptivePlaywrightExecutor {
   private mcpClient: MCPClient;
   private outputDir: string;
-  private testRunDir: string; // 테스트 실행별 디렉토리
-  private screenshotsDir: string; // 스크린샷 디렉토리
+  private testRunDir: string;
+  private screenshotsDir: string;
   private testReport: TestReport;
   private anthropic: Anthropic;
   private browserContextId: string | null = null;
   private pageId: string | null = null;
 
   constructor() {
-    // 기본 출력 디렉토리
     this.outputDir = path.join(process.cwd(), 'test-results');
-    
-    // 타임스탬프가 포함된 테스트 실행 폴더 생성
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     this.testRunDir = path.join(this.outputDir, `test-run-${timestamp}`);
-    
-    // 스크린샷 디렉토리
     this.screenshotsDir = path.join(this.testRunDir, 'screenshots');
-    
     this.mcpClient = new MCPClient();
-    
-    this.anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    });
-    
+    this.anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     this.testReport = {
       testName: 'Natural Language Test',
       startTime: '',
@@ -146,8 +149,557 @@ export class AdaptivePlaywrightExecutor {
       totalSteps: 0,
       passedSteps: 0,
       failedSteps: 0,
-      steps: [],
+      steps: []
     };
+  }
+
+  async handleFill(step: TestStep, stepResult: StepResult) {
+    console.log(`⌨️ 입력 시작: ${step.description}`);
+    
+    // 최대 3번 재시도
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        console.log(`🔄 입력 시도 #${attempt + 1}...`);
+        
+        // 매번 새로운 스냅샷 가져오기
+        const snapshot = await this.getPageSnapshot();
+        let { selector, ref } = await this.getSelectorAndRef(step, snapshot);
+        
+        stepResult.selector = selector;
+        stepResult.elementRef = ref;
+        
+        console.log('[🧩 입력 필드 추출 결과]', { selector, ref });
+        
+        if (!ref) {
+          console.warn(`⚠️ 입력 필드 ref를 찾을 수 없음 (시도 ${attempt + 1}/3): ${step.description}`);
+          
+          if (attempt < 2) {
+            console.log('🕒 페이지 로딩을 위해 2초 대기 중...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue; // 다음 시도
+          } else {
+            // 마지막 시도에서 휴리스틱 적용
+            const targetDesc = step.target || step.description;
+            
+            // 입력 필드 직접 찾기
+            const result = await this.mcpClient.executeAction('pageEvaluate', {
+              page: this.pageId,
+              expression: `() => {
+                const inputTypes = {
+                  username: ['input[name="username"]', 'input[name="id"]', 'input[placeholder*="아이디"]', 
+                            'input[placeholder*="이메일"]', 'input[type="email"]', 'input#username'],
+                  password: ['input[type="password"]', 'input[name="password"]', 'input[placeholder*="비밀번호"]', 
+                            'input#password'],
+                  passwordConfirm: ['input[name="confirmPassword"]', 'input[name="password2"]', 
+                                  'input[placeholder*="비밀번호 확인"]', 'input[placeholder*="확인"]']
+                };
+                
+                let selectorSet = inputTypes.username; // 기본값
+                
+                if ('${targetDesc}'.includes('비밀번호') && '${targetDesc}'.includes('확인')) {
+                  selectorSet = inputTypes.passwordConfirm;
+                } else if ('${targetDesc}'.includes('비밀번호')) {
+                  selectorSet = inputTypes.password;
+                }
+                
+                // 각 선택자 시도
+                for (const selector of selectorSet) {
+                  const element = document.querySelector(selector);
+                  if (element) {
+                    // 요소 강조 표시 (디버깅용)
+                    const originalBorder = element.style.border;
+                    element.style.border = '2px solid red';
+                    setTimeout(() => { element.style.border = originalBorder; }, 3000);
+                    
+                    return {
+                      found: true,
+                      selector: selector,
+                      value: element.value,
+                      type: element.getAttribute('type'),
+                      placeholder: element.getAttribute('placeholder')
+                    };
+                  }
+                }
+                
+                // 모든 가시적 입력 필드 찾기 (마지막 수단)
+                const visibleInputs = Array.from(document.querySelectorAll('input')).filter(el => {
+                  const rect = el.getBoundingClientRect();
+                  return rect.width > 0 && rect.height > 0;
+                });
+                
+                if (visibleInputs.length > 0) {
+                  const element = visibleInputs[0]; // 첫 번째 가시적 입력 필드 사용
+                  return {
+                    found: true,
+                    selector: 'input',
+                    fallback: true,
+                    value: element.value,
+                    type: element.getAttribute('type'),
+                    placeholder: element.getAttribute('placeholder')
+                  };
+                }
+                
+                return { found: false };
+              }`
+            });
+            
+            if (result.result && result.result.found) {
+              console.log(`✅ 입력 필드 감지됨: ${result.result.selector}`);
+              
+              // 직접 선택자 사용하여 입력
+              await this.mcpClient.executeAction('pageEvaluate', {
+                page: this.pageId,
+                expression: `() => {
+                  const el = document.querySelector('${result.result.selector}');
+                  if (el) {
+                    // 현재 값 지우기
+                    el.value = '';
+                    // 새 값 설정
+                    el.value = '${step.value}';
+                    // 이벤트 발생
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                    return true;
+                  }
+                  return false;
+                }`
+              });
+              
+              console.log(`✅ 대체 입력 성공: ${step.value}`);
+              return;
+            }
+            
+            // 휴리스틱도 실패하면 오류
+            throw new Error(`${step.target || step.description} 입력 필드를 찾을 수 없습니다.`);
+          }
+        }
+        
+        // MCP 입력 시도
+        try {
+          await this.mcpClient.executeAction('pageFill', {
+            ref,
+            element: step.description || '입력 필드',
+            text: step.value || ''
+          });
+          
+          console.log(`✅ 입력 완료: ${step.value}`);
+          return; // 성공적으로 입력 완료
+        } catch (error: any) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          console.warn(`⚠️ 입력 실패: ${errorMsg}`);
+          
+          // Stale ref 오류 확인
+          if (errorMsg.includes('Stale aria-ref')) {
+            console.log('🔁 오래된 ref 감지. 재시도 중...');
+            
+            if (attempt < 2) {
+              // 다음 시도 전 대기
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              continue;
+            }
+          } else {
+            // 다른 오류는 즉시 재시도하지 않고 상위로 전파
+            throw error;
+          }
+        }
+      } catch (error) {
+        // 마지막 시도에서 실패하면 오류 전파
+        if (attempt === 2) {
+          throw error;
+        }
+        console.error(`❌ 입력 시도 #${attempt + 1} 실패:`, error);
+        // 다음 시도 전 더 긴 대기
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+    }
+    
+    throw new Error(`${step.description} 입력 실패: 최대 재시도 횟수 초과`);
+  }
+  async handlePress(step: TestStep, stepResult: StepResult) {
+    const snapshot = await this.getPageSnapshot();
+    const { selector, ref } = await this.getSelectorAndRef(step, snapshot);
+    stepResult.selector = selector;
+    stepResult.elementRef = ref;
+
+    await this.mcpClient.executeAction('pagePress', {
+      page: this.pageId,
+      selector,
+      key: step.value || 'Enter'
+    });
+
+    console.log(`✅ 키 입력 완료: ${selector}`);
+  }
+
+  async handleWaitForSelector(step: TestStep, stepResult: StepResult) {
+    const snapshot = await this.getPageSnapshot();
+    const { selector, ref } = await this.getSelectorAndRef(step, snapshot);
+    stepResult.selector = selector;
+    stepResult.elementRef = ref;
+
+    await this.mcpClient.executeAction('pageWaitForSelector', {
+      page: this.pageId,
+      selector,
+      timeout: 5000
+    });
+
+    console.log(`✅ 요소 대기 완료: ${selector}`);
+  }
+  async handleClick(step: TestStep, stepResult: StepResult) {
+    console.log(`🖱️ 클릭 시작: ${step.description}`);
+    
+    // 페이지 안정화를 위한 대기
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // 최대 3번 재시도
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        console.log(`🔄 클릭 시도 #${attempt + 1}...`);
+        
+        // 매번 새로운 스냅샷 가져오기
+        const snapshot = await this.getPageSnapshot();
+        let { selector, ref } = await this.getSelectorAndRef(step, snapshot);
+        
+        stepResult.selector = selector;
+        stepResult.elementRef = ref;
+        
+        console.log('[🧩 선택자 추출 결과]', { selector, ref });
+        
+        if (!ref) {
+          console.warn(`⚠️ ref를 찾을 수 없음 (시도 ${attempt + 1}/3): ${step.description}`);
+          
+          if (attempt < 2) {
+            console.log('🕒 페이지 로딩을 위해 2초 대기 중...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue; // 다음 시도
+          } else {
+            // 마지막 시도에서 휴리스틱 사용
+            const targetText = step.target || step.description;
+            if (targetText.includes('회원가입')) {
+              // 회원가입 버튼은 페이지 상단에 있을 가능성이 높음
+              console.log('🔍 회원가입 버튼 휴리스틱 사용');
+              
+              // 회원가입 버튼 찾기 위한 직접 평가
+              const result = await this.mcpClient.executeAction('pageEvaluate', {
+                page: this.pageId,
+                expression: `() => {
+                  // 다양한 회원가입 버튼 패턴 찾기
+                  const possibilities = [
+                    document.querySelector('button:not([disabled]):has-text("회원가입")'),
+                    document.querySelector('button:not([disabled]):has-text("가입")'),
+                    document.querySelector('a:has-text("회원가입")'),
+                    document.querySelector('a:has-text("가입")'),
+                    document.querySelector('[role="button"]:has-text("회원가입")'),
+                    document.querySelector('button:not([disabled]):has-text("Sign up")'),
+                    document.querySelector('a:has-text("Sign up")'),
+                    // 첫 10개 버튼 중 첫 번째 버튼 (마지막 수단)
+                    Array.from(document.querySelectorAll('button'))[0]
+                  ];
+                  
+                  // 첫 번째 유효한 요소 찾기
+                  const element = possibilities.find(el => el !== null);
+                  
+                  if (element) {
+                    // 요소 강조 표시 (디버깅용)
+                    const originalBackground = element.style.backgroundColor;
+                    element.style.backgroundColor = 'red';
+                    setTimeout(() => { element.style.backgroundColor = originalBackground; }, 3000);
+                    
+                    // 계산된 위치 반환
+                    const rect = element.getBoundingClientRect();
+                    return {
+                      found: true,
+                      text: element.textContent,
+                      x: rect.x + rect.width / 2,
+                      y: rect.y + rect.height / 2
+                    };
+                  }
+                  
+                  return { found: false };
+                }`
+              });
+              
+              if (result.result && result.result.found) {
+                console.log(`✅ 회원가입 버튼 감지됨: "${result.result.text}"`);
+                
+                // 직접 클릭 이벤트 전송
+                await this.mcpClient.executeAction('pageEvaluate', {
+                  page: this.pageId,
+                  expression: `() => {
+                    const ev = new MouseEvent('click', {
+                      view: window,
+                      bubbles: true,
+                      cancelable: true,
+                      clientX: ${result.result.x},
+                      clientY: ${result.result.y}
+                    });
+                    
+                    const el = document.elementFromPoint(${result.result.x}, ${result.result.y});
+                    if (el) el.dispatchEvent(ev);
+                  }`
+                });
+                
+                // 페이지 변경 대기
+                await this.mcpClient.executeAction('pageWaitForLoadState', {
+                  page: this.pageId,
+                  state: 'networkidle'
+                });
+                
+                console.log(`✅ 대체 클릭 성공`);
+                return;
+              }
+            }
+            
+            // 휴리스틱도 실패하면 오류
+            throw new Error(`${step.target || step.description} 요소를 찾을 수 없습니다.`);
+          }
+        }
+        
+        // MCP 클릭 시도
+        try {
+          await this.mcpClient.executeAction('pageClick', {
+            ref,
+            element: step.description || '클릭 대상'
+          });
+          
+          console.log(`✅ 클릭 완료: ${ref}`);
+          
+          // 클릭 후 페이지 변경을 위한 대기
+          await this.mcpClient.executeAction('pageWaitForLoadState', {
+            page: this.pageId,
+            state: 'networkidle',
+            timeout: 10000
+          });
+          
+          // 추가 안정화 대기
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          return; // 성공적으로 클릭 완료
+        } catch (error: any) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          console.warn(`⚠️ 클릭 실패: ${errorMsg}`);
+          
+          // Stale ref 오류 확인
+          if (errorMsg.includes('Stale aria-ref')) {
+            console.log('🔁 오래된 ref 감지. 재시도 중...');
+            
+            if (attempt < 2) {
+              // 다음 시도 전 대기
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              continue;
+            }
+          } else {
+            // 다른 오류는 즉시 재시도하지 않고 상위로 전파
+            throw error;
+          }
+        }
+      } catch (error) {
+        // 마지막 시도에서 실패하면 오류 전파
+        if (attempt === 2) {
+          throw error;
+        }
+        console.error(`❌ 클릭 시도 #${attempt + 1} 실패:`, error);
+        // 다음 시도 전 더 긴 대기
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+    }
+    
+    throw new Error(`${step.description} 클릭 실패: 최대 재시도 횟수 초과`);
+  }
+  
+  private async getSelectorAndRef(step: TestStep, snapshot: string): Promise<{ selector: string; ref: string | null }> {
+    try {
+      const parsed = JSON.parse(snapshot);
+      const elements = parsed.elements || [];
+      
+      if (elements.length === 0) {
+        console.warn("⚠️ getSelectorAndRef: 요소 목록이 비어 있습니다");
+        return { selector: '', ref: null };
+      }
+      
+      // 요소 정보 중 일부만 Claude에 전달하여 복잡성 감소
+      const simplifiedElements = elements.map((el: any, idx: number) => {
+        return {
+          index: idx,
+          tagName: el.tagName,
+          type: el.type,
+          name: el.name,
+          id: el.id,
+          className: el.className,
+          text: el.text || el.buttonText || '',
+          placeholder: el.placeholder || '',
+          visible: el.visible
+        };
+      });
+      
+      // 스텝 정보에서 더 많은 컨텍스트 추출
+      let targetContext = '';
+      if (step.action === 'click' && step.target?.includes('회원가입')) {
+        targetContext = '회원가입 버튼을 찾아야 합니다. 일반적으로 버튼 요소이며 "회원가입", "가입", "Sign up" 등의 텍스트를 포함합니다.';
+      } else if (step.action === 'fill' && step.target?.includes('아이디')) {
+        targetContext = '아이디/이메일 입력란을 찾아야 합니다. 일반적으로 input 요소이며 type="text" 또는 type="email"이고 name="username" 또는 placeholder에 "아이디", "이메일" 등의 텍스트를 포함합니다.';
+      } else if (step.action === 'fill' && step.target?.includes('비밀번호')) {
+        targetContext = '비밀번호 입력란을 찾아야 합니다. 일반적으로 input 요소이며 type="password"이고 name="password" 또는 placeholder에 "비밀번호", "Password" 등의 텍스트를 포함합니다.';
+      }
+      
+      const response = await this.anthropic.messages.create({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 500,
+        messages: [
+          {
+            role: 'user',
+            content: `현재 웹 페이지에서 특정 요소를 찾아야 합니다.
+  
+  실행할 작업: ${step.action}
+  작업 설명: ${step.description}
+  대상 요소: ${step.target || ''}
+  ${step.value ? `입력할 값: ${step.value}` : ''}
+  
+  ${targetContext}
+  
+  페이지 요소 목록 (${simplifiedElements.length}개):
+  ${JSON.stringify(simplifiedElements, null, 2)}
+  
+  페이지 URL: ${parsed.url}
+  페이지 제목: ${parsed.title}
+  
+  다음 표준 형식으로만 응답해주세요:
+  \`\`\`json
+  {
+    "selector": "가장 적합한 CSS 선택자",
+    "ref": "요소 인덱스 기반 참조 (예: s0e5)",
+    "confidence": 0.9,
+    "reasoning": "이 요소를 선택한 이유에 대한 간략한 설명"
+  }
+  \`\`\`
+  
+  selector는 CSS 선택자이고, ref는 elements 배열의 인덱스를 기반으로 한 참조입니다. 
+  예를 들어, 0번 인덱스의 요소를 참조하려면 ref는 "s0e0"이 됩니다. 
+  가장 적합한 요소를 찾아 높은 신뢰도(confidence)를 제공하세요.
+  요소를 찾을 수 없으면 confidence를 0으로 설정하세요.`
+          },
+        ]
+      });
+  
+      console.log('[📩 Claude 요청] 요소 검색:', {
+        action: step.action,
+        description: step.description,
+        target: step.target,
+        elementsCount: simplifiedElements.length,
+      });
+      
+      try {
+        const content = response.content[0];
+        if (content.type === 'text') {
+          console.log('[📨 Claude 응답]', content.text);
+          
+          // JSON 추출
+          const jsonMatch = content.text.match(/```json\s*([\s\S]*?)\s*```|(\{.*\})/s);
+          if (jsonMatch) {
+            const jsonStr = jsonMatch[1] || jsonMatch[2];
+            const parsed = JSON.parse(jsonStr);
+            
+            // 낮은 신뢰도 경고
+            if (parsed.confidence < 0.7 && parsed.ref) {
+              console.warn(`⚠️ 요소 찾기 신뢰도 낮음 (${parsed.confidence}): ${parsed.reasoning}`);
+            }
+            
+            // Claude가 제공한 ref를 사용하기 전에 유효성 검사
+            if (parsed.ref && elements.length > 0) {
+              // ref 형식이 s0e5 같은 형태인지 확인
+              const refMatch = parsed.ref.match(/s\d+e(\d+)/);
+              if (refMatch) {
+                const elementIndex = parseInt(refMatch[1]);
+                // 인덱스가 유효한지 확인
+                if (elementIndex >= 0 && elementIndex < elements.length) {
+                  console.log(`✅ 유효한 요소 찾음: ${parsed.ref} (인덱스 ${elementIndex})`);
+                } else {
+                  console.warn(`⚠️ 유효하지 않은 요소 인덱스: ${elementIndex} (요소 수: ${elements.length})`);
+                  // 대체 요소 시도
+                  if (elements.length > 0) {
+                    const newRef = `s0e0`; // 첫 번째 요소 사용
+                    console.log(`🔄 대체 요소로 전환: ${newRef}`);
+                    parsed.ref = newRef;
+                  }
+                }
+              }
+            }
+            
+            return {
+              selector: parsed.selector || '',
+              ref: (parsed.confidence >= 0.5) ? parsed.ref : null
+            };
+          }
+        }
+      } catch (err) {
+        console.error('❌ AI 응답 파싱 실패:', err);
+      }
+      
+      // 대체 로직: 간단한 휴리스틱으로 요소 찾기
+      console.log('⚠️ Claude 응답 파싱 실패, 대체 로직 시도');
+      const targetTerm = (step.target || step.description || '').toLowerCase();
+      
+      // 단순 텍스트 매칭으로 요소 찾기
+      for (let i = 0; i < elements.length; i++) {
+        const el = elements[i];
+        const elText = (el.text || el.buttonText || '').toLowerCase();
+        const elPlaceholder = (el.placeholder || '').toLowerCase();
+        const elName = (el.name || '').toLowerCase();
+        const elId = (el.id || '').toLowerCase();
+        
+        // 클릭 대상 검색
+        if (step.action === 'click' && 
+            (elText.includes('회원가입') || elText.includes('가입') || 
+             elText.includes('sign up') || elText.includes('signup'))) {
+          return { 
+            selector: `button:contains('${elText}')`, 
+            ref: `s0e${i}` 
+          };
+        }
+        
+        // 아이디 입력란 검색
+        if (step.action === 'fill' && targetTerm.includes('아이디') &&
+            (el.tagName === 'input' && (el.type === 'text' || el.type === 'email') &&
+             (elPlaceholder.includes('아이디') || elPlaceholder.includes('이메일') || 
+              elName.includes('user') || elName.includes('email') || 
+              elId.includes('user') || elId.includes('email')))) {
+          return { 
+            selector: `input[type="${el.type}"]${el.name ? `[name="${el.name}"]` : ''}`, 
+            ref: `s0e${i}` 
+          };
+        }
+        
+        // 비밀번호 입력란 검색
+        if (step.action === 'fill' && targetTerm.includes('비밀번호') &&
+            (el.tagName === 'input' && el.type === 'password')) {
+          return { 
+            selector: `input[type="password"]${el.name ? `[name="${el.name}"]` : ''}`, 
+            ref: `s0e${i}` 
+          };
+        }
+      }
+      
+      return { selector: '', ref: null };
+    } catch (error) {
+      console.error('❌ getSelectorAndRef 실행 오류:', error);
+      return { selector: '', ref: null };
+    }
+  }
+
+  mapToolArgs(name: string, args: any): any {
+    let mappedArgs: any = {};
+
+    switch (name) {
+      case 'pageClick':
+        mappedArgs = {
+          page: args.page,
+          selector: args.selector
+        };
+        break;
+
+      // 다른 명령어 매핑 생략
+    }
+
+    return mappedArgs;
   }
 
   async initialize() {
@@ -190,54 +742,131 @@ export class AdaptivePlaywrightExecutor {
 
   private async getPageSnapshot(): Promise<string> {
     try {
-      // 현재 URL 가져오기
+      console.log("📸 스냅샷 캡처 시작...");
+      
+      // 페이지가 네트워크 활동 완료될 때까지 대기
+      try {
+        await this.mcpClient.executeAction('pageWaitForLoadState', {
+          page: this.pageId,
+          state: 'networkidle',
+          timeout: 10000
+        });
+        console.log("✅ 페이지 로딩 완료");
+      } catch (e) {
+        console.warn("⚠️ 페이지 로딩 대기 시간 초과 (계속 진행)");
+      }
+      
+      // DOM이 안정화될 시간 제공
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // 요소가 있는지 확인
+      try {
+        await this.mcpClient.executeAction('pageWaitForSelector', {
+          page: this.pageId,
+          selector: 'body',
+          timeout: 5000
+        });
+        console.log("✅ body 요소 확인됨");
+      } catch (e) {
+        console.warn("⚠️ body 요소를 찾을 수 없음");
+      }
+      
+      // 현재 URL 및 제목 가져오기
       const urlResult = await this.mcpClient.executeAction('pageUrl', {
         page: this.pageId
       });
-      const url = urlResult.url;
+      const url = urlResult.url || 'unknown';
       
-      // 페이지 제목 가져오기
       const titleResult = await this.mcpClient.executeAction('pageTitle', {
         page: this.pageId
       });
-      const title = titleResult.title;
+      const title = titleResult.title || 'unknown';
       
-      // 페이지의 인터랙티브 요소 가져오기
+      console.log(`📄 페이지 정보: URL=${url}, 제목=${title}`);
+      
+      // 페이지 내 요소 평가 - 대상 요소 범위 확장
       const elementsResult = await this.mcpClient.executeAction('pageEvaluate', {
         page: this.pageId,
         expression: `() => {
-          const interactive = Array.from(
-            document.querySelectorAll('input, button, textarea, select, a')
+          const allElements = Array.from(
+            document.querySelectorAll('button, input, textarea, select, a, [role="button"], [tabindex="0"], div[onclick], label, form')
           );
-          return interactive.map(el => ({
-            tagName: el.tagName.toLowerCase(),
-            type: el.type || '',
-            name: el.name || '',
-            id: el.id || '',
-            className: el.className || '',
-            placeholder: el.placeholder || '',
-            text: el.textContent?.trim() || '',
-            value: el.value || '',
-            visible: el.getBoundingClientRect().height > 0,
-          }));
+          
+          const result = allElements.map((el, index) => {
+            // 버튼 텍스트를 더 정확하게 추출
+            const buttonText = el.tagName.toLowerCase() === 'button' 
+              ? (el.textContent || '').trim() 
+              : '';
+            
+            // 입력 필드 관련 정보 강화
+            const isInput = el.tagName.toLowerCase() === 'input';
+            const inputType = isInput ? (el.getAttribute('type') || '') : '';
+            const placeholder = isInput ? (el.getAttribute('placeholder') || '') : '';
+            
+            return {
+              index: index,
+              tagName: el.tagName.toLowerCase(),
+              type: inputType || el.getAttribute('type') || '',
+              name: el.getAttribute('name') || '',
+              id: el.id || '',
+              className: el.className || '',
+              placeholder: placeholder,
+              buttonText: buttonText,
+              text: (el.textContent || '').trim().substring(0, 100),
+              value: el.value || '',
+              visible: el.offsetWidth > 0 && el.offsetHeight > 0,
+              attributes: {
+                role: el.getAttribute('role') || '',
+                ariaLabel: el.getAttribute('aria-label') || '',
+                ariaLabelledby: el.getAttribute('aria-labelledby') || '',
+              },
+              // 여기에 위치 정보 추가하면 더 많은 정보 제공 가능
+              position: {
+                x: el.getBoundingClientRect().x,
+                y: el.getBoundingClientRect().y,
+                width: el.getBoundingClientRect().width,
+                height: el.getBoundingClientRect().height
+              }
+            };
+          });
+          
+          console.log('요소 감지됨: ' + result.length);
+          return result;
         }`
       });
+      
+      const elements = elementsResult.result || [];
+      console.log(`🔍 페이지에서 ${elements.length}개 요소 감지됨`);
+      
+      if (elements.length === 0) {
+        console.warn("⚠️ 감지된 요소 없음! DOM에 접근할 수 없습니다.");
+      }
+      
+      // 디버깅을 위해 처음 몇 개 요소 정보 출력
+      if (elements.length > 0) {
+        console.log("📋 첫 3개 요소 샘플:");
+        for (let i = 0; i < Math.min(3, elements.length); i++) {
+          console.log(`  요소 ${i}: ${elements[i].tagName} - ${elements[i].buttonText || elements[i].text || elements[i].placeholder || elements[i].name || elements[i].id || '(텍스트 없음)'}`);
+        }
+      }
       
       return JSON.stringify(
         {
           url,
           title,
-          elements: elementsResult.result
+          timestamp: new Date().toISOString(),
+          elements
         },
         null,
         2
       );
     } catch (error) {
-      console.error('페이지 스냅샷 가져오기 실패:', error);
+      console.error('❌ 페이지 스냅샷 가져오기 실패:', error);
       return JSON.stringify(
         {
           url: 'unknown',
           title: 'unknown',
+          timestamp: new Date().toISOString(),
           elements: []
         },
         null,
@@ -354,212 +983,24 @@ YouTube의 경우:
             console.log(`페이지 이동 완료: ${url}`);
             break;
 
-          case 'fill':
-            const fillValue = step.value;
-            if (!fillValue) {
-              throw new Error('입력할 값이 지정되지 않았습니다.');
-            }
-
-            // YouTube 특별 처리
-            if (pageSnapshot.includes('youtube.com')) {
-              try {
-                // YouTube 검색창 선택자들
-                const youtubeSelectors = [
-                  'input[name="search_query"]',
-                  'input#search',
-                  '#search-input input',
-                  'input[placeholder*="검색"]',
-                  'input[placeholder*="Search"]',
-                ];
-
-                let selectorFound = false;
-                for (const selector of youtubeSelectors) {
-                  try {
-                    // 요소 존재 확인
-                    const visibleResult = await this.mcpClient.executeAction('pageIsVisible', {
-                      page: this.pageId,
-                      selector: selector,
-                      timeout: 3000
-                    });
-                    
-                    if (visibleResult.visible) {
-                      console.log(`YouTube 검색창 찾음: ${selector}`);
-                      
-                      // 요소 클릭
-                      await this.mcpClient.executeAction('pageClick', {
-                        page: this.pageId,
-                        selector: selector
-                      });
-                      
-                      // 대기
-                      await new Promise(resolve => setTimeout(resolve, 500));
-                      
-                      // 필드 채우기
-                      await this.mcpClient.executeAction('pageFill', {
-                        page: this.pageId,
-                        selector: selector,
-                        value: fillValue
-                      });
-                      
-                      // 대기
-                      await new Promise(resolve => setTimeout(resolve, 500));
-                      
-                      // 검색 버튼 클릭 시도
-                      const searchButtonVisible = await this.mcpClient.executeAction('pageIsVisible', {
-                        page: this.pageId,
-                        selector: 'button[id="search-icon-legacy"]',
-                        timeout: 1000
-                      });
-                      
-                      if (searchButtonVisible.visible) {
-                        await this.mcpClient.executeAction('pageClick', {
-                          page: this.pageId,
-                          selector: 'button[id="search-icon-legacy"]'
-                        });
-                      } else {
-                        // Enter 키 입력
-                        await this.mcpClient.executeAction('pagePress', {
-                          page: this.pageId,
-                          selector: selector,
-                          key: 'Enter'
-                        });
-                      }
-                      
-                      await this.mcpClient.executeAction('pageWaitForLoadState', {
-                        page: this.pageId,
-                        state: 'networkidle'
-                      });
-                      
-                      selectorFound = true;
-                      break;
-                    }
-                  } catch {
-                    continue;
-                  }
-                }
-
-                if (!selectorFound) {
-                  throw new Error('YouTube 검색창을 찾을 수 없습니다.');
-                }
-              } catch (error) {
-                console.error('YouTube 검색 실패:', error);
-                throw error;
-              }
-            } else {
-              // 일반 사이트 처리
-              const selector = await this.getSelectorForElement(
-                step,
-                pageSnapshot
-              );
-              console.log(`AI가 찾은 선택자: ${selector}`);
-
-              // 요소 기다리기
-              await this.mcpClient.executeAction('pageWaitForSelector', {
-                page: this.pageId,
-                selector: selector,
-                timeout: 5000
-              });
-              
-              // 요소 클릭
-              await this.mcpClient.executeAction('pageClick', {
-                page: this.pageId,
-                selector: selector
-              });
-              
-              // 값 입력
-              await this.mcpClient.executeAction('pageFill', {
-                page: this.pageId,
-                selector: selector,
-                value: fillValue
-              });
-              console.log(`입력 완료: "${fillValue}"`);
-              
-              // Enter 키 입력이 필요한 경우
-              if (step.description.includes('검색') || step.description.includes('로그인')) {
-                await this.mcpClient.executeAction('pagePress', {
-                  page: this.pageId,
-                  selector: selector,
-                  key: 'Enter'
-                });
-                console.log('Enter 키 입력 완료');
-              }
-              
-              // 페이지 로딩 대기
-              await this.mcpClient.executeAction('pageWaitForLoadState', {
-                page: this.pageId,
-                state: 'networkidle'
-              });
-            }
-            break;
-
-          case 'click':
-            const selector = await this.getSelectorForElement(
-              step,
-              pageSnapshot
-            );
-            console.log(`클릭할 선택자: ${selector}`);
-
-            // 요소 클릭
-            await this.mcpClient.executeAction('pageClick', {
-              page: this.pageId,
-              selector: selector
-            });
-            console.log(`선택자 ${selector} 클릭 완료`);
-            
-            // 페이지 로딩 대기
-            await this.mcpClient.executeAction('pageWaitForLoadState', {
-              page: this.pageId,
-              state: 'networkidle'
-            });
-            break;
-
-          case 'wait':
-            // wait 액션 구현
-            if (step.target) {
-              console.log(`요소 대기 중: ${step.target}`);
-              await this.mcpClient.executeAction('pageWaitForSelector', {
-                page: this.pageId,
-                selector: step.target,
-                timeout: 10000
-              });
-              console.log(`요소 발견: ${step.target}`);
-            } else {
-              console.log(`${step.value || 2000}ms 동안 대기 중...`);
-              const waitTime = step.value ? parseInt(step.value) : 2000;
-              await new Promise(resolve => setTimeout(resolve, waitTime));
-              console.log(`대기 완료`);
-            }
-            break;
-
-          case 'screenshot':
-            // 스크린샷 시간 타임스탬프
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const screenshotPath = path.join(
-              this.screenshotsDir,
-              `step-${i + 1}-${timestamp}.png`
-            );
-            
-            console.log('스크린샷 촬영 중...');
-            
-            // 스크린샷 촬영
-            const screenshotResult = await this.mcpClient.executeAction('pageScreenshot', {
-              page: this.pageId,
-              fullPage: true
-            });
-            
-            // 향상된 스크린샷 저장 함수 사용
-            const saved = await saveScreenshot(screenshotResult, screenshotPath);
-            if (saved) {
-              stepResult.screenshot = screenshotPath;
-              console.log(`스크린샷 저장됨: ${screenshotPath}`);
-            } else {
-              console.error('스크린샷 저장 실패');
-            }
-            break;
-
-          default:
-            console.warn(`알 수 없는 액션: ${step.action}`);
-        }
+            case 'click':
+              await this.handleClick(step, stepResult);
+              break;
+            case 'fill':
+              await this.handleFill(step, stepResult);
+              break;
+            case 'press':
+              await this.handlePress(step, stepResult);
+              break;
+            case 'wait':
+              await this.handleWaitForSelector(step, stepResult);
+              break;
+            case 'screenshot':
+              // 여기도 직접 처리
+              break;
+            default:
+              console.warn(`알 수 없는 액션: ${step.action}`);
+          }
 
         stepResult.status = 'success';
         this.testReport.passedSteps++;

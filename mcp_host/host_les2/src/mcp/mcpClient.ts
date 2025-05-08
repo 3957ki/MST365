@@ -86,23 +86,24 @@ interface ToolResult {
 const TOOL_MAPPING: Record<string, string> = {
   // 브라우저 관련 명령
   'browserLaunch': 'browser_install',
-  'browserNewContext': 'browser_navigate',
+  'browserNewContext': 'browser_snapshot',
   'contextNewPage': 'browser_tab_new',
   
   // 페이지 관련 명령
   'pageGoto': 'browser_navigate',
-  'pageUrl': 'browser_snapshot', // 스냅샷에서 URL 정보를 추출
-  'pageTitle': 'browser_snapshot', // 스냅샷에서 제목 정보를 추출
+  'pageUrl': 'browser_snapshot',
+  'pageTitle': 'browser_snapshot',
   'pageWaitForLoadState': 'browser_wait',
-  'pageEvaluate': 'browser_snapshot', // 스냅샷으로 대체
+  'pageEvaluate': 'browser_snapshot',
   'pageClick': 'browser_click',
   'pageFill': 'browser_type',
   'pagePress': 'browser_press_key',
-  'pageWaitForSelector': 'browser_wait', // 조건부 대기로 대체해야 함
+  'pageWaitForSelector': 'browser_wait',
   'pageScreenshot': 'browser_take_screenshot',
-  'pageIsVisible': 'browser_snapshot', // 스냅샷에서 요소 존재 여부를 확인
+  'pageIsVisible': 'browser_snapshot',
   'pageClose': 'browser_tab_close',
-  'contextClose': 'browser_close'
+  'contextClose': 'browser_close',
+  'pageSnapshot': 'browser_snapshot' // 이 줄 추가
 };
 
 // 도구 이름을 실제 MCP 도구 이름으로 변환하는 함수
@@ -112,77 +113,88 @@ function mapToolName(name: string): string {
 
 // 도구 인자를 실제 MCP 도구 인자 형식으로 변환하는 함수
 function mapToolArgs(name: string, args: any): any {
+  let mappedArgs: any = {};
+  
   switch (name) {
     case 'browserLaunch':
       // browser_install은 인자가 필요 없음
-      return {};
+      mappedArgs = {};
+      break;
       
     case 'browserNewContext':
-      // 브라우저 컨텍스트는 browser_navigate로 대체
-      // URL이 없는 경우 기본 URL 사용
-      return { url: 'about:blank' };
-      
     case 'contextNewPage':
-      // 새 탭 생성은 browser_tab_new로 대체
-      return {};
+      // browser_snapshot은 인자가 필요 없음
+      mappedArgs = {};
+      break;
       
     case 'pageGoto':
-      // 페이지 이동은 browser_navigate로 대체
-      return { url: args.url };
+      // browser_navigate는 url 인자 필요
+      mappedArgs = {
+        url: args.url
+      };
+      break;
       
     case 'pageWaitForLoadState':
-      // 페이지 로딩 대기는 browser_wait로 대체
-      return { time: 2 }; // 기본 2초 대기
-      
-    case 'pageClick':
-      // 클릭 동작은 browser_click으로 대체
-      return { 
-        selector: args.selector,
-        // MCP에 맞게 추가 옵션 설정
-        timeout: 5000,
-        button: 'left',
-        clickCount: 1,
-        delay: 0
+      // browser_wait는 time 인자 필요
+      mappedArgs = {
+        time: args.timeout ? Math.min(args.timeout / 1000, 10) : 5  // 최대 10초
       };
+      break;
+      
+      case 'pageClick':
+        mappedArgs = {
+          ref: args.ref, 
+          element: args.element
+        };
+        break;
+      
       
     case 'pageFill':
-      // 텍스트 입력은 browser_type으로 대체
-      return { 
-        selector: args.selector,
+      // browser_type은 text와 submit 인자 필요
+      mappedArgs = {
         text: args.value,
-        // MCP에 맞게 추가 옵션 설정
-        delay: 0
+        submit: false  // Enter 키를 누르지 않음
       };
+      break;
       
     case 'pagePress':
-      // 키 입력은 browser_press_key로 대체
-      return { 
+      // browser_press_key는 key 인자 필요
+      mappedArgs = {
         key: args.key
       };
+      break;
       
-    case 'pageScreenshot':
-      // 스크린샷은 browser_take_screenshot으로 대체
-      return { 
-        fullPage: args.fullPage
-      };
+      case 'pageScreenshot':
+        // browser_take_screenshot은 raw 인자가 불리언 타입이어야 함
+        mappedArgs = {
+          raw: true  // 문자열 "true"가 아닌 불리언 true로 설정
+        };
+        break;
       
     case 'pageWaitForSelector':
-      // 선택자 대기는 현재 직접 매핑이 없어 일반 대기로 대체
-      return { 
-        seconds: 2
+      // browser_wait로 대체
+      mappedArgs = {
+        time: 5  // 5초 대기
       };
+      break;
+      
+    case 'pageIsVisible':
+      // browser_snapshot은 인자가 필요 없음
+      mappedArgs = {};
+      break;
       
     case 'pageClose':
-      // 페이지 닫기는 browser_tab_close로 대체
-      return { index: 0 }; // 현재 활성 탭 닫기
-      
     case 'contextClose':
-      // 컨텍스트 닫기는 browser_close로 대체
-      return {};
+      // browser_close는 인자가 필요 없음
+      mappedArgs = {};
+      break;
       
     default:
-      return args;
+      mappedArgs = args;
+      break;
   }
+  
+  return mappedArgs;
 }
 
 // 도구 결과를 원래 형식으로 변환하는 함수
@@ -211,16 +223,22 @@ function transformResult(name: string, result: any): ToolResult {
       toolResult.title = 'unknown'; // 실제로는 스냅샷에서 제목을 추출해야 함
       break;
       
-    case 'pageScreenshot':
-      // 스크린샷 결과를 Base64 문자열로 반환
-      toolResult.binary = 'dummy-base64-string'; // 실제로는 스크린샷 데이터를 추출해야 함
-      // 브라우저가 스크린샷 데이터를 가지고 있을 수 있음
-      if (result.screenshot) {
-        toolResult.binary = result.screenshot;
-      } else if (result.data) {
-        toolResult.binary = result.data;
-      }
-      break;
+      case 'pageScreenshot':
+        // 기본값으로 더미값을 설정하지 않음
+        if (result.screenshot) {
+          toolResult.binary = result.screenshot;
+        } else if (result.data) {
+          toolResult.binary = result.data;
+        } else if (result.content && Array.isArray(result.content)) {
+          // content 배열에서 이미지 데이터 찾기
+          const imageContent = result.content.find(
+            (item: any) => item.type === 'image' && item.data
+          );
+          if (imageContent && imageContent.data) {
+            toolResult.binary = imageContent.data;
+          }
+        }
+        break;
       
     case 'pageEvaluate':
       // 스냅샷 결과에서 필요한 정보 추출
@@ -344,99 +362,45 @@ export class MCPClient {
     const mappedAction = mapToolName(action);
     const mappedArgs = mapToolArgs(action, args);
     
-    log(LogLevel.DEBUG, `액션 실행: ${action} (mapped to ${mappedAction})`, mappedArgs);
+    log(LogLevel.DEBUG, `액션 실행: ${action} (${mappedAction})`, mappedArgs);
     
-    // 중요한 액션만 콘솔에 표시
-    if (['pageClick', 'pageFill', 'pageGoto', 'pageScreenshot'].includes(action)) {
-      console.log(`액션 실행: ${action}`);
-    }
-
+    // 중요한 액션 콘솔에 표시
+    console.log(`액션 실행: ${action} (${mappedAction})`);
+  
     // 도구가 존재하는지 확인
     if (!this.toolCache[mappedAction]) {
-      log(LogLevel.WARN, `도구 "${mappedAction}"가 사용 가능한 도구에 없습니다. browser_snapshot을 대체로 사용합니다.`);
-      
-      // 기본적으로 스냅샷 도구로 대체
-      if (mappedAction !== 'browser_snapshot') {
-        try {
-          const snapshotResult = await this.executeAction('pageUrl', {});
-          return transformResult(action, snapshotResult);
-        } catch (error) {
-          log(LogLevel.ERROR, `대체 스냅샷 실행 오류:`, error);
-          return {
-            isError: true,
-            content: [{ type: 'text', text: `Failed to execute fallback for ${action}` }]
-          };
-        }
-      }
+      const errorMsg = `도구 "${mappedAction}"가 사용 가능한 도구에 없습니다.`;
+      log(LogLevel.ERROR, errorMsg);
+      throw new Error(errorMsg);
     }
-
+  
     try {
       // MCP 클라이언트 호출
-      let result: any;
-      try {
-        result = await this.client.callTool({
-          name: mappedAction,
-          arguments: mappedArgs,
-        });
-      } catch (mcpError) {
-        log(LogLevel.ERROR, `MCP 클라이언트 오류 (${mappedAction}):`, mcpError);
-        // MCP 오류가 발생하면 더미 응답
-        result = {
-          content: [{ type: 'text', text: `Tool "${mappedAction}" execution failed` }],
-          isError: true
-        };
-      }
-
-      log(LogLevel.DEBUG, `액션 ${action} (${mappedAction}) 결과:`, result);
+      const result = await this.client.callTool({
+        name: mappedAction,
+        arguments: mappedArgs,
+      });
       
-      // 중요한 액션의 결과만 콘솔에 간략히 표시
-      if (['pageClick', 'pageFill', 'pageGoto'].includes(action)) {
-        console.log(`액션 ${action} 완료`);
+      // 디버그 정보 로깅
+      log(LogLevel.DEBUG, `도구 응답 (${mappedAction}):`, result);
+      
+      // 결과가 오류인 경우 예외 발생
+      if (result.isError) {
+        const errorMsg = `도구 "${mappedAction}" 실행 실패: ${JSON.stringify(result)}`;
+        log(LogLevel.ERROR, errorMsg);
+        throw new Error(errorMsg);
       }
+      
+      // 액션 완료 메시지
+      console.log(`액션 ${action} 완료`);
       
       // 결과 변환 및 반환
       const transformedResult = transformResult(action, result);
       return transformedResult;
     } catch (error) {
       log(LogLevel.ERROR, `액션 실행 오류 ${action} (${mappedAction}):`, error);
-      
-      // 콘솔에 오류 표시
       console.error(`액션 ${action} 실행 오류:`, error instanceof Error ? error.message : error);
-      
-      // 더 자세한 에러 정보를 로그에 기록
-      if (error instanceof Error) {
-        log(LogLevel.ERROR, '오류 상세 정보:', {
-          message: error.message,
-          stack: error.stack,
-        });
-      }
-      
-      // 에러 발생 시 더미 데이터 반환
-      const errorResult: ToolResult = {
-        isError: true,
-        content: [{ type: 'text', text: `Error executing ${action}` }]
-      };
-      
-      // 특정 응답 형태에 맞게 추가 필드
-      switch (action) {
-        case 'pageScreenshot':
-          errorResult.binary = '';
-          break;
-        case 'pageUrl':
-          errorResult.url = 'unknown';
-          break;
-        case 'pageTitle':
-          errorResult.title = 'unknown';
-          break;
-        case 'pageEvaluate':
-          errorResult.result = [];
-          break;
-        case 'pageIsVisible':
-          errorResult.visible = false;
-          break;
-      }
-      
-      return errorResult;
+      throw error;  // 오류를 상위로 전파
     }
   }
 

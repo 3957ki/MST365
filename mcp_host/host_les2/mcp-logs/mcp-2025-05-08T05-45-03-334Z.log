@@ -1,0 +1,948 @@
+[2025-05-08T05:45:07.427Z] [INFO] MCPClient 인스턴스가 생성되었습니다.
+[2025-05-08T05:45:07.428Z] [INFO] MCP 서버에 연결 시도 중...
+[2025-05-08T05:45:10.440Z] [INFO] Transport를 통해 MCP 서버에 연결 중...
+[2025-05-08T05:45:11.749Z] [INFO] Playwright MCP 서버에 성공적으로 연결되었습니다
+[2025-05-08T05:45:11.754Z] [DEBUG] Available tools: {
+  "tools": [
+    {
+      "name": "browser_close",
+      "description": "Close the page",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Close browser",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_wait",
+      "description": "Wait for a specified time in seconds",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "number",
+            "description": "The time to wait in seconds"
+          }
+        },
+        "required": [
+          "time"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Wait",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_resize",
+      "description": "Resize the browser window",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "width": {
+            "type": "number",
+            "description": "Width of the browser window"
+          },
+          "height": {
+            "type": "number",
+            "description": "Height of the browser window"
+          }
+        },
+        "required": [
+          "width",
+          "height"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Resize browser window",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_console_messages",
+      "description": "Returns all console messages",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Get console messages",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_handle_dialog",
+      "description": "Handle a dialog",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "accept": {
+            "type": "boolean",
+            "description": "Whether to accept the dialog."
+          },
+          "promptText": {
+            "type": "string",
+            "description": "The text of the prompt in case of a prompt dialog."
+          }
+        },
+        "required": [
+          "accept"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Handle a dialog",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_file_upload",
+      "description": "Upload one or multiple files",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The absolute paths to the files to upload. Can be a single file or multiple files."
+          }
+        },
+        "required": [
+          "paths"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Upload files",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_install",
+      "description": "Install the browser specified in the config. Call this if you get an error about the browser not being installed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Install the browser specified in the config",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_press_key",
+      "description": "Press a key on the keyboard",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Name of the key to press or a character to generate, such as `ArrowLeft` or `a`"
+          }
+        },
+        "required": [
+          "key"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Press a key",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_navigate",
+      "description": "Navigate to a URL",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL to navigate to"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Navigate to a URL",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_navigate_back",
+      "description": "Go back to the previous page",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Go back",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_navigate_forward",
+      "description": "Go forward to the next page",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Go forward",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_network_requests",
+      "description": "Returns all network requests since loading the page",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "List network requests",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_pdf_save",
+      "description": "Save page as PDF",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Save as PDF",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_snapshot",
+      "description": "Capture accessibility snapshot of the current page, this is better than screenshot",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Page snapshot",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_click",
+      "description": "Perform click on a web page",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "element": {
+            "type": "string",
+            "description": "Human-readable element description used to obtain permission to interact with the element"
+          },
+          "ref": {
+            "type": "string",
+            "description": "Exact target element reference from the page snapshot"
+          }
+        },
+        "required": [
+          "element",
+          "ref"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Click",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_drag",
+      "description": "Perform drag and drop between two elements",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "startElement": {
+            "type": "string",
+            "description": "Human-readable source element description used to obtain the permission to interact with the element"
+          },
+          "startRef": {
+            "type": "string",
+            "description": "Exact source element reference from the page snapshot"
+          },
+          "endElement": {
+            "type": "string",
+            "description": "Human-readable target element description used to obtain the permission to interact with the element"
+          },
+          "endRef": {
+            "type": "string",
+            "description": "Exact target element reference from the page snapshot"
+          }
+        },
+        "required": [
+          "startElement",
+          "startRef",
+          "endElement",
+          "endRef"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Drag mouse",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_hover",
+      "description": "Hover over element on page",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "element": {
+            "type": "string",
+            "description": "Human-readable element description used to obtain permission to interact with the element"
+          },
+          "ref": {
+            "type": "string",
+            "description": "Exact target element reference from the page snapshot"
+          }
+        },
+        "required": [
+          "element",
+          "ref"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Hover mouse",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_type",
+      "description": "Type text into editable element",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "element": {
+            "type": "string",
+            "description": "Human-readable element description used to obtain permission to interact with the element"
+          },
+          "ref": {
+            "type": "string",
+            "description": "Exact target element reference from the page snapshot"
+          },
+          "text": {
+            "type": "string",
+            "description": "Text to type into the element"
+          },
+          "submit": {
+            "type": "boolean",
+            "description": "Whether to submit entered text (press Enter after)"
+          },
+          "slowly": {
+            "type": "boolean",
+            "description": "Whether to type one character at a time. Useful for triggering key handlers in the page. By default entire text is filled in at once."
+          }
+        },
+        "required": [
+          "element",
+          "ref",
+          "text"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Type text",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_select_option",
+      "description": "Select an option in a dropdown",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "element": {
+            "type": "string",
+            "description": "Human-readable element description used to obtain permission to interact with the element"
+          },
+          "ref": {
+            "type": "string",
+            "description": "Exact target element reference from the page snapshot"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Array of values to select in the dropdown. This can be a single value or multiple values."
+          }
+        },
+        "required": [
+          "element",
+          "ref",
+          "values"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Select option",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_take_screenshot",
+      "description": "Take a screenshot of the current page. You can't perform actions based on the screenshot, use browser_snapshot for actions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "raw": {
+            "type": "boolean",
+            "description": "Whether to return without compression (in PNG format). Default is false, which returns a JPEG image."
+          },
+          "element": {
+            "type": "string",
+            "description": "Human-readable element description used to obtain permission to screenshot the element. If not provided, the screenshot will be taken of viewport. If element is provided, ref must be provided too."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Exact target element reference from the page snapshot. If not provided, the screenshot will be taken of viewport. If ref is provided, element must be provided too."
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Take a screenshot",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_tab_list",
+      "description": "List browser tabs",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "List tabs",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_tab_new",
+      "description": "Open a new tab",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL to navigate to in the new tab. If not provided, the new tab will be blank."
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Open a new tab",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_tab_select",
+      "description": "Select a tab by index",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "number",
+            "description": "The index of the tab to select"
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Select a tab",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_tab_close",
+      "description": "Close a tab",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "number",
+            "description": "The index of the tab to close. Closes current tab if not provided."
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Close a tab",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_generate_playwright_test",
+      "description": "Generate a Playwright test for given scenario",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the test"
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the test"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The steps of the test"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "steps"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Generate a Playwright test",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    }
+  ]
+}
+[2025-05-08T05:45:11.755Z] [DEBUG] 액션 실행: browserLaunch (browser_install) {}
+[2025-05-08T05:45:11.754Z] [INFO] 25개의 MCP 도구를 로드했습니다
+[2025-05-08T05:45:12.331Z] [DEBUG] 도구 응답 (browser_install): {
+  "content": [
+    {
+      "type": "text",
+      "text": "No open pages available. Use the \"browser_navigate\" tool to navigate to a page first."
+    }
+  ]
+}
+[2025-05-08T05:45:12.332Z] [DEBUG] 액션 실행: browserNewContext (browser_snapshot) {}
+[2025-05-08T05:45:12.665Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: about:blank\n- Page Title: \n- Page Snapshot\n```yaml\nnull\n```"
+    }
+  ]
+}
+[2025-05-08T05:45:12.666Z] [DEBUG] 액션 실행: contextNewPage (browser_snapshot) {}
+[2025-05-08T05:45:12.673Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: about:blank\n- Page Title: \n- Page Snapshot\n```yaml\nnull\n```"
+    }
+  ]
+}
+[2025-05-08T05:45:12.674Z] [DEBUG] 액션 실행: pageUrl (browser_snapshot) {}
+[2025-05-08T05:45:12.681Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: about:blank\n- Page Title: \n- Page Snapshot\n```yaml\nnull\n```"
+    }
+  ]
+}
+[2025-05-08T05:45:12.681Z] [DEBUG] 액션 실행: pageTitle (browser_snapshot) {}
+[2025-05-08T05:45:12.687Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: about:blank\n- Page Title: \n- Page Snapshot\n```yaml\nnull\n```"
+    }
+  ]
+}
+[2025-05-08T05:45:12.688Z] [DEBUG] 액션 실행: pageEvaluate (browser_snapshot) {
+  "expression": "() => {\n          const interactive = Array.from(\n            document.querySelectorAll('input, button, textarea, select, a')\n          );\n          return interactive.map(el => ({\n            tagName: el.tagName.toLowerCase(),\n            type: el.type || '',\n            name: el.name || '',\n            id: el.id || '',\n            className: el.className || '',\n            placeholder: el.placeholder || '',\n            text: el.textContent?.trim() || '',\n            value: el.value || '',\n            visible: el.getBoundingClientRect().height > 0,\n          }));\n        }"
+}
+[2025-05-08T05:45:12.695Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: about:blank\n- Page Title: \n- Page Snapshot\n```yaml\nnull\n```"
+    }
+  ]
+}
+[2025-05-08T05:45:12.695Z] [DEBUG] 액션 실행: pageGoto (browser_navigate) {
+  "url": "https://k12s111.p.ssafy.io/"
+}
+[2025-05-08T05:45:12.945Z] [DEBUG] 도구 응답 (browser_navigate): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// Navigate to https://k12s111.p.ssafy.io/\nawait page.goto('https://k12s111.p.ssafy.io/');\n```\n\n- Page URL: https://k12s111.p.ssafy.io/\n- Page Title: Demo Web\n- Page Snapshot\n```yaml\n- img \"Microsoft Logo\" [ref=s1e6]\n- heading \"Demo Web\" [level=1] [ref=s1e7]\n- paragraph [ref=s1e8]: Microsoft Playwright MCP 기본 테스트\n- link \"로그인\" [ref=s1e10]:\n  - /url: /login\n- link \"회원가입\" [ref=s1e11]:\n  - /url: /signup\n- alert [ref=s1e13]\n```"
+    }
+  ]
+}
+[2025-05-08T05:45:12.946Z] [DEBUG] 액션 실행: pageWaitForLoadState (browser_wait) {
+  "time": 5
+}
+[2025-05-08T05:45:17.970Z] [DEBUG] 도구 응답 (browser_wait): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// Waited for 5 seconds\n```\n\n- Page URL: https://k12s111.p.ssafy.io/\n- Page Title: Demo Web\n- Page Snapshot\n```yaml\n- img \"Microsoft Logo\" [ref=s2e6]\n- heading \"Demo Web\" [level=1] [ref=s2e7]\n- paragraph [ref=s2e8]: Microsoft Playwright MCP 기본 테스트\n- link \"로그인\" [ref=s2e10]:\n  - /url: /login\n- link \"회원가입\" [ref=s2e11]:\n  - /url: /signup\n- alert [ref=s2e13]\n```"
+    }
+  ]
+}
+[2025-05-08T05:45:19.978Z] [DEBUG] 액션 실행: pageScreenshot (browser_take_screenshot) {
+  "raw": "true"
+}
+[2025-05-08T05:45:19.982Z] [DEBUG] 도구 응답 (browser_take_screenshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"boolean\",\n    \"received\": \"string\",\n    \"path\": [\n      \"raw\"\n    ],\n    \"message\": \"Expected boolean, received string\"\n  }\n]"
+    }
+  ],
+  "isError": true
+}
+[2025-05-08T05:45:19.982Z] [ERROR] 도구 "browser_take_screenshot" 실행 실패: {"content":[{"type":"text","text":"[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"boolean\",\n    \"received\": \"string\",\n    \"path\": [\n      \"raw\"\n    ],\n    \"message\": \"Expected boolean, received string\"\n  }\n]"}],"isError":true}
+[2025-05-08T05:45:19.982Z] [ERROR] 액션 실행 오류 pageScreenshot (browser_take_screenshot): {}
+[2025-05-08T05:45:19.997Z] [DEBUG] 액션 실행: pageScreenshot (browser_take_screenshot) {
+  "raw": "true"
+}
+[2025-05-08T05:45:20.002Z] [ERROR] 도구 "browser_take_screenshot" 실행 실패: {"content":[{"type":"text","text":"[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"boolean\",\n    \"received\": \"string\",\n    \"path\": [\n      \"raw\"\n    ],\n    \"message\": \"Expected boolean, received string\"\n  }\n]"}],"isError":true}
+[2025-05-08T05:45:20.002Z] [ERROR] 액션 실행 오류 pageScreenshot (browser_take_screenshot): {}
+[2025-05-08T05:45:20.002Z] [DEBUG] 도구 응답 (browser_take_screenshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"boolean\",\n    \"received\": \"string\",\n    \"path\": [\n      \"raw\"\n    ],\n    \"message\": \"Expected boolean, received string\"\n  }\n]"
+    }
+  ],
+  "isError": true
+}
+[2025-05-08T05:45:27.964Z] [DEBUG] 액션 실행: pageUrl (browser_snapshot) {}
+[2025-05-08T05:45:27.978Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: https://k12s111.p.ssafy.io/\n- Page Title: Demo Web\n- Page Snapshot\n```yaml\n- img \"Microsoft Logo\" [ref=s3e6]\n- heading \"Demo Web\" [level=1] [ref=s3e7]\n- paragraph [ref=s3e8]: Microsoft Playwright MCP 기본 테스트\n- link \"로그인\" [ref=s3e10]:\n  - /url: /login\n- link \"회원가입\" [ref=s3e11]:\n  - /url: /signup\n- alert [ref=s3e13]\n```"
+    }
+  ]
+}
+[2025-05-08T05:45:27.978Z] [DEBUG] 액션 실행: pageTitle (browser_snapshot) {}
+[2025-05-08T05:45:27.989Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: https://k12s111.p.ssafy.io/\n- Page Title: Demo Web\n- Page Snapshot\n```yaml\n- img \"Microsoft Logo\" [ref=s4e6]\n- heading \"Demo Web\" [level=1] [ref=s4e7]\n- paragraph [ref=s4e8]: Microsoft Playwright MCP 기본 테스트\n- link \"로그인\" [ref=s4e10]:\n  - /url: /login\n- link \"회원가입\" [ref=s4e11]:\n  - /url: /signup\n- alert [ref=s4e13]\n```"
+    }
+  ]
+}
+[2025-05-08T05:45:27.989Z] [DEBUG] 액션 실행: pageEvaluate (browser_snapshot) {
+  "expression": "() => {\n          const interactive = Array.from(\n            document.querySelectorAll('input, button, textarea, select, a')\n          );\n          return interactive.map(el => ({\n            tagName: el.tagName.toLowerCase(),\n            type: el.type || '',\n            name: el.name || '',\n            id: el.id || '',\n            className: el.className || '',\n            placeholder: el.placeholder || '',\n            text: el.textContent?.trim() || '',\n            value: el.value || '',\n            visible: el.getBoundingClientRect().height > 0,\n          }));\n        }"
+}
+[2025-05-08T05:45:27.999Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: https://k12s111.p.ssafy.io/\n- Page Title: Demo Web\n- Page Snapshot\n```yaml\n- img \"Microsoft Logo\" [ref=s5e6]\n- heading \"Demo Web\" [level=1] [ref=s5e7]\n- paragraph [ref=s5e8]: Microsoft Playwright MCP 기본 테스트\n- link \"로그인\" [ref=s5e10]:\n  - /url: /login\n- link \"회원가입\" [ref=s5e11]:\n  - /url: /signup\n- alert [ref=s5e13]\n```"
+    }
+  ]
+}
+[2025-05-08T05:45:33.081Z] [DEBUG] 액션 실행: pageClick (browser_click) {
+  "x": 100,
+  "y": 100
+}
+[2025-05-08T05:45:33.083Z] [DEBUG] 도구 응답 (browser_click): {
+  "content": [
+    {
+      "type": "text",
+      "text": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"element\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"ref\"\n    ],\n    \"message\": \"Required\"\n  }\n]"
+    }
+  ],
+  "isError": true
+}
+[2025-05-08T05:45:33.083Z] [ERROR] 도구 "browser_click" 실행 실패: {"content":[{"type":"text","text":"[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"element\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"ref\"\n    ],\n    \"message\": \"Required\"\n  }\n]"}],"isError":true}
+[2025-05-08T05:45:33.083Z] [ERROR] 액션 실행 오류 pageClick (browser_click): {}
+[2025-05-08T05:45:33.086Z] [DEBUG] 액션 실행: pageScreenshot (browser_take_screenshot) {
+  "raw": "true"
+}
+[2025-05-08T05:45:33.087Z] [DEBUG] 도구 응답 (browser_take_screenshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"boolean\",\n    \"received\": \"string\",\n    \"path\": [\n      \"raw\"\n    ],\n    \"message\": \"Expected boolean, received string\"\n  }\n]"
+    }
+  ],
+  "isError": true
+}
+[2025-05-08T05:45:33.087Z] [ERROR] 도구 "browser_take_screenshot" 실행 실패: {"content":[{"type":"text","text":"[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"boolean\",\n    \"received\": \"string\",\n    \"path\": [\n      \"raw\"\n    ],\n    \"message\": \"Expected boolean, received string\"\n  }\n]"}],"isError":true}
+[2025-05-08T05:45:33.087Z] [ERROR] 액션 실행 오류 pageScreenshot (browser_take_screenshot): {}
+[2025-05-08T05:45:40.095Z] [DEBUG] 액션 실행: pageUrl (browser_snapshot) {}
+[2025-05-08T05:45:40.112Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: https://k12s111.p.ssafy.io/\n- Page Title: Demo Web\n- Page Snapshot\n```yaml\n- img \"Microsoft Logo\" [ref=s6e6]\n- heading \"Demo Web\" [level=1] [ref=s6e7]\n- paragraph [ref=s6e8]: Microsoft Playwright MCP 기본 테스트\n- link \"로그인\" [ref=s6e10]:\n  - /url: /login\n- link \"회원가입\" [ref=s6e11]:\n  - /url: /signup\n- alert [ref=s6e13]\n```"
+    }
+  ]
+}
+[2025-05-08T05:45:40.113Z] [DEBUG] 액션 실행: pageTitle (browser_snapshot) {}
+[2025-05-08T05:45:40.122Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: https://k12s111.p.ssafy.io/\n- Page Title: Demo Web\n- Page Snapshot\n```yaml\n- img \"Microsoft Logo\" [ref=s7e6]\n- heading \"Demo Web\" [level=1] [ref=s7e7]\n- paragraph [ref=s7e8]: Microsoft Playwright MCP 기본 테스트\n- link \"로그인\" [ref=s7e10]:\n  - /url: /login\n- link \"회원가입\" [ref=s7e11]:\n  - /url: /signup\n- alert [ref=s7e13]\n```"
+    }
+  ]
+}
+[2025-05-08T05:45:40.123Z] [DEBUG] 액션 실행: pageEvaluate (browser_snapshot) {
+  "expression": "() => {\n          const interactive = Array.from(\n            document.querySelectorAll('input, button, textarea, select, a')\n          );\n          return interactive.map(el => ({\n            tagName: el.tagName.toLowerCase(),\n            type: el.type || '',\n            name: el.name || '',\n            id: el.id || '',\n            className: el.className || '',\n            placeholder: el.placeholder || '',\n            text: el.textContent?.trim() || '',\n            value: el.value || '',\n            visible: el.getBoundingClientRect().height > 0,\n          }));\n        }"
+}
+[2025-05-08T05:45:40.129Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: https://k12s111.p.ssafy.io/\n- Page Title: Demo Web\n- Page Snapshot\n```yaml\n- img \"Microsoft Logo\" [ref=s8e6]\n- heading \"Demo Web\" [level=1] [ref=s8e7]\n- paragraph [ref=s8e8]: Microsoft Playwright MCP 기본 테스트\n- link \"로그인\" [ref=s8e10]:\n  - /url: /login\n- link \"회원가입\" [ref=s8e11]:\n  - /url: /signup\n- alert [ref=s8e13]\n```"
+    }
+  ]
+}
+[2025-05-08T05:45:48.653Z] [DEBUG] 액션 실행: pageWaitForSelector (browser_wait) {
+  "time": 5
+}
+[2025-05-08T05:45:53.678Z] [DEBUG] 도구 응답 (browser_wait): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// Waited for 5 seconds\n```\n\n- Page URL: https://k12s111.p.ssafy.io/\n- Page Title: Demo Web\n- Page Snapshot\n```yaml\n- img \"Microsoft Logo\" [ref=s9e6]\n- heading \"Demo Web\" [level=1] [ref=s9e7]\n- paragraph [ref=s9e8]: Microsoft Playwright MCP 기본 테스트\n- link \"로그인\" [ref=s9e10]:\n  - /url: /login\n- link \"회원가입\" [ref=s9e11]:\n  - /url: /signup\n- alert [ref=s9e13]\n```"
+    }
+  ]
+}
+[2025-05-08T05:45:53.678Z] [DEBUG] 액션 실행: pageClick (browser_click) {
+  "x": 100,
+  "y": 100
+}
+[2025-05-08T05:45:53.680Z] [DEBUG] 도구 응답 (browser_click): {
+  "content": [
+    {
+      "type": "text",
+      "text": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"element\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"ref\"\n    ],\n    \"message\": \"Required\"\n  }\n]"
+    }
+  ],
+  "isError": true
+}
+[2025-05-08T05:45:53.680Z] [ERROR] 도구 "browser_click" 실행 실패: {"content":[{"type":"text","text":"[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"element\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"ref\"\n    ],\n    \"message\": \"Required\"\n  }\n]"}],"isError":true}
+[2025-05-08T05:45:53.680Z] [ERROR] 액션 실행 오류 pageClick (browser_click): {}
+[2025-05-08T05:45:53.681Z] [DEBUG] 액션 실행: pageScreenshot (browser_take_screenshot) {
+  "raw": "true"
+}
+[2025-05-08T05:45:53.683Z] [DEBUG] 도구 응답 (browser_take_screenshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"boolean\",\n    \"received\": \"string\",\n    \"path\": [\n      \"raw\"\n    ],\n    \"message\": \"Expected boolean, received string\"\n  }\n]"
+    }
+  ],
+  "isError": true
+}
+[2025-05-08T05:45:53.683Z] [ERROR] 도구 "browser_take_screenshot" 실행 실패: {"content":[{"type":"text","text":"[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"boolean\",\n    \"received\": \"string\",\n    \"path\": [\n      \"raw\"\n    ],\n    \"message\": \"Expected boolean, received string\"\n  }\n]"}],"isError":true}
+[2025-05-08T05:45:53.683Z] [ERROR] 액션 실행 오류 pageScreenshot (browser_take_screenshot): {}
+[2025-05-08T05:46:04.737Z] [DEBUG] 액션 실행: pageUrl (browser_snapshot) {}
+[2025-05-08T05:46:04.747Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: https://k12s111.p.ssafy.io/\n- Page Title: Demo Web\n- Page Snapshot\n```yaml\n- img \"Microsoft Logo\" [ref=s10e6]\n- heading \"Demo Web\" [level=1] [ref=s10e7]\n- paragraph [ref=s10e8]: Microsoft Playwright MCP 기본 테스트\n- link \"로그인\" [ref=s10e10]:\n  - /url: /login\n- link \"회원가입\" [ref=s10e11]:\n  - /url: /signup\n- alert [ref=s10e13]\n```"
+    }
+  ]
+}
+[2025-05-08T05:46:04.747Z] [DEBUG] 액션 실행: pageTitle (browser_snapshot) {}
+[2025-05-08T05:46:04.753Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: https://k12s111.p.ssafy.io/\n- Page Title: Demo Web\n- Page Snapshot\n```yaml\n- img \"Microsoft Logo\" [ref=s11e6]\n- heading \"Demo Web\" [level=1] [ref=s11e7]\n- paragraph [ref=s11e8]: Microsoft Playwright MCP 기본 테스트\n- link \"로그인\" [ref=s11e10]:\n  - /url: /login\n- link \"회원가입\" [ref=s11e11]:\n  - /url: /signup\n- alert [ref=s11e13]\n```"
+    }
+  ]
+}
+[2025-05-08T05:46:04.753Z] [DEBUG] 액션 실행: pageEvaluate (browser_snapshot) {
+  "expression": "() => {\n          const interactive = Array.from(\n            document.querySelectorAll('input, button, textarea, select, a')\n          );\n          return interactive.map(el => ({\n            tagName: el.tagName.toLowerCase(),\n            type: el.type || '',\n            name: el.name || '',\n            id: el.id || '',\n            className: el.className || '',\n            placeholder: el.placeholder || '',\n            text: el.textContent?.trim() || '',\n            value: el.value || '',\n            visible: el.getBoundingClientRect().height > 0,\n          }));\n        }"
+}
+[2025-05-08T05:46:04.759Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: https://k12s111.p.ssafy.io/\n- Page Title: Demo Web\n- Page Snapshot\n```yaml\n- img \"Microsoft Logo\" [ref=s12e6]\n- heading \"Demo Web\" [level=1] [ref=s12e7]\n- paragraph [ref=s12e8]: Microsoft Playwright MCP 기본 테스트\n- link \"로그인\" [ref=s12e10]:\n  - /url: /login\n- link \"회원가입\" [ref=s12e11]:\n  - /url: /signup\n- alert [ref=s12e13]\n```"
+    }
+  ]
+}
+[2025-05-08T05:46:14.593Z] [DEBUG] 액션 실행: pageWaitForSelector (browser_wait) {
+  "time": 5
+}
+[2025-05-08T05:46:19.615Z] [DEBUG] 도구 응답 (browser_wait): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// Waited for 5 seconds\n```\n\n- Page URL: https://k12s111.p.ssafy.io/\n- Page Title: Demo Web\n- Page Snapshot\n```yaml\n- img \"Microsoft Logo\" [ref=s13e6]\n- heading \"Demo Web\" [level=1] [ref=s13e7]\n- paragraph [ref=s13e8]: Microsoft Playwright MCP 기본 테스트\n- link \"로그인\" [ref=s13e10]:\n  - /url: /login\n- link \"회원가입\" [ref=s13e11]:\n  - /url: /signup\n- alert [ref=s13e13]\n```"
+    }
+  ]
+}
+[2025-05-08T05:46:19.615Z] [DEBUG] 액션 실행: pageClick (browser_click) {
+  "x": 100,
+  "y": 100
+}
+[2025-05-08T05:46:19.616Z] [DEBUG] 도구 응답 (browser_click): {
+  "content": [
+    {
+      "type": "text",
+      "text": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"element\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"ref\"\n    ],\n    \"message\": \"Required\"\n  }\n]"
+    }
+  ],
+  "isError": true
+}
+[2025-05-08T05:46:19.617Z] [ERROR] 도구 "browser_click" 실행 실패: {"content":[{"type":"text","text":"[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"element\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"ref\"\n    ],\n    \"message\": \"Required\"\n  }\n]"}],"isError":true}
+[2025-05-08T05:46:19.617Z] [ERROR] 액션 실행 오류 pageClick (browser_click): {}
+[2025-05-08T05:46:19.617Z] [DEBUG] 액션 실행: pageScreenshot (browser_take_screenshot) {
+  "raw": "true"
+}
+[2025-05-08T05:46:19.618Z] [DEBUG] 도구 응답 (browser_take_screenshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"boolean\",\n    \"received\": \"string\",\n    \"path\": [\n      \"raw\"\n    ],\n    \"message\": \"Expected boolean, received string\"\n  }\n]"
+    }
+  ],
+  "isError": true
+}
+[2025-05-08T05:46:19.618Z] [ERROR] 도구 "browser_take_screenshot" 실행 실패: {"content":[{"type":"text","text":"[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"boolean\",\n    \"received\": \"string\",\n    \"path\": [\n      \"raw\"\n    ],\n    \"message\": \"Expected boolean, received string\"\n  }\n]"}],"isError":true}
+[2025-05-08T05:46:19.618Z] [ERROR] 액션 실행 오류 pageScreenshot (browser_take_screenshot): {}
+[2025-05-08T05:46:31.713Z] [DEBUG] 액션 실행: pageUrl (browser_snapshot) {}
+[2025-05-08T05:46:31.720Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: https://k12s111.p.ssafy.io/\n- Page Title: Demo Web\n- Page Snapshot\n```yaml\n- img \"Microsoft Logo\" [ref=s14e6]\n- heading \"Demo Web\" [level=1] [ref=s14e7]\n- paragraph [ref=s14e8]: Microsoft Playwright MCP 기본 테스트\n- link \"로그인\" [ref=s14e10]:\n  - /url: /login\n- link \"회원가입\" [ref=s14e11]:\n  - /url: /signup\n- alert [ref=s14e13]\n```"
+    }
+  ]
+}
+[2025-05-08T05:46:31.720Z] [DEBUG] 액션 실행: pageTitle (browser_snapshot) {}
+[2025-05-08T05:46:31.726Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: https://k12s111.p.ssafy.io/\n- Page Title: Demo Web\n- Page Snapshot\n```yaml\n- img \"Microsoft Logo\" [ref=s15e6]\n- heading \"Demo Web\" [level=1] [ref=s15e7]\n- paragraph [ref=s15e8]: Microsoft Playwright MCP 기본 테스트\n- link \"로그인\" [ref=s15e10]:\n  - /url: /login\n- link \"회원가입\" [ref=s15e11]:\n  - /url: /signup\n- alert [ref=s15e13]\n```"
+    }
+  ]
+}
+[2025-05-08T05:46:31.726Z] [DEBUG] 액션 실행: pageEvaluate (browser_snapshot) {
+  "expression": "() => {\n          const interactive = Array.from(\n            document.querySelectorAll('input, button, textarea, select, a')\n          );\n          return interactive.map(el => ({\n            tagName: el.tagName.toLowerCase(),\n            type: el.type || '',\n            name: el.name || '',\n            id: el.id || '',\n            className: el.className || '',\n            placeholder: el.placeholder || '',\n            text: el.textContent?.trim() || '',\n            value: el.value || '',\n            visible: el.getBoundingClientRect().height > 0,\n          }));\n        }"
+}
+[2025-05-08T05:46:31.732Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: https://k12s111.p.ssafy.io/\n- Page Title: Demo Web\n- Page Snapshot\n```yaml\n- img \"Microsoft Logo\" [ref=s16e6]\n- heading \"Demo Web\" [level=1] [ref=s16e7]\n- paragraph [ref=s16e8]: Microsoft Playwright MCP 기본 테스트\n- link \"로그인\" [ref=s16e10]:\n  - /url: /login\n- link \"회원가입\" [ref=s16e11]:\n  - /url: /signup\n- alert [ref=s16e13]\n```"
+    }
+  ]
+}
