@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    // "noEmit": true, // Changed: Allow emitting files if needed by build process
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node", // Changed: Use "node" resolution for wider compatibility
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx", // Changed: Use "react-jsx" for Vite
+    "incremental": true,
+    "types": ["vite/client"]
+    // "plugins": [ // Removed next plugin
+    //   {
+    //     "name": "next"
+    //   }
+    // ],
+    // "paths": { // Removed paths alias for now
+    //   "@/*": ["./src/*"]
+    // }
+  },
+  // "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"], // Changed: Simplified include
+  "include": ["src"], // Changed: Include only src directory
+  "exclude": ["node_modules"]
+}
