@@ -1,7 +1,7 @@
+# 기존 내용
 .DS_Store
 node_modules
 /dist
-
 
 # local env files
 .env.local
@@ -21,3 +21,31 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# 🔽 추가 제안 내용
+
+# production build (Vite or Webpack 등 사용 시 추가적으로 생기는 폴더)
+/build
+/dist-ssr
+
+# TypeScript 관련 (사용 중이면)
+/*.tsbuildinfo
+
+# Mac, Linux OS 추가 파일들
+*.swp
+*.bak
+*.tmp
+
+# VSCode의 자동 저장 백업 파일
+*.code-workspace
+
+# Test coverage
+/coverage
+
+# Lint cache
+.eslintcache
+
+# Optional lock files (중복 관리 피하려면)
+/package-lock.json
+/yarn.lock
+/pnpm-lock.yaml

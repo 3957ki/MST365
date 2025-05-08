@@ -1,9 +1,12 @@
+const baseURL = process.env.VUE_APP_BASE_URL;
+
+// 게시물 목록 조회
 export async function getBoards(token, page, size) {
   const params = new URLSearchParams({
     page: page.toString(),
     size: size.toString(),
   });
-  const url = `http://localhost:8080/api/v1/boards?${params.toString()}`;
+  const url = `${baseURL}/api/v1/boards?${params.toString()}`;
 
   const response = await fetch(url, {
     method: "GET",
@@ -37,9 +40,10 @@ export async function getBoards(token, page, size) {
   return successResponse.data;
 }
 
+// 게시물 상세 조회
 export async function getBoardById(boardId, token) {
   const response = await fetch(
-    `http://localhost:8080/api/v1/boards/${boardId}`,
+    `${baseURL}/api/v1/boards/${boardId}`,
     {
       method: "GET",
       headers: {
@@ -48,9 +52,7 @@ export async function getBoardById(boardId, token) {
     }
   );
 
-  if (response.status === 404) {
-    return null;
-  }
+  if (response.status === 404) return null;
 
   const result = await response.json();
 
@@ -86,9 +88,10 @@ export async function getBoardById(boardId, token) {
   return successResponse.data;
 }
 
+// 게시물 삭제
 export async function deleteBoard(boardId, token) {
   const response = await fetch(
-    `http://localhost:8080/api/v1/boards/${boardId}`,
+    `${baseURL}/api/v1/boards/${boardId}`,
     {
       method: "DELETE",
       headers: {
@@ -104,15 +107,14 @@ export async function deleteBoard(boardId, token) {
       errorMessage =
         errorResult.details ||
         errorResult.error ||
-        `게시물 삭제 실패 (HTTP ${response.status})`;
+        errorMessage;
 
       if (response.status === 401) {
         errorMessage = "인증되지 않았습니다. 다시 로그인해주세요.";
       } else if (response.status === 403) {
         errorMessage = "이 게시물을 삭제할 권한이 없습니다.";
       } else if (response.status === 404) {
-        errorMessage =
-          "삭제하려는 게시물을 찾을 수 없거나 이미 삭제되었습니다.";
+        errorMessage = "삭제하려는 게시물을 찾을 수 없거나 이미 삭제되었습니다.";
       }
     } catch (e) {
       console.error("Error parsing delete error response:", e);
@@ -128,8 +130,9 @@ export async function deleteBoard(boardId, token) {
   }
 }
 
+// 게시물 작성
 export async function createBoard(input, token) {
-  const response = await fetch("http://localhost:8080/api/v1/boards", {
+  const response = await fetch(`${baseURL}/api/v1/boards`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -155,9 +158,10 @@ export async function createBoard(input, token) {
   return result;
 }
 
+// 게시물 수정
 export async function updateBoard(boardId, updateData, token) {
   const response = await fetch(
-    `http://localhost:8080/api/v1/boards/${boardId}`,
+    `${baseURL}/api/v1/boards/${boardId}`,
     {
       method: "PATCH",
       headers: {

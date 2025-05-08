@@ -1,12 +1,14 @@
-import { getToken } from '@/services/api/auth.js'; // Updated import path
+const baseURL = process.env.VUE_APP_BASE_URL;
+
+import { getToken } from "@/services/api/auth.js";
 
 // 댓글 작성 함수
 export async function createComment(boardId, content, token) {
-  const response = await fetch(`http://localhost:8080/api/v1/boards/${boardId}/comments`, {
+  const response = await fetch(`${baseURL}/api/v1/boards/${boardId}/comments`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ content }),
   });
@@ -17,14 +19,14 @@ export async function createComment(boardId, content, token) {
     throw new Error(result.details || result.error || `댓글 작성 실패 (HTTP ${response.status})`);
   }
 
-  return result; // Removed 'as CreateCommentResponse'
+  return result;
 }
 
 // 댓글 목록 조회 함수
 export async function getComments(boardId) {
   const token = getToken();
 
-  const headers = { // Simplified HeadersInit for JS
+  const headers = {
     "Content-Type": "application/json",
   };
 
@@ -32,7 +34,7 @@ export async function getComments(boardId) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`http://localhost:8080/api/v1/boards/${boardId}/comments`, {
+  const response = await fetch(`${baseURL}/api/v1/boards/${boardId}/comments`, {
     method: "GET",
     headers,
   });
@@ -53,26 +55,19 @@ export async function getComments(boardId) {
   }
 
   if (!Array.isArray(result)) {
-    // The original API seems to return the array directly, not nested in a 'data' field.
-    // If the actual API nests it, this check needs adjustment.
-    // For now, assuming 'result' itself is the array of comments.
     console.warn("getComments: API response is not an array as expected by the original client code.", result);
-    // Depending on actual API, might need to return result.data or similar.
-    // For now, to match the original client's expectation of result being the array:
-    // throw new Error("댓글 목록이 배열 형식이 아닙니다.");
   }
 
-
-  return result; // Assuming result is the array of comments
+  return result;
 }
 
 // 댓글 수정 함수 (PATCH로 변경 + boardId 포함)
 export async function updateComment(boardId, commentId, content, token) {
-  const response = await fetch(`http://localhost:8080/api/v1/boards/${boardId}/comments/${commentId}`, {
+  const response = await fetch(`${baseURL}/api/v1/boards/${boardId}/comments/${commentId}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ content }),
   });
@@ -83,36 +78,31 @@ export async function updateComment(boardId, commentId, content, token) {
     throw new Error(result.details || result.error || `댓글 수정 실패 (HTTP ${response.status})`);
   }
 
-  return result; // Removed 'as UpdateCommentResponse'
+  return result;
 }
 
 // 댓글 삭제 함수
 export async function deleteComment(boardId, commentId, token) {
-  const response = await fetch(`http://localhost:8080/api/v1/boards/${boardId}/comments/${commentId}`, {
+  const response = await fetch(`${baseURL}/api/v1/boards/${boardId}/comments/${commentId}`, {
     method: "DELETE",
     headers: {
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
   });
 
   if (!response.ok) {
-    // Try to parse error message, but be cautious as DELETE might not always return JSON body on error
     let errorMessage = `댓글 삭제 실패 (HTTP ${response.status})`;
     try {
-        const result = await response.json();
-        errorMessage = result.details || result.error || errorMessage;
+      const result = await response.json();
+      errorMessage = result.details || result.error || errorMessage;
     } catch (e) {
-        // Ignore if parsing fails, use default error message
+       // no-op: JSON 파싱 실패 시 무시
     }
     throw new Error(errorMessage);
   }
 
-  // No explicit return for void Promise, but can check for 204 No Content if needed
   if (response.status === 204) {
-    return; // Successfully deleted, no content
+    return;
   }
-  // If backend sends a JSON body on successful DELETE (e.g. { message: "deleted" })
-  // you might want to parse and log it, but it's not strictly necessary for a void function.
-  // For now, assume 200/204 means success.
   return;
 }
