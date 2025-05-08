@@ -14,6 +14,7 @@ import demo.demo_back.exception.InvalidRequestException;
 import demo.demo_back.service.BoardService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -35,9 +36,9 @@ public class BoardController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllBoards() {
+    public ResponseEntity<?> getAllBoards(Pageable pageable) {
         try {
-            BoardListResponseDto response = boardService.getAllBoards();
+            BoardListResponseDto response = boardService.getAllBoards(pageable);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, String> errorResponse = new HashMap<>();

@@ -1,6 +1,8 @@
 package demo.demo_back.repository;
 
 import demo.demo_back.domain.Board;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -10,9 +12,10 @@ import java.util.Optional;
 @Repository
 public interface BoardRepository extends JpaRepository<Board, Long> {
     List<Board> findAllByIsDeletedFalseOrderByCreatedAtDesc();
+    Page<Board> findAllByIsDeletedFalseOrderByCreatedAtDesc(Pageable pageable);
     Optional<Board> findByIdAndIsDeletedFalse(Long id);
 
-    List<Board> findByUserId(Long userId);
+    List<Board> findByUserIdAndIsDeletedFalse(Long userId);
 
 
 } 

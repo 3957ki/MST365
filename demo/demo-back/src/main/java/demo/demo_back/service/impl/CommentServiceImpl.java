@@ -49,7 +49,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentResponseDto> getCommentsByBoardId(Long boardId) {
-        List<Comment> comments = commentRepository.findByBoardId(boardId);
+        List<Comment> comments = commentRepository.findByBoard_IdAndIsDeletedFalseOrderByCreatedAtAsc(boardId);
 
         return comments.stream()
                 .map(this::toDto)
@@ -94,14 +94,16 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional(readOnly = true)
     public List<CommentResponseDto> getCommentsByUserId(Long userId) {
-        List<Comment> comments = commentRepository.findByUserId(userId);
+        List<Comment> comments = commentRepository
+                .findByUserIdAndIsDeletedFalseAndBoard_IsDeletedFalse(userId); // 게시글까지 고려
 
         return comments.stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
-    // ✅ 중복 제거용 private 메서드
+
+    // 중복 제거용 private 메서드
     private CommentResponseDto toDto(Comment comment) {
         return CommentResponseDto.builder()
                 .id(comment.getId())

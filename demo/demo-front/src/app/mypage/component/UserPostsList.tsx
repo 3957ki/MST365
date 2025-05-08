@@ -1,66 +1,86 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React from 'react'; // Removed useState, useEffect
+import Link from 'next/link'; // Added Link import
+import { UserPostItem } from '../../api/auth'; // Corrected UserPostItem import path
+
+// Define the structure for component props
+interface UserPostsListProps {
+  posts: UserPostItem[] | null; // Prop for posts array (can be null)
+  // Loading and error states will be handled by the parent component
+}
 
 // Define the structure of a post object (adjust based on your actual data structure)
+// This internal 'Post' interface is no longer needed as we use UserPostItem from props
+/*
 interface Post {
   id: number;
   title: string;
   createdAt: string; // Or Date object
+  view: number; // 조회수 추가
 }
+*/
 
-// Mock function to fetch user posts - replace with your actual API call
-async function fetchUserPosts(): Promise<Post[]> {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  // Return mock data
-  return [
-    { id: 1, title: "첫 번째 게시글 제목", createdAt: "2024-04-30" },
-    { id: 2, title: "두 번째 게시글 제목", createdAt: "2024-04-29" },
-    { id: 3, title: "세 번째 게시글 제목", createdAt: "2024-04-28" },
-  ];
-}
+// Mock function removed as data comes from props
+// async function fetchUserPosts(): Promise<Post[]> { ... }
 
-export default function UserPostsList() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// Component signature changed to accept props
+export default function UserPostsList({ posts }: UserPostsListProps) {
+  // Internal state and useEffect removed
+  // const [posts, setPosts] = useState<Post[]>([]);
+  // const [loading, setLoading] = useState(true);
+  // const [error, setError] = useState<string | null>(null);
+  // useEffect(() => { ... }, []);
 
-  useEffect(() => {
-    const loadPosts = async () => {
-      try {
-        setLoading(true);
-        const userPosts = await fetchUserPosts(); // Replace with actual API call
-        setPosts(userPosts);
-        setError(null);
-      } catch (err) {
-        console.error("Failed to fetch user posts:", err);
-        setError("게시글을 불러오는 데 실패했습니다.");
-        setPosts([]); // Clear posts on error
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadPosts();
-  }, []);
+  // Loading and error display are handled by the parent component
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-6">
       <h3 className="text-xl font-semibold mb-4 text-black">내가 쓴 글</h3>
-      {loading && <p className="text-gray-600">게시글을 불러오는 중...</p>}
-      {error && <p className="text-red-500">{error}</p>}
-      {!loading && !error && posts.length === 0 && (
+      {/* Display message if posts is null or empty */}
+      {(!posts || posts.length === 0) && (
         <p className="text-gray-600">작성한 게시글이 없습니다.</p>
       )}
-      {!loading && !error && posts.length > 0 && (
+      {/* Render list if posts array exists and is not empty */}
+      {posts && posts.length > 0 && (
         <ul className="space-y-2">
-          {posts.map((post) => (
-            <li key={post.id} className="border-b pb-2 text-black">
-              <p className="font-medium">{post.title}</p>
-              <p className="text-sm text-gray-500">작성일: {post.createdAt}</p>
-              {/* Add Link to post details page if needed */}
-              {/* <Link href={`/board/${post.id}`}><a>자세히 보기</a></Link> */}
+          {posts.map((post: UserPostItem) => ( // Added type annotation for post
+            <li key={post.id} className="border-b pb-2 text-black flex justify-between items-center">
+              {/* Link to the post detail page */}
+              <Link href={`/board/${post.id}`} className="flex-grow mr-4 hover:text-blue-600">
+                <p className="font-medium">{post.title}</p>
+                {/* Use created_at field and format date safely */}
+                <p className="text-sm text-gray-500">
+                  작성일: {(() => {
+                    // Removed debugging console.log
+                    try {
+                      // Use post.createdAt (camelCase)
+                      const datePart = post.createdAt.split('T')[0];
+                      const [year, month, day] = datePart.split('-').map(Number);
+
+                      // Create Date object using year, month (0-indexed), day
+                      // Validate parts before creating Date
+                      if (!year || !month || !day) {
+                        throw new Error("Invalid date parts");
+                      }
+                      // Month is 0-indexed (0 = January, 11 = December)
+                      const date = new Date(year, month - 1, day);
+
+                      // Check if the date object is valid
+                      if (isNaN(date.getTime())) {
+                         throw new Error("Invalid Date object");
+                      }
+                      // Format date as YYYY. MM. DD
+                      return `${year}. ${month}. ${day}`;
+                    } catch (e) {
+                      // Use post.createdAt in error log
+                      console.error("Error parsing date:", post.createdAt, e);
+                      return "날짜 형식 오류"; // Return error message if parsing fails
+                    }
+                  })()}
+                </p>
+              </Link>
+              <p className="text-sm text-gray-500">조회수: {post.view}</p> {/* Display view count */}
             </li>
           ))}
         </ul>

@@ -13,6 +13,8 @@ import demo.demo_back.repository.BoardRepository;
 import demo.demo_back.repository.UserRepository;
 import demo.demo_back.service.BoardService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,10 +50,10 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional(readOnly = true)
-    public BoardListResponseDto getAllBoards() {
-        List<Board> boards = boardRepository.findAllByIsDeletedFalseOrderByCreatedAtDesc();
+    public BoardListResponseDto getAllBoards(Pageable pageable) {
+        Page<Board> boardPage = boardRepository.findAllByIsDeletedFalseOrderByCreatedAtDesc(pageable);
 
-        List<BoardListResponseDto.BoardItemDto> boardItems = boards.stream()
+        List<BoardListResponseDto.BoardItemDto> boardItems = boardPage.getContent().stream()
                 .map(board -> new BoardListResponseDto.BoardItemDto(
                         board.getId(),
                         board.getUser().getId(),
@@ -67,7 +69,7 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional(readOnly = true)
     public List<BoardListResponseDto.BoardItemDto> getBoardsByUserId(Long userId) {
-        List<Board> boards = boardRepository.findByUserId(userId);
+        List<Board> boards = boardRepository.findByUserIdAndIsDeletedFalse(userId);
 
         return boards.stream()
                 .map(board -> new BoardListResponseDto.BoardItemDto(
@@ -81,7 +83,7 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public BoardDetailResponseDto getBoardById(Long boardId) {
         Board board = boardRepository.findByIdAndIsDeletedFalse(boardId)
                 .orElseThrow(() -> new BoardNotFoundException(boardId));
