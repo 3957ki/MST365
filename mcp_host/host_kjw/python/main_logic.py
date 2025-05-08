@@ -16,6 +16,7 @@ from langchain_anthropic import ChatAnthropic
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 from langchain_core.messages import AIMessage
+from dotenv import load_dotenv
 
 
 # Output Parser
@@ -166,11 +167,11 @@ async def run_test(
     output_dir = os.path.join(base_dir, test_id)
     os.makedirs(output_dir, exist_ok=True)
 
-    if provider.lower() == "anthropic":
+    if provider == "anthropic":
         model = ChatAnthropic(
             model=llm_model, temperature=0, max_tokens=1000, api_key=api_key
         )
-    elif provider.lower() == "openai":
+    elif provider == "openai":
         model = ChatOpenAI(
             model=llm_model, temperature=0, max_tokens=1000, api_key=api_key
         )
@@ -197,27 +198,27 @@ async def run_test(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, required=True, help="설정 JSON 파일 경로")
+    parser.add_argument("--build", type=int, required=True, help="빌드 번호")
     parser.add_argument(
-        "--scenarios", type=str, required=True, help="시나리오 JSON 파일 경로"
+        "--output_dir", type=str, default="./results", help="결과 저장 디렉토리"
+    )
+    parser.add_argument(
+        "--file", type=str, required=True, help="시나리오 JSON 파일 경로"
     )
     args = parser.parse_args()
 
-    # config 로드
-    with open(args.config, "r", encoding="utf-8") as f:
-        config = json.load(f)
+    # 환경변수 불러오기
+    load_dotenv()
 
-    provider = config["provider"]
-    llm_model = config["llm_model"]
-    api_key = config["api_key"]
-    build_num = config["build"]
-    output_dir = config.get("output_dir", "./results")
+    provider = os.getenv("LLM_PROVIDER")
+    llm_model = os.getenv("LLM_MODEL")
+    api_key = os.getenv("LLM_API_KEY")
 
     # 시나리오 로드
-    with open(args.scenarios, "r", encoding="utf-8") as f:
+    with open(args.file, "r", encoding="utf-8") as f:
         data = json.load(f)
     scenarios = data.get("scenarios", [])
 
     asyncio.run(
-        run_test(scenarios, build_num, output_dir, provider, llm_model, api_key)
+        run_test(scenarios, args.build, args.output_dir, provider, llm_model, api_key)
     )

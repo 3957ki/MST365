@@ -11,13 +11,7 @@
 
 ### ⚙️ 환경 설정
 
-#### 1. 자동 설정 (setup.bat)
-
-- setup.bat 실행 시, MCP 서버 실행을 위한 환경이 자동으로 구성됩니다.
-
-#### 2. 수동 설정
-
-- 직접 환경을 구성하려면 아래 명령어를 참고하세요.
+- 플러그인 환경을 구성하세요
 
 ```bash
 # apt 최신화
@@ -43,16 +37,12 @@ npm install
 cd ..
 ```
 
-### config.json 파일 생성 (현재 openai만 정상 작동)
+### .env 파일 생성
 
-```json
-{
-  "provider": "openai 혹은 anthropic",
-  "llm_model": "모델명",
-  "api_key": "API Key",
-  "build": "빌드번호",
-  "output_dir": "결과파일 경로"
-}
+```
+LLM_PROVIDER={openai 혹은 anthropic}
+LLM_MODEL={사용할 모델}
+LLM_API_KEY={API 키}
 ```
 
 - 지원 모델 목록:
@@ -65,14 +55,14 @@ cd ..
 
 ```
 source .venv/bin/activate
-python .\main_logic.py --config {사용자 Secret json 경로} --scenarios {사용자 시나리오 json 경로}
+python .\main_logic.py --build {빌드 번호} --file {사용자 시나리오 json 경로} --output_dir {결과 저장 경로}
 ```
 
 - Window
 
 ```
 call .venv\Scripts\activate
-python .\main_logic.py --config {사용자 Secret json 경로} --scenarios {사용자 시나리오 json 경로}
+python .\main_logic.py --build {빌드 번호} --file {사용자 시나리오 json 경로} --output_dir {결과 저장 경로}
 ```
 
 ### 토큰 문제 개선에 관한 고찰
