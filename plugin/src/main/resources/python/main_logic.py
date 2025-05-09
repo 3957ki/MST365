@@ -39,11 +39,12 @@ output_parser = PydanticOutputParser(pydantic_object=WebTestResult)
 system_prompt = """너는 아래 시나리오를 테스트하는 AI야.
 각 스텝에서 시키는 대로 행동하고, 실패한 스텝과 이유를 한글로 기록해.
 스텝에서 시키는 대로 할 수 없거나, 시킨 대로 한 결과가 이상하면 실패로 처리해.
-모든 스텝이 끝난 뒤엔 전체 피드백을 주고, 반드시 아래 형식 그대로 응답해야 해.
 
 특히 스크린샷을 캡쳐할 땐 반드시 snapshot을 먼저 만들어야 해.  
 즉, navigate 이후 바로 take_screenshot을 실행하면 안 되고,  
 반드시 snapshot → take_screenshot 순서로 실행해야 해.
+
+모든 스텝이 끝난 뒤엔 전체 피드백을 주고, 반드시 아래 형식 그대로 응답해야 해.
 
 최종 JSON은 반드시 아래처럼 **```json 코드블럭 안에만** 포함시켜야 해.
 다른 설명은 JSON 블럭 바깥에 써도 되지만, JSON 그 자체는 무조건 ```json 으로 감싸야 해.
@@ -113,7 +114,8 @@ async def run_logic(agent, steps: List[str], screenshot_dir: str):
                 {"role": "system", "content": prompt.format()},
                 {"role": "user", "content": create_instruction(steps)},
             ]
-        }
+        },
+        config={"recursion_limit": 100},
     )
 
     # 스크린샷 저장

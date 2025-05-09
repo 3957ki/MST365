@@ -14,9 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+var __importDefault =
+    (this && this.__importDefault) ||
+    function (mod) {
+        return mod && mod.__esModule ? mod : { default: mod };
+    };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createServer = createServer;
 const path_1 = __importDefault(require("path"));
@@ -61,52 +63,49 @@ const screenshotTools = [
     ...screen_1.default,
     ...(0, tabs_1.default)(false),
 ];
-const packageJSON = require('../package.json');
+const packageJSON = require("../package.json");
 
 async function createServer(options) {
     let browserName;
     let channel;
     switch (options?.browser) {
-        case 'chrome':
-        case 'chrome-beta':
-        case 'chrome-canary':
-        case 'chrome-dev':
-        case 'msedge':
-        case 'msedge-beta':
-        case 'msedge-canary':
-        case 'msedge-dev':
-            browserName = 'chromium';
+        case "chrome":
+        case "chrome-beta":
+        case "chrome-canary":
+        case "chrome-dev":
+        case "msedge":
+        case "msedge-beta":
+        case "msedge-canary":
+        case "msedge-dev":
+            browserName = "chromium";
             channel = options.browser;
             break;
-        case 'chromium':
-            browserName = 'chromium';
+        case "chromium":
+            browserName = "chromium";
             break;
-        case 'firefox':
-            browserName = 'firefox';
+        case "firefox":
+            browserName = "firefox";
             break;
-        case 'webkit':
-            browserName = 'webkit';
+        case "webkit":
+            browserName = "webkit";
             break;
         default:
-            browserName = 'chromium';
-            channel = 'chrome';
+            browserName = "chromium";
+            channel = "chrome";
     }
-    const userDataDir = options?.userDataDir ?? await createUserDataDir(browserName);
+    const userDataDir = options?.userDataDir ?? (await createUserDataDir(browserName));
     const launchOptions = {
-        headless: !!(options?.headless ?? (os_1.default.platform() === 'linux' && !process.env.DISPLAY)),
+        headless: !!(options?.headless ?? (os_1.default.platform() === "linux" && !process.env.DISPLAY)),
         channel,
         executablePath: options?.executablePath,
-        args: [
-            '--incognito',
-            ...(options?.launchOptions?.args || [])
-        ],
+        args: ["--incognito", ...(options?.launchOptions?.args || [])],
     };
     const allTools = options?.vision ? screenshotTools : snapshotTools;
     const tools = allTools.filter(
-        tool => !options?.capabilities || tool.capability === 'core' || options.capabilities.includes(tool.capability)
+        (tool) => !options?.capabilities || tool.capability === "core" || options.capabilities.includes(tool.capability)
     );
     return (0, server_1.createServerWithTools)({
-        name: 'Playwright',
+        name: "Playwright",
         version: packageJSON.version,
         tools,
         resources: [],
@@ -119,15 +118,14 @@ async function createServer(options) {
 
 async function createUserDataDir(browserName) {
     let cacheDirectory;
-    if (process.platform === 'linux')
-        cacheDirectory = process.env.XDG_CACHE_HOME || path_1.default.join(os_1.default.homedir(), '.cache');
-    else if (process.platform === 'darwin')
-        cacheDirectory = path_1.default.join(os_1.default.homedir(), 'Library', 'Caches');
-    else if (process.platform === 'win32')
-        cacheDirectory = process.env.LOCALAPPDATA || path_1.default.join(os_1.default.homedir(), 'AppData', 'Local');
-    else
-        throw new Error('Unsupported platform: ' + process.platform);
-    const result = path_1.default.join(cacheDirectory, 'ms-playwright', `mcp-${browserName}-profile`);
+    if (process.platform === "linux")
+        cacheDirectory = process.env.XDG_CACHE_HOME || path_1.default.join(os_1.default.homedir(), ".cache");
+    else if (process.platform === "darwin")
+        cacheDirectory = path_1.default.join(os_1.default.homedir(), "Library", "Caches");
+    else if (process.platform === "win32")
+        cacheDirectory = process.env.LOCALAPPDATA || path_1.default.join(os_1.default.homedir(), "AppData", "Local");
+    else throw new Error("Unsupported platform: " + process.platform);
+    const result = path_1.default.join(cacheDirectory, "ms-playwright", `mcp-${browserName}-profile`);
     await fs_1.default.promises.mkdir(result, { recursive: true });
     return result;
 }
