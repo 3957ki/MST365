@@ -36,7 +36,7 @@ pipeline {
             steps {
                 sh '''
                 docker image rm -f ${REACT_IMAGE} || true
-                cd demo/demo-front
+                cd demo/demo-front/demo-react
                 cp ${ENV_FILE_PATH} .env
                 docker build -t ${REACT_IMAGE} .
                 '''
