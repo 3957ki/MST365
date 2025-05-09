@@ -14,42 +14,62 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
+var __createBinding =
+    (this && this.__createBinding) ||
+    (Object.create
+        ? function (o, m, k, k2) {
+            if (k2 === undefined) k2 = k;
+            var desc = Object.getOwnPropertyDescriptor(m, k);
+            if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+                desc = {
+                    enumerable: true,
+                    get: function () {
+                        return m[k];
+                    },
+                };
+            }
+            Object.defineProperty(o, k2, desc);
+        }
+        : function (o, m, k, k2) {
+            if (k2 === undefined) k2 = k;
+            o[k2] = m[k];
+        });
+var __setModuleDefault =
+    (this && this.__setModuleDefault) ||
+    (Object.create
+        ? function (o, v) {
+            Object.defineProperty(o, "default", { enumerable: true, value: v });
+        }
+        : function (o, v) {
+            o["default"] = v;
+        });
+var __importStar =
+    (this && this.__importStar) ||
+    (function () {
+        var ownKeys = function (o) {
+            ownKeys =
+                Object.getOwnPropertyNames ||
+                function (o) {
+                    var ar = [];
+                    for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+                    return ar;
+                };
+            return ownKeys(o);
         };
-        return ownKeys(o);
+        return function (mod) {
+            if (mod && mod.__esModule) return mod;
+            var result = {};
+            if (mod != null)
+                for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+            __setModuleDefault(result, mod);
+            return result;
+        };
+    })();
+var __importDefault =
+    (this && this.__importDefault) ||
+    function (mod) {
+        return mod && mod.__esModule ? mod : { default: mod };
     };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Tab = exports.Context = void 0;
 exports.generateLocator = generateLocator;
@@ -77,12 +97,12 @@ class Context {
         this._modalStates.push({ ...modalState, tab: inTab });
     }
     clearModalState(modalState) {
-        this._modalStates = this._modalStates.filter(state => state !== modalState);
+        this._modalStates = this._modalStates.filter((state) => state !== modalState);
     }
     modalStatesMarkdown() {
-        const result = ['### Modal state'];
+        const result = ["### Modal state"];
         for (const state of this._modalStates) {
-            const tool = this.tools.find(tool => tool.clearsModalState === state.type);
+            const tool = this.tools.find((tool) => tool.clearsModalState === state.type);
             result.push(`- [${state.description}]: can be handled by the "${tool?.schema.name}" tool`);
         }
         return result;
@@ -92,13 +112,13 @@ class Context {
     }
     currentTabOrDie() {
         if (!this._currentTab)
-            throw new Error('No current snapshot available. Capture a snapshot of navigate to a new location first.');
+            throw new Error("No current snapshot available. Capture a snapshot of navigate to a new location first.");
         return this._currentTab;
     }
     async newTab() {
         const browserContext = await this._ensureBrowserContext();
         const page = await browserContext.newPage();
-        this._currentTab = this._tabs.find(t => t.page === page);
+        this._currentTab = this._tabs.find((t) => t.page === page);
         return this._currentTab;
     }
     async selectTab(index) {
@@ -107,22 +127,20 @@ class Context {
     }
     async ensureTab() {
         const context = await this._ensureBrowserContext();
-        if (!this._currentTab)
-            await context.newPage();
+        if (!this._currentTab) await context.newPage();
         return this._currentTab;
     }
     async listTabsMarkdown() {
-        if (!this._tabs.length)
-            return '### No tabs open';
-        const lines = ['### Open tabs'];
+        if (!this._tabs.length) return "### No tabs open";
+        const lines = ["### Open tabs"];
         for (let i = 0; i < this._tabs.length; i++) {
             const tab = this._tabs[i];
             const title = await tab.page.title();
             const url = tab.page.url();
-            const current = tab === this._currentTab ? ' (current)' : '';
+            const current = tab === this._currentTab ? " (current)" : "";
             lines.push(`- ${i + 1}:${current} [${title}] (${url})`);
         }
-        return lines.join('\n');
+        return lines.join("\n");
     }
     async closeTab(index) {
         const tab = index === undefined ? this._currentTab : this._tabs[index - 1];
@@ -134,14 +152,15 @@ class Context {
         const toolResult = await tool.handle(this, tool.schema.inputSchema.parse(params));
         const { code, action, waitForNetwork, captureSnapshot, resultOverride } = toolResult;
         const racingAction = action ? () => this._raceAgainstModalDialogs(action) : undefined;
-        if (resultOverride)
-            return resultOverride;
+        if (resultOverride) return resultOverride;
         if (!this._currentTab) {
             return {
-                content: [{
-                        type: 'text',
+                content: [
+                    {
+                        type: "text",
                         text: 'No open pages available. Use the "browser_navigate" tool to navigate to a page first.',
-                    }],
+                    },
+                ],
             };
         }
         const tab = this.currentTabOrDie();
@@ -149,52 +168,48 @@ class Context {
         let actionResult;
         try {
             if (waitForNetwork)
-                actionResult = await (0, utils_1.waitForCompletion)(this, tab.page, async () => racingAction?.()) ?? undefined;
-            else
-                actionResult = await racingAction?.() ?? undefined;
-        }
-        finally {
-            if (captureSnapshot && !this._javaScriptBlocked())
-                await tab.captureSnapshot();
+                actionResult =
+                    (await (0, utils_1.waitForCompletion)(this, tab.page, async () => racingAction?.())) ?? undefined;
+            else actionResult = (await racingAction?.()) ?? undefined;
+        } finally {
+            if (captureSnapshot && !this._javaScriptBlocked()) await tab.captureSnapshot();
         }
         const result = [];
         result.push(`- Ran Playwright code:
 \`\`\`js
-${code.join('\n')}
+${code.join("\n")}
 \`\`\`
 `);
         if (this.modalStates().length) {
             result.push(...this.modalStatesMarkdown());
             return {
-                content: [{
-                        type: 'text',
-                        text: result.join('\n'),
-                    }],
+                content: [
+                    {
+                        type: "text",
+                        text: result.join("\n"),
+                    },
+                ],
             };
         }
-        if (this.tabs().length > 1)
-            result.push(await this.listTabsMarkdown(), '');
-        if (this.tabs().length > 1)
-            result.push('### Current tab');
+        if (this.tabs().length > 1) result.push(await this.listTabsMarkdown(), "");
+        if (this.tabs().length > 1) result.push("### Current tab");
         result.push(`- Page URL: ${tab.page.url()}`, `- Page Title: ${await tab.page.title()}`);
-        if (captureSnapshot && tab.hasSnapshot())
-            result.push(tab.snapshotOrDie().text());
+        if (captureSnapshot && tab.hasSnapshot()) result.push(tab.snapshotOrDie().text());
         const content = actionResult?.content ?? [];
         return {
             content: [
                 ...content,
                 {
-                    type: 'text',
-                    text: result.join('\n'),
-                }
+                    type: "text",
+                    text: result.join("\n"),
+                },
             ],
         };
     }
     async waitForTimeout(time) {
         if (this._currentTab && !this._javaScriptBlocked())
-            await this._currentTab.page.evaluate(() => new Promise(f => setTimeout(f, 1000)));
-        else
-            await new Promise(f => setTimeout(f, time));
+            await this._currentTab.page.evaluate(() => new Promise((f) => setTimeout(f, 1000)));
+        else await new Promise((f) => setTimeout(f, time));
     }
     async _raceAgainstModalDialogs(action) {
         this._pendingAction = {
@@ -202,74 +217,75 @@ ${code.join('\n')}
         };
         let result;
         try {
-            await Promise.race([
-                action().then(r => result = r),
-                this._pendingAction.dialogShown,
-            ]);
-        }
-        finally {
+            await Promise.race([action().then((r) => (result = r)), this._pendingAction.dialogShown]);
+        } finally {
             this._pendingAction = undefined;
         }
         return result;
     }
     _javaScriptBlocked() {
-        return this._modalStates.some(state => state.type === 'dialog');
+        return this._modalStates.some((state) => state.type === "dialog");
     }
     dialogShown(tab, dialog) {
-        this.setModalState({
-            type: 'dialog',
-            description: `"${dialog.type()}" dialog with message "${dialog.message()}"`,
-            dialog,
-        }, tab);
+        this.setModalState(
+            {
+                type: "dialog",
+                description: `"${dialog.type()}" dialog with message "${dialog.message()}"`,
+                dialog,
+            },
+            tab
+        );
         this._pendingAction?.dialogShown.resolve();
     }
     _onPageCreated(page) {
-        const tab = new Tab(this, page, tab => this._onPageClosed(tab));
+        const tab = new Tab(this, page, (tab) => this._onPageClosed(tab));
         this._tabs.push(tab);
-        if (!this._currentTab)
-            this._currentTab = tab;
+        if (!this._currentTab) this._currentTab = tab;
     }
     _onPageClosed(tab) {
-        this._modalStates = this._modalStates.filter(state => state.tab !== tab);
+        this._modalStates = this._modalStates.filter((state) => state.tab !== tab);
         const index = this._tabs.indexOf(tab);
-        if (index === -1)
-            return;
+        if (index === -1) return;
         this._tabs.splice(index, 1);
-        if (this._currentTab === tab)
-            this._currentTab = this._tabs[Math.min(index, this._tabs.length - 1)];
-        if (this._browserContext && !this._tabs.length)
-            void this.close();
+        if (this._currentTab === tab) this._currentTab = this._tabs[Math.min(index, this._tabs.length - 1)];
+        if (this._browserContext && !this._tabs.length) void this.close();
     }
     async close() {
-        if (!this._browserContext)
-            return;
+        if (!this._browserContext) return;
         const browserContext = this._browserContext;
         const browser = this._browser;
         this._browserContext = undefined;
         this._browser = undefined;
-        await browserContext?.close().then(async () => {
-            await browser?.close();
-        }).catch(() => { });
+        await browserContext
+            ?.close()
+            .then(async () => {
+                await browser?.close();
+            })
+            .catch(() => {});
     }
     async _ensureBrowserContext() {
         if (!this._browserContext) {
             const context = await this._createBrowserContext();
             this._browser = context.browser;
             this._browserContext = context.browserContext;
-            for (const page of this._browserContext.pages())
+            for (const page of this._browserContext.pages()) this._onPageCreated(page);
+            this._browserContext.on("page", (page) => {
+                page.on("dialog", async (dialog) => {
+                    console.log(`Dialog detected: ${dialog.type()} - ${dialog.message()}`);
+                    await dialog.accept();
+                });
                 this._onPageCreated(page);
-            this._browserContext.on('page', page => this._onPageCreated(page));
+            });
         }
         return this._browserContext;
     }
     async _createBrowserContext() {
         if (this.options.remoteEndpoint) {
             const url = new URL(this.options.remoteEndpoint);
-            if (this.options.browserName)
-                url.searchParams.set('browser', this.options.browserName);
+            if (this.options.browserName) url.searchParams.set("browser", this.options.browserName);
             if (this.options.launchOptions)
-                url.searchParams.set('launch-options', JSON.stringify(this.options.launchOptions));
-            const browser = await playwright[this.options.browserName ?? 'chromium'].connect(String(url));
+                url.searchParams.set("launch-options", JSON.stringify(this.options.launchOptions));
+            const browser = await playwright[this.options.browserName ?? "chromium"].connect(String(url));
             const browserContext = await browser.newContext();
             return { browser, browserContext };
         }
@@ -285,10 +301,11 @@ ${code.join('\n')}
         try {
             const browserType = this.options.browserName ? playwright[this.options.browserName] : playwright.chromium;
             return await browserType.launchPersistentContext(this.options.userDataDir, this.options.launchOptions);
-        }
-        catch (error) {
-            if (error.message.includes('Executable doesn\'t exist'))
-                throw new Error(`Browser specified in your config is not installed. Either install it (likely) or change the config.`);
+        } catch (error) {
+            if (error.message.includes("Executable doesn't exist"))
+                throw new Error(
+                    `Browser specified in your config is not installed. Either install it (likely) or change the config.`
+                );
             throw error;
         }
     }
@@ -305,22 +322,27 @@ class Tab {
         this.context = context;
         this.page = page;
         this._onPageClose = onPageClose;
-        page.on('console', event => this._console.push(event));
-        page.on('request', request => this._requests.set(request, null));
-        page.on('response', response => this._requests.set(response.request(), response));
-        page.on('framenavigated', frame => {
-            if (!frame.parentFrame())
-                this._clearCollectedArtifacts();
+        page.on("console", (event) => this._console.push(event));
+        page.on("request", (request) => this._requests.set(request, null));
+        page.on("response", (response) => this._requests.set(response.request(), response));
+        page.on("framenavigated", (frame) => {
+            if (!frame.parentFrame()) this._clearCollectedArtifacts();
         });
-        page.on('close', () => this._onClose());
-        page.on('filechooser', chooser => {
-            this.context.setModalState({
-                type: 'fileChooser',
-                description: 'File chooser',
-                fileChooser: chooser,
-            }, this);
+        page.on("close", () => this._onClose());
+        page.on("filechooser", (chooser) => {
+            this.context.setModalState(
+                {
+                    type: "fileChooser",
+                    description: "File chooser",
+                    fileChooser: chooser,
+                },
+                this
+            );
         });
-        page.on('dialog', dialog => this.context.dialogShown(this, dialog));
+        page.on("dialog", async (dialog) => {
+            console.log(`Dialog detected: ${dialog.type()} - ${dialog.message()}`);
+            await dialog.accept();
+        });
         page.setDefaultNavigationTimeout(60000);
         page.setDefaultTimeout(5000);
     }
@@ -333,16 +355,15 @@ class Tab {
         this._onPageClose(this);
     }
     async navigate(url) {
-        await this.page.goto(url, { waitUntil: 'domcontentloaded' });
+        await this.page.goto(url, { waitUntil: "domcontentloaded" });
         // Cap load event to 5 seconds, the page is operational at this point.
-        await this.page.waitForLoadState('load', { timeout: 5000 }).catch(() => { });
+        await this.page.waitForLoadState("load", { timeout: 5000 }).catch(() => {});
     }
     hasSnapshot() {
         return !!this._snapshot;
     }
     snapshotOrDie() {
-        if (!this._snapshot)
-            throw new Error('No snapshot available');
+        if (!this._snapshot) throw new Error("No snapshot available");
         return this._snapshot;
     }
     console() {
@@ -359,8 +380,7 @@ exports.Tab = Tab;
 class PageSnapshot {
     _frameLocators = [];
     _text;
-    constructor() {
-    }
+    constructor() {}
     static async create(page) {
         const snapshot = new PageSnapshot();
         await snapshot._build(page);
@@ -371,41 +391,32 @@ class PageSnapshot {
     }
     async _build(page) {
         const yamlDocument = await this._snapshotFrame(page);
-        this._text = [
-            `- Page Snapshot`,
-            '```yaml',
-            yamlDocument.toString({ indentSeq: false }).trim(),
-            '```',
-        ].join('\n');
+        this._text = [`- Page Snapshot`, "```yaml", yamlDocument.toString({ indentSeq: false }).trim(), "```"].join("\n");
     }
     async _snapshotFrame(frame) {
         const frameIndex = this._frameLocators.push(frame) - 1;
-        const snapshotString = await frame.locator('body').ariaSnapshot({ ref: true, emitGeneric: true });
+        const snapshotString = await frame.locator("body").ariaSnapshot({ ref: true, emitGeneric: true });
         const snapshot = yaml_1.default.parseDocument(snapshotString);
         const visit = async (node) => {
             if (yaml_1.default.isPair(node)) {
                 await Promise.all([
-                    visit(node.key).then(k => node.key = k),
-                    visit(node.value).then(v => node.value = v)
+                    visit(node.key).then((k) => (node.key = k)),
+                    visit(node.value).then((v) => (node.value = v)),
                 ]);
-            }
-            else if (yaml_1.default.isSeq(node) || yaml_1.default.isMap(node)) {
+            } else if (yaml_1.default.isSeq(node) || yaml_1.default.isMap(node)) {
                 node.items = await Promise.all(node.items.map(visit));
-            }
-            else if (yaml_1.default.isScalar(node)) {
-                if (typeof node.value === 'string') {
+            } else if (yaml_1.default.isScalar(node)) {
+                if (typeof node.value === "string") {
                     const value = node.value;
-                    if (frameIndex > 0)
-                        node.value = value.replace('[ref=', `[ref=f${frameIndex}`);
-                    if (value.startsWith('iframe ')) {
+                    if (frameIndex > 0) node.value = value.replace("[ref=", `[ref=f${frameIndex}`);
+                    if (value.startsWith("iframe ")) {
                         const ref = value.match(/\[ref=(.*)\]/)?.[1];
                         if (ref) {
                             try {
                                 const childSnapshot = await this._snapshotFrame(frame.frameLocator(`aria-ref=${ref}`));
                                 return snapshot.createPair(node.value, childSnapshot);
-                            }
-                            catch (error) {
-                                return snapshot.createPair(node.value, '<could not take iframe snapshot>');
+                            } catch (error) {
+                                return snapshot.createPair(node.value, "<could not take iframe snapshot>");
                             }
                         }
                     }
@@ -424,8 +435,7 @@ class PageSnapshot {
             frame = this._frameLocators[frameIndex];
             ref = match[2];
         }
-        if (!frame)
-            throw new Error(`Frame does not exist. Provide ref from the most current snapshot.`);
+        if (!frame) throw new Error(`Frame does not exist. Provide ref from the most current snapshot.`);
         return frame.locator(`aria-ref=${ref}`);
     }
 }
