@@ -1,0 +1,7 @@
+.board-info-container {
+  @apply flex justify-between items-center mb-2 text-black;
+}
+
+.info-text-highlight {
+  @apply font-bold text-red-500;
+}

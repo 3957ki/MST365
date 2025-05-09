@@ -10,6 +10,7 @@ import UserCommentsList from "./component/UserCommentsList";
 import LogoutButton from "../components/common/LogoutButton";
 // getUserInfo, UserInfoData, getUserPosts, UserPostItem, getUserComments, UserCommentItem 타입 임포트 추가
 import { getToken, getUserId, removeToken, withdrawUser, getUserInfo, UserInfoData, getUserPosts, UserPostItem, getUserComments, UserCommentItem } from "../api/auth";
+import "./page.css";
 
 export default function MyPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -187,37 +188,37 @@ export default function MyPage() {
   };
 
   return (
-    <div className="container mx-auto p-8">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
+    <div className="mypage-container">
+      <div className="header-container">
+        <div className="logo-title-container">
           <Link href="/board">
             <Image
               src="/microsoft.png"
               alt="Microsoft Logo"
               width={50}
               height={50}
-              className="mr-5 cursor-pointer"
+              className="logo-image"
             />
           </Link>
-          <h1 className="text-3xl font-bold text-black">마이페이지</h1>
+          <h1 className="page-title">마이페이지</h1>
         </div>
         {/* LogoutButton 컴포넌트로 교체 */}
         <LogoutButton />
       </div>
-      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <div className="flex items-center">
+      <div className="user-info-card">
+        <div className="user-info-flex">
           {/* 사진 들어갈 공간 (추후 프로필 사진 기능 추가 시 사용) */}
-          <div className="w-24 h-24 bg-gray-300 rounded-full mr-6 flex items-center justify-center text-gray-500">
+          <div className="profile-image-placeholder">
             {/* 로딩/에러/데이터 상태에 따라 아이콘 또는 이니셜 표시 가능 */}
             {isUserInfoLoading ? '...' : user ? user.userName.charAt(0).toUpperCase() : '?'} {/* user_name -> userName */}
           </div>
-          <div className="text-left">
+          <div className="user-info-text-container">
             {/* 사용자 이름 표시 */}
-            <h2 className="text-2xl font-semibold mb-1 text-black">
+            <h2 className="user-name">
               {isUserInfoLoading ? "로딩 중..." : userInfoError ? "오류" : user?.userName ?? "사용자"} {/* user_name -> userName */}
             </h2>
             {/* 환영 메시지 또는 에러 메시지 표시 */}
-            <p className="text-gray-600">
+            <p className="welcome-message">
               {isUserInfoLoading
                 ? "회원 정보를 불러오고 있습니다..."
                 : userInfoError
@@ -228,10 +229,10 @@ export default function MyPage() {
             </p>
           </div>
         </div>
-        <div className="mt-6 text-right">
+        <div className="button-group-right">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-5"
+            className="password-change-button"
           >
             비밀번호 수정
           </button>
@@ -239,8 +240,8 @@ export default function MyPage() {
           <button
             onClick={handleWithdraw}
             disabled={isWithdrawing}
-            className={`bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded ${
-              isWithdrawing ? "opacity-50 cursor-not-allowed" : ""
+            className={`withdraw-button ${
+              isWithdrawing ? "withdraw-button-loading" : ""
             }`}
           >
             {isWithdrawing ? "탈퇴 처리 중..." : "회원 탈퇴"}
@@ -248,21 +249,21 @@ export default function MyPage() {
         </div>
         {/* 탈퇴 에러 메시지 표시 */}
         {withdrawError && (
-          <p className="text-red-500 text-sm mt-2 text-right">
+          <p className="withdraw-error-message">
             {withdrawError}
           </p>
         )}
       </div>
 
       {/* 사용자 게시물 목록 로딩 및 에러 처리 */}
-      {isUserPostsLoading && <p className="text-center text-gray-600 my-4">게시글 목록을 불러오는 중...</p>}
-      {userPostsError && <p className="text-center text-red-500 my-4">게시글 목록 로딩 오류: {userPostsError}</p>}
+      {isUserPostsLoading && <p className="loading-text">게시글 목록을 불러오는 중...</p>}
+      {userPostsError && <p className="error-text">게시글 목록 로딩 오류: {userPostsError}</p>}
       {/* 로딩 완료 및 에러 없을 때 UserPostsList 렌더링 */}
       {!isUserPostsLoading && !userPostsError && <UserPostsList posts={userPosts} />}
 
       {/* 사용자 댓글 목록 로딩 및 에러 처리 */}
-      {isUserCommentsLoading && <p className="text-center text-gray-600 my-4">댓글 목록을 불러오는 중...</p>}
-      {userCommentsError && <p className="text-center text-red-500 my-4">댓글 목록 로딩 오류: {userCommentsError}</p>}
+      {isUserCommentsLoading && <p className="loading-text">댓글 목록을 불러오는 중...</p>}
+      {userCommentsError && <p className="error-text">댓글 목록 로딩 오류: {userCommentsError}</p>}
       {/* 로딩 완료 및 에러 없을 때 UserCommentsList 렌더링 */}
       {!isUserCommentsLoading && !userCommentsError && <UserCommentsList comments={userComments} />}
 

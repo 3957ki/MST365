@@ -1,0 +1,91 @@
+.edit-page-container {
+  @apply container mx-auto p-8;
+}
+
+.loading-text-container {
+  @apply container mx-auto p-8 text-center;
+}
+
+.loading-text {
+  @apply text-black;
+}
+
+.not-found-container {
+  @apply container mx-auto p-8 text-center;
+}
+
+.not-found-title {
+  @apply text-2xl font-bold text-red-600 mb-4;
+}
+
+.not-found-message {
+  @apply text-black mb-4;
+}
+
+.link-to-board {
+  @apply text-blue-600 hover:underline;
+}
+
+.error-container {
+  @apply container mx-auto p-8 text-center;
+}
+
+.error-title {
+  @apply text-2xl font-bold text-red-600 mb-4;
+}
+
+.error-message {
+  @apply text-red-500 mb-4;
+}
+
+.header-container {
+  @apply flex items-center mb-6;
+}
+
+.logo-image {
+  @apply mr-5 cursor-pointer;
+}
+
+.page-title {
+  @apply text-3xl font-bold text-black;
+}
+
+.edit-form {
+  @apply space-y-6;
+}
+
+.form-label {
+  @apply block text-black font-semibold mb-2;
+}
+
+.title-input {
+  @apply w-[80%] border border-gray-300 rounded-lg p-2 text-black bg-white focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+.content-textarea {
+  @apply w-[80%] border border-gray-300 rounded-lg p-2 h-40 text-black bg-white focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+.update-error-message {
+  @apply text-red-500 text-sm;
+}
+
+.button-group {
+  @apply flex space-x-4;
+}
+
+.submit-button {
+  @apply py-2 px-4 rounded-lg text-white;
+}
+
+.submit-button-enabled {
+  @apply bg-blue-600 hover:bg-blue-700;
+}
+
+.submit-button-disabled {
+  @apply bg-gray-400 cursor-not-allowed;
+}
+
+.cancel-button {
+  @apply py-2 px-4 rounded-lg bg-gray-300 text-black hover:bg-gray-400;
+}

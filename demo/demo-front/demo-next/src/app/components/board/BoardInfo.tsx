@@ -1,3 +1,5 @@
+import "./BoardInfo.css";
+
 interface BoardInfoProps {
   totalPosts: number;
   currentPage: number;
@@ -10,11 +12,11 @@ const BoardInfo: React.FC<BoardInfoProps> = ({
   totalPages,
 }) => {
   return (
-    <div className="flex justify-between items-center mb-2 text-black">
+    <div className="board-info-container">
       <div>
-        총 게시물 <span className="font-bold text-red-500">{totalPosts}</span>건
+        총 게시물 <span className="info-text-highlight">{totalPosts}</span>건
         | 현재 페이지{" "}
-        <span className="font-bold text-red-500">{currentPage}</span>/
+        <span className="info-text-highlight">{currentPage}</span>/
         {totalPages}
       </div>
     </div>

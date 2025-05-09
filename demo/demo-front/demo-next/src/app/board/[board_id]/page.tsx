@@ -13,6 +13,7 @@ import {
   deleteComment,
   CommentData,
 } from "@/app/api/comment";
+import "./page.css";
 
 interface BoardDetailPageProps {
   params: {
@@ -194,7 +195,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
   // 로딩 중 UI
   if (isLoading) {
     return (
-      <div className="container mx-auto p-8 text-center">
+      <div className="container-mx-auto-p-8-text-center">
         게시물 정보를 불러오는 중...
       </div>
     );
@@ -203,16 +204,16 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
   // 에러 발생 UI
   if (error) {
     return (
-      <div className="container mx-auto p-8">
+      <div className="container-mx-auto-p-8">
         <div
-          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
+          className="error-alert-container"
           role="alert"
         >
-          <strong className="font-bold">오류 발생:</strong>
-          <span className="block sm:inline"> {error}</span>
+          <strong>오류 발생:</strong>
+          <span className="block-sm-inline"> {error}</span>
         </div>
         <Link href="/board">
-          <button className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+          <button className="button-gray">
             목록으로 돌아가기
           </button>
         </Link>
@@ -223,10 +224,10 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
   // 게시물 없음 (404) UI
   if (isNotFound) {
     return (
-      <div className="container mx-auto p-8 text-center">
+      <div className="container-mx-auto-p-8-text-center">
         <p className="mb-4">요청하신 게시물을 찾을 수 없습니다.</p>
         <Link href="/board">
-          <button className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+          <button className="button-gray">
             목록으로 돌아가기
           </button>
         </Link>
@@ -236,16 +237,16 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
 
   // 게시물 상세 정보 표시 UI (성공 시)
   return (
-    <div className="container mx-auto p-8">
+    <div className="container-mx-auto-p-8">
       {/* 헤더 (로고 등) */}
-      <div className="flex items-center mb-6">
+      <div className="header-container">
         <Link href="/board">
           <Image
             src="/microsoft.png"
             alt="Microsoft Logo"
             width={50}
             height={50}
-            className="mr-5 cursor-pointer"
+            className="logo-image"
           />
         </Link>
       </div>
@@ -253,14 +254,14 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
       {/* 게시물 내용 */}
       {board && ( // board 데이터가 있을 때만 렌더링
         <>
-          <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+          <div className="card-container-mb-6">
             {/* 제목 */}
-            <h1 className="text-2xl font-bold text-black mb-4 border-b pb-2">
+            <h1 className="title-h1">
               {board.title}
             </h1>
 
             {/* 메타 정보 (작성자, 조회수, 등록일, 수정일) */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border-b pb-2 mb-4 text-sm text-gray-600">
+            <div className="meta-info-grid">
               <div>
                 <span className="font-semibold">작성자 ID:</span> {board.userId}
                 {/* TODO: 사용자 이름 표시 기능 추가 */}
@@ -268,7 +269,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
               <div>
                 <span className="font-semibold">조회수:</span> {board.view}
               </div>
-              <div className="md:col-span-1 md:text-right">
+              <div className="meta-info-date">
                 <span className="font-semibold">등록일:</span>{" "}
                 {formatDateTime(board.createdAt)}
               </div>
@@ -288,16 +289,16 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
           </div>
 
           {/* 버튼 영역 (수정/삭제/목록) */}
-          <div className="flex justify-end space-x-2 mt-5">
+          <div className="button-group-flex-end">
             {currentUserId === board.userId && ( // 현재 사용자가 작성자인 경우 수정/삭제 버튼 표시
               <>
                 <Link href={`/board/${board.id}/edit`}>
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                  <button className="button-blue">
                     수정
                   </button>
                 </Link>
                 <button
-                  className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="button-red-disabled"
                   onClick={handleDeleteBoard} // 삭제 핸들러 연결
                   disabled={isDeleting} // 삭제 중 비활성화
                 >
@@ -306,7 +307,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
               </>
             )}
             <Link href="/board">
-              <button className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+              <button className="button-gray">
                 목록
               </button>
             </Link>
@@ -314,14 +315,14 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
         </>
       )}
 
-      <div className="bg-white shadow-md rounded-lg p-6">
-        <h3 className="text-black text-xl font-semibold mb-4 border-b pb-2">댓글</h3>
-        <div className="space-y-4 mb-6">
+      <div className="card-container">
+        <h3 className="comment-title-h3">댓글</h3>
+        <div className="comment-list-container">
         {comments.map((comment) => (
-          <div key={comment.id} className="border rounded-md p-4 bg-gray-50">
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-semibold text-blue-600">user {comment.userId}</span>
-              <span className="text-sm text-gray-500">
+          <div key={comment.id} className="comment-item-container">
+            <div className="comment-item-header">
+              <span className="comment-user-id">user {comment.userId}</span>
+              <span className="comment-date">
                 {comment.updatedAt && comment.updatedAt !== comment.createdAt
                   ? `수정됨 · ${new Date(comment.updatedAt).toLocaleString()}`
                   : new Date(comment.createdAt).toLocaleString()}
@@ -331,11 +332,11 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
             {editingCommentId === comment.id ? (
               <>
                 <textarea
-                  className="w-full border border-gray-300 rounded-lg p-2 text-black mb-2"
+                  className="textarea-comment-edit"
                   value={editingContent}
                   onChange={(e) => setEditingContent(e.target.value)}
                 />
-                <div className="flex justify-end space-x-2 mt-2">
+                <div className="button-group-comment-actions">
                   <button
                     onClick={async () => {
                       const token = getToken();
@@ -350,7 +351,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
                         alert(`수정 실패: ${err.message}`);
                       }
                     }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
+                    className="button-blue-sm"
                   >
                     저장
                   </button>
@@ -359,7 +360,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
                       setEditingCommentId(null);
                       setEditingContent("");
                     }}
-                    className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded-lg text-sm"
+                    className="button-gray-sm"
                   >
                     취소
                   </button>
@@ -367,11 +368,11 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
               </>
             ) : (
               <>
-                <p className="text-gray-800">{comment.content}</p>
+                <p className="comment-content-text">{comment.content}</p>
                 {currentUserId === comment.userId && (
-                  <div className="flex justify-end space-x-2 mt-2">
+                  <div className="button-group-comment-actions">
                     <button
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
+                      className="button-blue-sm"
                       onClick={() => {
                         setEditingCommentId(comment.id);
                         setEditingContent(comment.content);
@@ -380,7 +381,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
                       수정
                     </button>
                     <button
-                      className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
+                      className="button-red-disabled"
                       onClick={() => handleDelete(comment.id)}
                     >
                       삭제
@@ -393,16 +394,16 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
         ))}
         </div>
         <div>
-          <h4 className="text-black text-lg font-semibold mb-2">댓글 작성</h4>
+          <h4 className="comment-form-title">댓글 작성</h4>
           <textarea
-            className="w-full border border-gray-300 rounded-lg p-2 h-24 text-black mb-2"
+            className="textarea-comment-new"
             placeholder="댓글을 입력하세요"
             value={commentContent}
             onChange={(e) => setCommentContent(e.target.value)}
           />
           <button
             onClick={handleCommentSubmit}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg"
+            className="button-indigo"
           >
             댓글 등록
           </button>

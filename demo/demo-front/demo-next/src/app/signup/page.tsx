@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signup, SignupResponse } from "../api/auth"; // signup 함수 및 타입 임포트 추가
+import "./page.css";
 
 export default function SignupPage() {
   const [userName, setUserName] = useState(""); // 아이디 상태 추가
@@ -79,26 +80,26 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center">
-      <div className="max-w-md w-full bg-blue-50 p-10 rounded-lg shadow-md">
-        <div className="mb-6 flex justify-center items-center">
+    <div className="signup-page-container">
+      <div className="signup-form-container">
+        <div className="logo-title-container">
           <Link href="/">
             <Image
               src="/microsoft.png"
               alt="Microsoft Logo"
               width={50}
               height={50}
-              className="mr-3 cursor-pointer"
+              className="logo-image"
             />
           </Link>
-          <h1 className="text-center text-2xl font-bold text-black">
+          <h1 className="page-title">
             회원가입
           </h1>
         </div>
-        <div className="mb-4">
+        <div className="form-group">
           <label
             htmlFor="username"
-            className="block mb-1 text-sm font-medium text-gray-700"
+            className="form-label"
           >
             아이디
           </label>
@@ -108,14 +109,14 @@ export default function SignupPage() {
             name="username"
             value={userName} // value 바인딩
             onChange={(e) => setUserName(e.target.value)} // onChange 핸들러 추가
-            className="w-full p-2 border border-gray-300 rounded box-border text-black"
+            className="form-input"
             required // 필수 필드 표시 (선택 사항)
           />
         </div>
-        <div className="mb-4">
+        <div className="form-group">
           <label
             htmlFor="password"
-            className="block mb-1 text-sm font-medium text-gray-700"
+            className="form-label"
           >
             비밀번호
           </label>
@@ -125,14 +126,14 @@ export default function SignupPage() {
             name="password"
             value={password}
             onChange={handlePasswordChange}
-            className="w-full p-2 border border-gray-300 rounded box-border text-black"
+            className="form-input"
             required // 필수 필드 표시 (선택 사항)
           />
         </div>
-        <div className="mb-1">
+        <div className="form-group-mb-1">
           <label
             htmlFor="confirmPassword"
-            className="block mb-1 text-sm font-medium text-gray-700 "
+            className="form-label"
           >
             비밀번호 확인
           </label>
@@ -142,30 +143,30 @@ export default function SignupPage() {
             name="confirmPassword"
             value={confirmPassword}
             onChange={handleConfirmPasswordChange}
-            className={`w-full p-2 border ${
-              passwordError ? "border-red-500" : "border-gray-300"
-            } rounded box-border text-black`}
+            className={`form-input ${
+              passwordError ? "form-input-error" : ""
+            }`}
             required // 필수 필드 표시 (선택 사항)
           />
           {passwordError && (
-            <p className="text-red-500 text-xs mt-1">{passwordError}</p>
+            <p className="password-error-message">{passwordError}</p>
           )}
         </div>
         {/* API 에러 메시지 표시 */}
         {apiError && (
-          <p className="text-red-500 text-sm mt-2 text-center">{apiError}</p>
+          <p className="api-error-message">{apiError}</p>
         )}
         <button
           onClick={handleSignup}
           disabled={isLoading} // 로딩 중일 때 버튼 비활성화
-          className={`w-full mt-4 py-2 px-4 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75 transition-colors ${
-            isLoading ? "opacity-50 cursor-not-allowed" : ""
+          className={`signup-button ${
+            isLoading ? "signup-button-loading" : ""
           }`} // 로딩 시 스타일 변경
         >
           {isLoading ? "가입 처리 중..." : "회원가입"}
         </button>
-        <div className="mt-4 text-center text-sm">
-          <Link href="/login" className="text-blue-600 hover:underline">
+        <div className="login-link-container">
+          <Link href="/login" className="login-link">
             로그인
           </Link>
         </div>

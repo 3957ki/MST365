@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react"; // useState, useEffect 임포트
 import { BoardListItem } from "../../api/board";
 import { getUserInfo, UserInfoData } from "../../api/auth"; // getUserInfo 및 타입 임포트
+import "./BoardTable.css";
 
 interface BoardTableProps {
   boards: BoardListItem[];
@@ -83,40 +84,40 @@ const BoardTable: React.FC<BoardTableProps> = ({ boards, token }) => {
   };
 
   return (
-    <table className="w-full border-collapse border border-gray-300 mb-4 text-black">
-      <thead className="bg-gray-100">
+    <table className="board-table">
+      <thead className="table-header">
         <tr>
-          <th className="border p-2 w-16">번호</th>
-          <th className="border p-2">제목</th>
-          <th className="border p-2 w-32">작성자</th> {/* 작성자 ID -> 작성자 */}
-          <th className="border p-2 w-32">작성일</th>
-          <th className="border p-2 w-20">조회수</th>
+          <th className="table-header-cell-id">번호</th>
+          <th className="table-header-cell">제목</th>
+          <th className="table-header-cell-author">작성자</th> {/* 작성자 ID -> 작성자 */}
+          <th className="table-header-cell-date">작성일</th>
+          <th className="table-header-cell-views">조회수</th>
         </tr>
       </thead>
       <tbody>
         {boards.length === 0 ? (
           <tr>
-            <td colSpan={5} className="text-center p-4 border">
+            <td colSpan={5} className="no-posts-cell">
               작성된 게시글이 없습니다. {/* 메시지 수정 */}
             </td>
           </tr>
         ) : (
           boards.map((board) => (
-            <tr key={board.id} className="hover:bg-gray-50">
-              <td className="border p-2 text-center">{board.id}</td>
-              <td className="border p-2 hover:underline">
+            <tr key={board.id} className="table-body-row-hover">
+              <td className="table-body-cell">{board.id}</td>
+              <td className="table-body-cell-title">
                 <Link href={`/board/${board.id}`}>{board.title}</Link>
               </td>
-              <td className="border p-2 text-center">
+              <td className="table-body-cell">
                 {userNamesMap[board.userId] || // 사용자 이름 표시 시도
                   (loadingUserNames ? "로딩중..." : `ID: ${board.userId}`)}
                 {/* 없으면 로딩 상태 또는 ID 표시 */}
               </td>
-              <td className="border p-2 text-center">
+              <td className="table-body-cell">
                 {formatDate(board.createdAt)}
               </td>
               {/* createdAt 포맷팅 */}
-              <td className="border p-2 text-center">{board.view}</td>{" "}
+              <td className="table-body-cell">{board.view}</td>{" "}
               {/* views -> view */}
             </tr>
           ))
