@@ -13,7 +13,7 @@ export default function Home() {
             height={80}
             className="mr-6"
           />
-          <h1 className="text-4xl font-bold text-blue-700 text-black">Demo Web</h1>
+          <h1 className="text-4xl font-bold text-blue-700">Demo Web</h1>
         </div>
         <p className="text-lg text-gray-600 mb-8 font-bold">
           Microsoft Playwright MCP 기본 테스트
