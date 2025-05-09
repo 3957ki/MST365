@@ -3,7 +3,7 @@ from datetime import datetime
 import json
 import argparse
 import os
-import base64
+import shutil
 from pydantic import BaseModel
 from typing import List, Optional
 from mcp import ClientSession, StdioServerParameters
@@ -123,19 +123,23 @@ async def run_logic(agent, steps: List[str], screenshot_dir: str):
     saved_screenshot_files = []
 
     for event in agent_response["messages"]:
-        # 바로 event에서 ToolMessage 여부 검사
-        if isinstance(event, ToolMessage) and getattr(event, "artifact", None):
-            for artifact in event.artifact:
-                if getattr(artifact, "type", "") == "image" and hasattr(
-                    artifact, "data"
-                ):
-                    filename = f"{image_count}.png"
-                    filepath = os.path.join(screenshot_dir, filename)
-                    with open(filepath, "wb") as f:
-                        f.write(base64.b64decode(artifact.data))
-                    saved_screenshot_files.append(filename)
-                    print(f"스크린샷 저장됨: {filename}")
-                    image_count += 1
+        if isinstance(event, ToolMessage) and hasattr(event, "content"):
+            try:
+                # ToolMessage.content는 문자열 → JSON 배열로 파싱
+                content_items = json.loads(event.content)
+            except Exception as e:
+                continue
+
+            for item in content_items:
+                if isinstance(item, str) and item.startswith("[screenshot_path] "):
+                    source_path = item[len("[screenshot_path] ") :].strip()
+                    if os.path.exists(source_path) and os.path.isfile(source_path):
+                        filename = f"{image_count}.png"
+                        dest_path = os.path.join(screenshot_dir, filename)
+                        shutil.copy(source_path, dest_path)
+                        saved_screenshot_files.append(filename)
+                        print(f"스크린샷 저장됨: {filename}")
+                        image_count += 1
 
     last_message = agent_response["messages"][-1]
     json_text = extract_json_from_message(last_message)
