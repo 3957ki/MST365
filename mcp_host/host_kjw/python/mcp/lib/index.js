@@ -64,6 +64,7 @@ const screenshotTools = [
   ...(0, tabs_1.default)(false),
 ];
 const packageJSON = require("../package.json");
+
 async function createServer(options) {
   let browserName;
   let channel;
@@ -97,14 +98,7 @@ async function createServer(options) {
     headless: !!(options?.headless ?? (os_1.default.platform() === "linux" && !process.env.DISPLAY)),
     channel,
     executablePath: options?.executablePath,
-    args: [
-      "--no-first-run",
-      "--no-default-browser-check",
-      "--disable-session-crashed-bubble",
-      "--disable-infobars",
-      "--disable-dev-shm-usage",
-      "--no-sandbox",
-    ],
+    args: ["--incognito", ...(options?.launchOptions?.args || [])],
   };
   const allTools = options?.vision ? screenshotTools : snapshotTools;
   const tools = allTools.filter(
@@ -121,6 +115,7 @@ async function createServer(options) {
     cdpEndpoint: options?.cdpEndpoint,
   });
 }
+
 async function createUserDataDir(browserName) {
   let cacheDirectory;
   if (process.platform === "linux")
