@@ -97,13 +97,14 @@ async function createServer(options) {
         channel,
         executablePath: options?.executablePath,
         args: [
-            '--disable-features=PasswordLeakDetection',
-            '--disable-features=PasswordManagerOnboarding',
+            '--incognito',
             ...(options?.launchOptions?.args || [])
         ],
     };
     const allTools = options?.vision ? screenshotTools : snapshotTools;
-    const tools = allTools.filter(tool => !options?.capabilities || tool.capability === 'core' || options.capabilities.includes(tool.capability));
+    const tools = allTools.filter(
+        tool => !options?.capabilities || tool.capability === 'core' || options.capabilities.includes(tool.capability)
+    );
     return (0, server_1.createServerWithTools)({
         name: 'Playwright',
         version: packageJSON.version,

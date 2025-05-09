@@ -258,7 +258,12 @@ ${code.join('\n')}
             this._browserContext = context.browserContext;
             for (const page of this._browserContext.pages())
                 this._onPageCreated(page);
-            this._browserContext.on('page', page => this._onPageCreated(page));
+            this._browserContext.on("page", (page) => {
+                page.on("dialog", async (dialog) => {
+                    await dialog.accept();
+                });
+                this._onPageCreated(page);
+            });
         }
         return this._browserContext;
     }
@@ -320,7 +325,10 @@ class Tab {
                 fileChooser: chooser,
             }, this);
         });
-        page.on('dialog', dialog => this.context.dialogShown(this, dialog));
+        page.on("dialog", async (dialog) => {
+            console.log(`Dialog detected: ${dialog.type()} - ${dialog.message()}`);
+            await dialog.accept();
+        });
         page.setDefaultNavigationTimeout(60000);
         page.setDefaultTimeout(5000);
     }
