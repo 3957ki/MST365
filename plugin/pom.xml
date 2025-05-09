@@ -110,6 +110,7 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
     </dependency>
+<!--     Jenkins Credentials 플러그인: FileCredentials 를 사용하기 위해 추가 -->
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-job</artifactId>
