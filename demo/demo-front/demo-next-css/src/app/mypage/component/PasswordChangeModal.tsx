@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, useEffect } from "react"; // FormEvent, useEffect 추가
 import { getToken, changePassword } from "@/app/api/auth"; // 경로 수정 (@ 사용 또는 상대경로)
+import "./PasswordChangeModal.css";
 
 interface PasswordChangeModalProps {
   isOpen: boolean;
@@ -89,17 +90,17 @@ export default function PasswordChangeModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="modal-overlay">
       <form
         onSubmit={handleChangePassword}
-        className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md"
+        className="modal-content"
       >
-        <h2 className="text-2xl font-bold mb-6 text-black">비밀번호 변경</h2>
+        <h2 className="modal-title">비밀번호 변경</h2>
         {/* 현재 비밀번호 */}
-        <div className="mb-4">
+        <div className="form-group">
           <label
             htmlFor="currentPassword"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="form-label"
           >
             현재 비밀번호
           </label>
@@ -108,16 +109,16 @@ export default function PasswordChangeModal({
             id="currentPassword"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-black"
+            className="form-input"
             required
             disabled={isLoading}
           />
         </div>
         {/* 새 비밀번호 */}
-        <div className="mb-4">
+        <div className="form-group">
           <label
             htmlFor="newPassword"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="form-label"
           >
             새 비밀번호
           </label>
@@ -126,16 +127,16 @@ export default function PasswordChangeModal({
             id="newPassword"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-black"
+            className="form-input"
             required
             disabled={isLoading}
           />
         </div>
         {/* 새 비밀번호 확인 */}
-        <div className="mb-2"> {/* 에러 메시지 공간 확보 위해 mb 줄임 */}
+        <div className="form-group-mb-2"> {/* 에러 메시지 공간 확보 위해 mb 줄임 */}
           <label
             htmlFor="confirmNewPassword"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="form-label"
           >
             새 비밀번호 확인
           </label>
@@ -148,36 +149,36 @@ export default function PasswordChangeModal({
               // 입력 시 비밀번호 일치 에러 초기화
               if (newPasswordMatchError) setNewPasswordMatchError(null);
             }}
-            className={`w-full px-3 py-2 border ${newPasswordMatchError ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-black`}
+            className={`form-input ${newPasswordMatchError ? 'form-input-error' : ''}`}
             required
             disabled={isLoading}
           />
         </div>
         {/* 새 비밀번호 불일치 에러 메시지 */}
         {newPasswordMatchError && (
-          <p className="text-red-500 text-xs mt-1 mb-4">{newPasswordMatchError}</p>
+          <p className="error-text-xs">{newPasswordMatchError}</p>
         )}
 
         {/* API 에러 또는 성공 메시지 표시 */}
-        <div className="mt-4 mb-4 h-5"> {/* 메시지 영역 높이 고정 */}
-          {apiError && <p className="text-red-500 text-sm text-center">{apiError}</p>}
-          {successMessage && <p className="text-green-600 text-sm text-center">{successMessage}</p>}
+        <div className="message-container"> {/* 메시지 영역 높이 고정 */}
+          {apiError && <p className="api-error-text">{apiError}</p>}
+          {successMessage && <p className="success-text">{successMessage}</p>}
         </div>
 
         {/* 버튼 영역 */}
-        <div className="flex justify-end space-x-3">
+        <div className="button-group">
           <button
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className={`bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`cancel-button ${isLoading ? 'button-disabled' : ''}`}
           >
             취소
           </button>
           <button
             type="submit"
             disabled={isLoading}
-            className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`confirm-button ${isLoading ? 'button-disabled' : ''}`}
           >
             {isLoading ? "변경 중..." : "확인"}
           </button>

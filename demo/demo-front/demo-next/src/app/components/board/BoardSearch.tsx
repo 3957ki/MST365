@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import "./BoardSearch.css";
 
 interface BoardSearchProps {
   onSearch: (searchTerm: string, searchType: string) => void;
@@ -32,10 +31,10 @@ const BoardSearch: React.FC<BoardSearchProps> = ({ onSearch }) => {
   };
 
   return (
-    <div className="search-container">
-      <div className="search-input-group">
+    <div className="flex justify-between items-center mb-4 p-3 border border-gray-200 bg-gray-50 shadow-sm">
+      <div className="flex gap-2">
         <select
-          className="search-select"
+          className="border border-gray-300 p-2 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           value={searchType} // 상태와 연결
           onChange={handleSelectChange} // 변경 핸들러 연결
         >
@@ -48,20 +47,20 @@ const BoardSearch: React.FC<BoardSearchProps> = ({ onSearch }) => {
         <input
           type="text"
           placeholder="검색어를 입력하세요."
-          className="search-input"
+          className="border border-gray-300 p-2 w-64 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           value={searchTerm}
           onChange={handleInputChange}
         />
       </div>
-      <div className="search-button-group">
+      <div className="flex gap-2">
         <button
-          className="search-button"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-200 shadow-sm"
           onClick={handleSearch}
         >
           검색
         </button>
         <button
-          className="reset-button"
+          className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition duration-200 shadow-sm"
           onClick={handleReset}
         >
           초기화

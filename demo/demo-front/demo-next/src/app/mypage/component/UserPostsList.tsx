@@ -3,7 +3,6 @@
 import React from 'react'; // Removed useState, useEffect
 import Link from 'next/link'; // Added Link import
 import { UserPostItem } from '../../api/auth'; // Corrected UserPostItem import path
-import './UserPostsList.css';
 
 // Define the structure for component props
 interface UserPostsListProps {
@@ -36,22 +35,22 @@ export default function UserPostsList({ posts }: UserPostsListProps) {
   // Loading and error display are handled by the parent component
 
   return (
-    <div className="posts-list-container">
-      <h3 className="posts-list-title">내가 쓴 글</h3>
+    <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+      <h3 className="text-xl font-semibold mb-4 text-black">내가 쓴 글</h3>
       {/* Display message if posts is null or empty */}
       {(!posts || posts.length === 0) && (
-        <p className="no-posts-text">작성한 게시글이 없습니다.</p>
+        <p className="text-gray-600">작성한 게시글이 없습니다.</p>
       )}
       {/* Render list if posts array exists and is not empty */}
       {posts && posts.length > 0 && (
-        <ul className="posts-list">
+        <ul className="space-y-2">
           {posts.map((post: UserPostItem) => ( // Added type annotation for post
-            <li key={post.id} className="post-item">
+            <li key={post.id} className="border-b pb-2 text-black flex justify-between items-center">
               {/* Link to the post detail page */}
-              <Link href={`/board/${post.id}`} className="post-link">
-                <p className="post-title">{post.title}</p>
+              <Link href={`/board/${post.id}`} className="flex-grow mr-4 hover:text-blue-600">
+                <p className="font-medium">{post.title}</p>
                 {/* Use created_at field and format date safely */}
-                <p className="post-meta">
+                <p className="text-sm text-gray-500">
                   작성일: {(() => {
                     // Removed debugging console.log
                     try {
@@ -81,7 +80,7 @@ export default function UserPostsList({ posts }: UserPostsListProps) {
                   })()}
                 </p>
               </Link>
-              <p className="post-views">조회수: {post.view}</p> {/* Display view count */}
+              <p className="text-sm text-gray-500">조회수: {post.view}</p> {/* Display view count */}
             </li>
           ))}
         </ul>

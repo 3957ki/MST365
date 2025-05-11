@@ -10,6 +10,7 @@ import WriteButton from "../components/board/WriteButton";
 import LogoutButton from "../components/common/LogoutButton";
 import { getToken } from "../api/auth";
 import { getBoards, BoardListItem } from "../api/board"; // API 함수 및 타입 임포트
+import "./page.css";
 
 const BoardPage = () => {
   // 상태 변수 추가
@@ -101,24 +102,24 @@ const BoardPage = () => {
   }, [handleScroll]); // handleScroll 의존성 추가
 
   return (
-    <div className="container mx-auto p-8">
+    <div className="board-container">
       {/* 헤더 부분 */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
+      <div className="header-container">
+        <div className="logo-title-container">
           <Link href="/board">
             <Image
               src="/microsoft.png"
               alt="Microsoft Logo"
               width={50}
               height={50}
-              className="mr-5 cursor-pointer"
+              className="logo-image"
             />
           </Link>
-          <h1 className="text-3xl font-bold text-black">자유 게시판</h1>
+          <h1 className="board-title">자유 게시판</h1>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="user-actions-container">
           <Link href="/mypage">
-            <button className="bg-green-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm">
+            <button className="mypage-button">
               마이 페이지
             </button>
           </Link>
@@ -128,7 +129,7 @@ const BoardPage = () => {
 
       {/* 초기 로딩 상태 표시 */}
       {isLoadingInitial && (
-        <div className="text-center py-10">
+        <div className="loading-text-container">
           <p>게시물 목록을 불러오는 중...</p>
           {/* 로딩 스피너 등 추가 가능 */}
         </div>
@@ -137,11 +138,11 @@ const BoardPage = () => {
       {/* 에러 상태 표시 */}
       {error && !isLoadingInitial && ( // 초기 로딩 중 아닐 때만 에러 표시
         <div
-          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
+          className="error-alert-container"
           role="alert"
         >
-          <strong className="font-bold">오류 발생:</strong>
-          <span className="block sm:inline"> {error}</span>
+          <strong className="font-bold-text">오류 발생:</strong>
+          <span className="block-sm-inline"> {error}</span>
         </div>
       )}
 
@@ -152,14 +153,14 @@ const BoardPage = () => {
 
       {/* 게시물 없음 메시지 (초기 로딩 완료, 에러 없고, 게시물 없을 때) */}
       {!isLoadingInitial && !error && boards.length === 0 && (
-         <div className="text-center py-10 text-gray-500">
+         <div className="no-posts-text">
            작성된 게시글이 없습니다.
          </div>
        )}
 
       {/* 추가 로딩 상태 표시 */}
       {isLoadingMore && (
-        <div className="text-center py-4">
+        <div className="loading-more-text-container">
           <p>추가 게시물을 불러오는 중...</p>
           {/* 로딩 스피너 등 추가 가능 */}
         </div>
@@ -167,7 +168,7 @@ const BoardPage = () => {
 
       {/* 더 이상 게시물 없음 메시지 */}
       {!hasMore && !isLoadingInitial && !isLoadingMore && !error && boards.length > 0 && (
-        <div className="text-center py-4 text-gray-500">
+        <div className="no-more-posts-text">
           마지막 게시물입니다.
         </div>
       )}

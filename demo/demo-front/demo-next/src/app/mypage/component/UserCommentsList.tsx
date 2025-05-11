@@ -3,7 +3,6 @@
 import React from "react"; // Removed useState, useEffect
 import Link from "next/link"; // Added Link import
 import { UserCommentItem } from "../../api/auth"; // Added UserCommentItem import
-import "./UserCommentsList.css";
 
 // Define the structure for component props
 interface UserCommentsListProps {
@@ -36,24 +35,24 @@ export default function UserCommentsList({ comments }: UserCommentsListProps) {
   // Loading and error display are handled by the parent component
 
   return (
-    <div className="comments-list-container">
-      <h3 className="comments-list-title">내가 쓴 댓글</h3>
+    <div className="bg-white p-6 rounded-lg shadow-md">
+      <h3 className="text-xl font-semibold mb-4 text-black">내가 쓴 댓글</h3>
       {/* Display message if comments is null or empty */}
       {(!comments || comments.length === 0) && (
-        <p className="no-comments-text">작성한 댓글이 없습니다.</p>
+        <p className="text-gray-600">작성한 댓글이 없습니다.</p>
       )}
       {/* Render list if comments array exists and is not empty */}
       {comments && comments.length > 0 && (
-        <ul className="comments-list">
+        <ul className="space-y-3">
           {comments
             .filter((comment) => !comment.deleted) // 삭제되지 않은 댓글만 필터링
             .map(
               (
                 comment: UserCommentItem // Added type annotation
               ) => (
-                <li key={comment.id} className="comment-item">
-                  <p className="comment-content">"{comment.content}"</p>
-                  <p className="comment-meta">
+                <li key={comment.id} className="border-b pb-3 text-black">
+                  <p className="mb-1">"{comment.content}"</p>
+                  <p className="text-sm text-gray-600">
                     {/* Format createdAt date safely */}
                     작성일:{" "}
                     {(() => {
@@ -80,7 +79,7 @@ export default function UserCommentsList({ comments }: UserCommentsListProps) {
                     })()}{" "}
                     <Link
                       href={`/board/${comment.boardId}`}
-                      className="original-post-link"
+                      className="text-blue-600 hover:underline"
                     >
                       원본 게시글 보기
                     </Link>

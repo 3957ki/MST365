@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getToken, getUserId } from "@/app/api/auth";
 import { createBoard } from "@/app/api/board";
-import "./page.css";
 
 const WritePage = () => {
   const [title, setTitle] = useState("");
@@ -39,43 +38,43 @@ const WritePage = () => {
   };
 
   return (
-    <div className="write-page-container">
-      <div className="header-container">
+    <div className="container mx-auto p-8">
+      <div className="flex items-center mb-6">
         <Link href="/board">
           <Image
             src="/microsoft.png"
             alt="Microsoft Logo"
             width={50}
             height={50}
-            className="logo-image"
+            className="mr-5 cursor-pointer"
           />
         </Link>
-        <h1 className="page-title">게시물 작성</h1>
+        <h1 className="text-3xl font-bold text-black">게시물 작성</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="write-form">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="form-label">제목</label>
+          <label className="block text-black font-semibold mb-2">제목</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="title-input"
+            className="w-[80%] border border-gray-300 rounded-lg p-2 text-black"
             placeholder="제목을 입력하세요"
           />
         </div>
         <div>
-          <label className="form-label">내용</label>
+          <label className="block text-black font-semibold mb-2">내용</label>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="content-textarea"
+            className="w-[80%] border border-gray-300 rounded-lg p-2 h-40 text-black"
             placeholder="내용을 입력하세요"
           />
         </div>
         <button
           type="submit"
-          className="submit-button"
+          className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
         >
           작성하기
         </button>

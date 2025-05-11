@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation"; // useRouter 임포트
 import { login } from "../api/auth"; // login 함수 임포트
-import "./page.css";
 
 export default function LoginPage() {
   const [userName, setUserName] = useState("");
@@ -49,26 +48,26 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="login-page-container">
-      <div className="login-form-container">
-        <div className="logo-title-container">
+    <div className="min-h-screen flex flex-col justify-center items-center">
+      <div className="max-w-md w-full bg-blue-50 p-10 rounded-lg shadow-md">
+        <div className="mb-6 flex justify-center items-center">
           <Link href="/">
             <Image
               src="/microsoft.png"
               alt="Microsoft Logo"
               width={50}
               height={50}
-              className="logo-image"
+              className="mr-3 cursor-pointer"
             />
           </Link>
-          <h1 className="page-title">로그인</h1>
+          <h1 className="text-center text-2xl font-bold text-black">로그인</h1>
         </div>
         {/* form 요소로 감싸고 onSubmit 핸들러 연결 */}
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
+          <div className="mb-4">
             <label
               htmlFor="username"
-              className="form-label"
+              className="block mb-1 text-sm font-medium text-gray-700"
             >
               아이디
             </label>
@@ -78,15 +77,15 @@ export default function LoginPage() {
               name="username"
               value={userName} // 상태와 연결
               onChange={(e) => setUserName(e.target.value)} // 상태 업데이트
-              className="form-input"
+              className="w-full p-2 border border-gray-300 rounded box-border text-black"
               required // 필수 입력 필드
               disabled={isLoading} // 로딩 중 비활성화
             />
           </div>
-          <div className="form-group-mb-5">
+          <div className="mb-5">
             <label
               htmlFor="password"
-              className="form-label"
+              className="block mb-1 text-sm font-medium text-gray-700"
             >
               비밀번호
             </label>
@@ -96,29 +95,29 @@ export default function LoginPage() {
               name="password"
               value={password} // 상태와 연결
               onChange={(e) => setPassword(e.target.value)} // 상태 업데이트
-              className="form-input"
+              className="w-full p-2 border border-gray-300 rounded box-border text-black"
               required // 필수 입력 필드
               disabled={isLoading} // 로딩 중 비활성화
             />
           </div>
           {/* 에러 메시지 표시 */}
           {error && (
-            <p className="error-message">{error}</p>
+            <p className="text-red-500 text-sm mb-3 text-center">{error}</p>
           )}
           {/* LoginButton 대신 일반 button 사용 */}
           <button
             type="submit"
             disabled={isLoading} // 로딩 중 비활성화
-            className={`login-button ${
-              isLoading ? "login-button-loading" : ""
+            className={`w-full py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 transition-colors ${
+              isLoading ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             {isLoading ? "로그인 중..." : "로그인"}
           </button>
         </form>
-        <div className="signup-link-container">
+        <div className="flex justify-center mt-4 text-sm">
           <div>
-            <Link href="/signup" className="signup-link">
+            <Link href="/signup" className="text-blue-600 hover:underline">
               회원가입
             </Link>
           </div>

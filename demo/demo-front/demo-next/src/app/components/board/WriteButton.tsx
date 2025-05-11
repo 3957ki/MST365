@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import "./WriteButton.css";
 
 const WriteButton = () => {
   const router = useRouter();
@@ -11,10 +10,10 @@ const WriteButton = () => {
   };
 
   return (
-    <div className="write-button-container">
+    <div className="flex justify-end">
       <button
         onClick={handleClick}
-        className="write-button"
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
       >
         글쓰기
       </button>

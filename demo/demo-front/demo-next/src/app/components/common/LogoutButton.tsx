@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { getToken, removeToken, logout } from "@/app/api/auth"; // 경로 수정 (@ 사용 또는 상대경로)
-import "./LogoutButton.css";
 
 export default function LogoutButton() {
   const router = useRouter();
@@ -40,7 +39,7 @@ export default function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="logout-button" // 스타일은 필요에 따라 조정
+      className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm" // 스타일은 필요에 따라 조정
     >
       로그아웃
     </button>

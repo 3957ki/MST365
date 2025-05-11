@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getToken, getUserId } from "@/app/api/auth";
 import { createBoard } from "@/app/api/board";
+import "./page.css";
 
 const WritePage = () => {
   const [title, setTitle] = useState("");
@@ -38,43 +39,43 @@ const WritePage = () => {
   };
 
   return (
-    <div className="container mx-auto p-8">
-      <div className="flex items-center mb-6">
+    <div className="write-page-container">
+      <div className="header-container">
         <Link href="/board">
           <Image
             src="/microsoft.png"
             alt="Microsoft Logo"
             width={50}
             height={50}
-            className="mr-5 cursor-pointer"
+            className="logo-image"
           />
         </Link>
-        <h1 className="text-3xl font-bold text-black">게시물 작성</h1>
+        <h1 className="page-title">게시물 작성</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="write-form">
         <div>
-          <label className="block text-black font-semibold mb-2">제목</label>
+          <label className="form-label">제목</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-[80%] border border-gray-300 rounded-lg p-2 text-black"
+            className="title-input"
             placeholder="제목을 입력하세요"
           />
         </div>
         <div>
-          <label className="block text-black font-semibold mb-2">내용</label>
+          <label className="form-label">내용</label>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="w-[80%] border border-gray-300 rounded-lg p-2 h-40 text-black"
+            className="content-textarea"
             placeholder="내용을 입력하세요"
           />
         </div>
         <button
           type="submit"
-          className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+          className="submit-button"
         >
           작성하기
         </button>
