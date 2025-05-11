@@ -1,0 +1,35 @@
+.write-page-container {
+  @apply container mx-auto p-8;
+}
+
+.header-container {
+  @apply flex items-center mb-6;
+}
+
+.logo-image {
+  @apply mr-5 cursor-pointer;
+}
+
+.page-title {
+  @apply text-3xl font-bold text-black;
+}
+
+.write-form {
+  @apply space-y-6;
+}
+
+.form-label {
+  @apply block text-black font-semibold mb-2;
+}
+
+.title-input {
+  @apply w-[80%] border border-gray-300 rounded-lg p-2 text-black;
+}
+
+.content-textarea {
+  @apply w-[80%] border border-gray-300 rounded-lg p-2 h-40 text-black;
+}
+
+.submit-button {
+  @apply bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700;
+}

@@ -1,0 +1,35 @@
+.posts-list-container {
+  @apply bg-white p-6 rounded-lg shadow-md mb-6;
+}
+
+.posts-list-title {
+  @apply text-xl font-semibold mb-4 text-black;
+}
+
+.no-posts-text {
+  @apply text-gray-600;
+}
+
+.posts-list {
+  @apply space-y-2;
+}
+
+.post-item {
+  @apply border-b pb-2 text-black flex justify-between items-center;
+}
+
+.post-link {
+  @apply flex-grow mr-4 hover:text-blue-600;
+}
+
+.post-title {
+  @apply font-medium;
+}
+
+.post-meta {
+  @apply text-sm text-gray-500;
+}
+
+.post-views {
+  @apply text-sm text-gray-500;
+}
