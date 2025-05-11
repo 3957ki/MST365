@@ -1,0 +1,702 @@
+[2025-05-11T17:04:19.250Z] [INFO] MCPClient 인스턴스가 생성되었습니다.
+[2025-05-11T17:04:19.252Z] [INFO] MCP 서버에 연결 시도 중...
+[2025-05-11T17:04:22.284Z] [INFO] Transport를 통해 MCP 서버에 연결 중...
+[2025-05-11T17:04:27.171Z] [INFO] Playwright MCP 서버에 성공적으로 연결되었습니다
+[2025-05-11T17:04:27.177Z] [INFO] 25개의 MCP 도구를 로드했습니다
+[2025-05-11T17:04:27.177Z] [DEBUG] Available tools: {
+  "tools": [
+    {
+      "name": "browser_close",
+      "description": "Close the page",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Close browser",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_wait",
+      "description": "Wait for a specified time in seconds",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "number",
+            "description": "The time to wait in seconds"
+          }
+        },
+        "required": [
+          "time"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Wait",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_resize",
+      "description": "Resize the browser window",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "width": {
+            "type": "number",
+            "description": "Width of the browser window"
+          },
+          "height": {
+            "type": "number",
+            "description": "Height of the browser window"
+          }
+        },
+        "required": [
+          "width",
+          "height"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Resize browser window",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_console_messages",
+      "description": "Returns all console messages",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Get console messages",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_handle_dialog",
+      "description": "Handle a dialog",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "accept": {
+            "type": "boolean",
+            "description": "Whether to accept the dialog."
+          },
+          "promptText": {
+            "type": "string",
+            "description": "The text of the prompt in case of a prompt dialog."
+          }
+        },
+        "required": [
+          "accept"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Handle a dialog",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_file_upload",
+      "description": "Upload one or multiple files",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The absolute paths to the files to upload. Can be a single file or multiple files."
+          }
+        },
+        "required": [
+          "paths"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Upload files",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_install",
+      "description": "Install the browser specified in the config. Call this if you get an error about the browser not being installed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Install the browser specified in the config",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_press_key",
+      "description": "Press a key on the keyboard",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Name of the key to press or a character to generate, such as `ArrowLeft` or `a`"
+          }
+        },
+        "required": [
+          "key"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Press a key",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_navigate",
+      "description": "Navigate to a URL",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL to navigate to"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Navigate to a URL",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_navigate_back",
+      "description": "Go back to the previous page",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Go back",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_navigate_forward",
+      "description": "Go forward to the next page",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Go forward",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_network_requests",
+      "description": "Returns all network requests since loading the page",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "List network requests",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_pdf_save",
+      "description": "Save page as PDF",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Save as PDF",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_snapshot",
+      "description": "Capture accessibility snapshot of the current page, this is better than screenshot",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Page snapshot",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_click",
+      "description": "Perform click on a web page",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "element": {
+            "type": "string",
+            "description": "Human-readable element description used to obtain permission to interact with the element"
+          },
+          "ref": {
+            "type": "string",
+            "description": "Exact target element reference from the page snapshot"
+          }
+        },
+        "required": [
+          "element",
+          "ref"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Click",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_drag",
+      "description": "Perform drag and drop between two elements",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "startElement": {
+            "type": "string",
+            "description": "Human-readable source element description used to obtain the permission to interact with the element"
+          },
+          "startRef": {
+            "type": "string",
+            "description": "Exact source element reference from the page snapshot"
+          },
+          "endElement": {
+            "type": "string",
+            "description": "Human-readable target element description used to obtain the permission to interact with the element"
+          },
+          "endRef": {
+            "type": "string",
+            "description": "Exact target element reference from the page snapshot"
+          }
+        },
+        "required": [
+          "startElement",
+          "startRef",
+          "endElement",
+          "endRef"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Drag mouse",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_hover",
+      "description": "Hover over element on page",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "element": {
+            "type": "string",
+            "description": "Human-readable element description used to obtain permission to interact with the element"
+          },
+          "ref": {
+            "type": "string",
+            "description": "Exact target element reference from the page snapshot"
+          }
+        },
+        "required": [
+          "element",
+          "ref"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Hover mouse",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_type",
+      "description": "Type text into editable element",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "element": {
+            "type": "string",
+            "description": "Human-readable element description used to obtain permission to interact with the element"
+          },
+          "ref": {
+            "type": "string",
+            "description": "Exact target element reference from the page snapshot"
+          },
+          "text": {
+            "type": "string",
+            "description": "Text to type into the element"
+          },
+          "submit": {
+            "type": "boolean",
+            "description": "Whether to submit entered text (press Enter after)"
+          },
+          "slowly": {
+            "type": "boolean",
+            "description": "Whether to type one character at a time. Useful for triggering key handlers in the page. By default entire text is filled in at once."
+          }
+        },
+        "required": [
+          "element",
+          "ref",
+          "text"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Type text",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_select_option",
+      "description": "Select an option in a dropdown",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "element": {
+            "type": "string",
+            "description": "Human-readable element description used to obtain permission to interact with the element"
+          },
+          "ref": {
+            "type": "string",
+            "description": "Exact target element reference from the page snapshot"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Array of values to select in the dropdown. This can be a single value or multiple values."
+          }
+        },
+        "required": [
+          "element",
+          "ref",
+          "values"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Select option",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_take_screenshot",
+      "description": "Take a screenshot of the current page. You can't perform actions based on the screenshot, use browser_snapshot for actions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "raw": {
+            "type": "boolean",
+            "description": "Whether to return without compression (in PNG format). Default is false, which returns a JPEG image."
+          },
+          "element": {
+            "type": "string",
+            "description": "Human-readable element description used to obtain permission to screenshot the element. If not provided, the screenshot will be taken of viewport. If element is provided, ref must be provided too."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Exact target element reference from the page snapshot. If not provided, the screenshot will be taken of viewport. If ref is provided, element must be provided too."
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Take a screenshot",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_tab_list",
+      "description": "List browser tabs",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "List tabs",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_tab_new",
+      "description": "Open a new tab",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL to navigate to in the new tab. If not provided, the new tab will be blank."
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Open a new tab",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_tab_select",
+      "description": "Select a tab by index",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "number",
+            "description": "The index of the tab to select"
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Select a tab",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_tab_close",
+      "description": "Close a tab",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "number",
+            "description": "The index of the tab to close. Closes current tab if not provided."
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Close a tab",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "browser_generate_playwright_test",
+      "description": "Generate a Playwright test for given scenario",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the test"
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the test"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The steps of the test"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "steps"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Generate a Playwright test",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    }
+  ]
+}
+[2025-05-11T17:04:27.178Z] [DEBUG] 액션 실행: browserLaunch (browser_install) {}
+[2025-05-11T17:04:28.289Z] [DEBUG] 도구 응답 (browser_install): {
+  "content": [
+    {
+      "type": "text",
+      "text": "No open pages available. Use the \"browser_navigate\" tool to navigate to a page first."
+    }
+  ]
+}
+[2025-05-11T17:04:28.289Z] [DEBUG] 액션 실행: browserNewContext (browser_snapshot) {}
+[2025-05-11T17:04:29.550Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n- Page URL: about:blank\n- Page Title: \n- Page Snapshot\n```yaml\nnull\n```"
+    }
+  ]
+}
+[2025-05-11T17:04:29.550Z] [DEBUG] 액션 실행: contextNewPage (browser_tab_new) {}
+[2025-05-11T17:04:29.716Z] [DEBUG] 도구 응답 (browser_tab_new): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to open a new tab>\n```\n\n### Open tabs\n- 1: [] (about:blank)\n- 2: (current) [] (about:blank)\n\n### Current tab\n- Page URL: about:blank\n- Page Title: \n- Page Snapshot\n```yaml\nnull\n```"
+    }
+  ]
+}
+[2025-05-11T17:04:29.716Z] [DEBUG] 액션 실행: pageGoto (browser_navigate) {
+  "url": "https://example.com"
+}
+[2025-05-11T17:04:30.485Z] [DEBUG] 도구 응답 (browser_navigate): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// Navigate to https://example.com\nawait page.goto('https://example.com');\n```\n\n### Open tabs\n- 1: [] (about:blank)\n- 2: (current) [Example Domain] (https://example.com/)\n\n### Current tab\n- Page URL: https://example.com/\n- Page Title: Example Domain\n- Page Snapshot\n```yaml\n- heading \"Example Domain\" [level=1] [ref=s1e4]\n- paragraph [ref=s1e5]: This domain is for use in illustrative examples in\n    documents. You may use this domain in literature without prior coordination\n    or asking for permission.\n- paragraph [ref=s1e6]:\n  - link \"More information...\" [ref=s1e7]:\n    - /url: https://www.iana.org/domains/example\n```"
+    }
+  ]
+}
+[2025-05-11T17:04:30.485Z] [DEBUG] 액션 실행: pageWaitForLoadState (browser_wait) {
+  "time": 5
+}
+[2025-05-11T17:04:35.550Z] [DEBUG] 도구 응답 (browser_wait): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// Waited for 5 seconds\n```\n\n### Open tabs\n- 1: [] (about:blank)\n- 2: (current) [Example Domain] (https://example.com/)\n\n### Current tab\n- Page URL: https://example.com/\n- Page Title: Example Domain\n- Page Snapshot\n```yaml\n- heading \"Example Domain\" [level=1] [ref=s2e4]\n- paragraph [ref=s2e5]: This domain is for use in illustrative examples in\n    documents. You may use this domain in literature without prior coordination\n    or asking for permission.\n- paragraph [ref=s2e6]:\n  - link \"More information...\" [ref=s2e7]:\n    - /url: https://www.iana.org/domains/example\n```"
+    }
+  ]
+}
+[2025-05-11T17:04:35.552Z] [DEBUG] 액션 실행: pageSnapshot (browser_snapshot) {}
+[2025-05-11T17:04:35.585Z] [DEBUG] 도구 응답 (browser_snapshot): {
+  "content": [
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// <internal code to capture accessibility snapshot>\n```\n\n### Open tabs\n- 1: [] (about:blank)\n- 2: (current) [Example Domain] (https://example.com/)\n\n### Current tab\n- Page URL: https://example.com/\n- Page Title: Example Domain\n- Page Snapshot\n```yaml\n- heading \"Example Domain\" [level=1] [ref=s3e4]\n- paragraph [ref=s3e5]: This domain is for use in illustrative examples in\n    documents. You may use this domain in literature without prior coordination\n    or asking for permission.\n- paragraph [ref=s3e6]:\n  - link \"More information...\" [ref=s3e7]:\n    - /url: https://www.iana.org/domains/example\n```"
+    }
+  ]
+}
+[2025-05-11T17:04:35.587Z] [DEBUG] 액션 실행: pageScreenshot (browser_take_screenshot) {
+  "raw": true
+}
+[2025-05-11T17:04:35.696Z] [DEBUG] 도구 응답 (browser_take_screenshot): {
+  "content": [
+    {
+      "type": "image",
+      "data": "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AAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJAAAAIGQAAAABEICAAAQCAkAAEAgJADA/99+HQsAAAAADPK33j2HsgiAkQQAAGAkAQAAGEkAAABGEgAAgJEEAABgJAEAABhJAAAARhIAAICRBAAAYCQBAAAYSQAAAEYSAACAkQQAAGAkAQAAGEkAAABGEgAAgJEEAABgJAEAABhJAAAARhIAAICRBAAAYCQBAAAYSQAAAEYSAACAkQQAAGAkAQAAGEkAAABGEgAAgAmn/1wDNl3j8AAAAABJRU5ErkJggg==",
+      "mimeType": "image/png"
+    },
+    {
+      "type": "text",
+      "text": "- Ran Playwright code:\n```js\n// Screenshot viewport and save it as C:\\Users\\95ker\\AppData\\Local\\Temp\\page-2025-05-11T17-04-35-590Z.png\nawait page.screenshot({\n  path: 'C:\\\\Users\\\\95ker\\\\AppData\\\\Local\\\\Temp\\\\page-2025-05-11T17-04-35-590Z.png',\n  scale: 'css',\n  type: 'png'\n});\n```\n\n### Open tabs\n- 1: [] (about:blank)\n- 2: (current) [Example Domain] (https://example.com/)\n\n### Current tab\n- Page URL: https://example.com/\n- Page Title: Example Domain\n- Page Snapshot\n```yaml\n- heading \"Example Domain\" [level=1] [ref=s4e4]\n- paragraph [ref=s4e5]: This domain is for use in illustrative examples in\n    documents. You may use this domain in literature without prior coordination\n    or asking for permission.\n- paragraph [ref=s4e6]:\n  - link \"More information...\" [ref=s4e7]:\n    - /url: https://www.iana.org/domains/example\n```"
+    }
+  ]
+}
+[2025-05-11T17:04:35.697Z] [DEBUG] 액션 실행: contextClose (browser_close) {}
+[2025-05-11T17:04:36.042Z] [DEBUG] 도구 응답 (browser_close): {
+  "content": [
+    {
+      "type": "text",
+      "text": "No open pages available. Use the \"browser_navigate\" tool to navigate to a page first."
+    }
+  ]
+}
+[2025-05-11T17:04:36.042Z] [INFO] MCP 서버 연결 해제 중...
+[2025-05-11T17:04:36.043Z] [INFO] MCP 서버 연결이 해제되었습니다
