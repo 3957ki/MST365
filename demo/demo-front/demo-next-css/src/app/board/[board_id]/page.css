@@ -1,0 +1,115 @@
+.container-mx-auto-p-8-text-center {
+  @apply container mx-auto p-8 text-center;
+}
+
+.container-mx-auto-p-8 {
+  @apply container mx-auto p-8;
+}
+
+.error-alert-container {
+  @apply bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4;
+}
+
+.block-sm-inline {
+  @apply block sm:inline;
+}
+
+.button-gray {
+  @apply bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg;
+}
+
+.header-container {
+  @apply flex items-center mb-6;
+}
+
+.logo-image {
+  @apply mr-5 cursor-pointer;
+}
+
+.card-container-mb-6 {
+  @apply bg-white shadow-md rounded-lg p-6 mb-6;
+}
+
+.title-h1 {
+  @apply text-2xl font-bold text-black mb-4 border-b pb-2;
+}
+
+.meta-info-grid {
+  @apply grid grid-cols-1 md:grid-cols-4 gap-4 border-b pb-2 mb-4 text-sm text-gray-600;
+}
+
+.meta-info-date {
+  @apply md:col-span-1 md:text-right;
+}
+
+.button-group-flex-end {
+  @apply flex justify-end space-x-2 mt-5;
+}
+
+.button-blue {
+  @apply bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg;
+}
+
+.button-red-disabled {
+  @apply bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.card-container {
+  @apply bg-white shadow-md rounded-lg p-6;
+}
+
+.comment-title-h3 {
+  @apply text-black text-xl font-semibold mb-4 border-b pb-2;
+}
+
+.comment-list-container {
+  @apply space-y-4 mb-6;
+}
+
+.comment-item-container {
+  @apply border rounded-md p-4 bg-gray-50;
+}
+
+.comment-item-header {
+  @apply flex justify-between items-center mb-2;
+}
+
+.comment-user-id {
+  @apply font-semibold text-blue-600;
+}
+
+.comment-date {
+  @apply text-sm text-gray-500;
+}
+
+.textarea-comment-edit {
+  @apply w-full border border-gray-300 rounded-lg p-2 text-black mb-2;
+}
+
+.button-group-comment-actions {
+  @apply flex justify-end space-x-2 mt-2;
+}
+
+.button-blue-sm {
+  @apply bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-sm;
+}
+
+.button-gray-sm {
+  @apply bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded-lg text-sm;
+}
+
+.comment-content-text {
+  @apply text-gray-800;
+}
+
+.comment-form-title {
+  @apply text-black text-lg font-semibold mb-2;
+}
+
+.textarea-comment-new {
+  @apply w-full border border-gray-300 rounded-lg p-2 h-24 text-black mb-2;
+}
+
+.button-indigo {
+  @apply bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg;
+}
