@@ -3,7 +3,7 @@ from datetime import datetime
 import json
 import argparse
 import os
-import base64
+import shutil
 from pydantic import BaseModel
 from typing import List, Optional
 from mcp import ClientSession, StdioServerParameters
@@ -39,11 +39,12 @@ output_parser = PydanticOutputParser(pydantic_object=WebTestResult)
 system_prompt = """너는 아래 시나리오를 테스트하는 AI야.
 각 스텝에서 시키는 대로 행동하고, 실패한 스텝과 이유를 한글로 기록해.
 스텝에서 시키는 대로 할 수 없거나, 시킨 대로 한 결과가 이상하면 실패로 처리해.
-모든 스텝이 끝난 뒤엔 전체 피드백을 주고, 반드시 아래 형식 그대로 응답해야 해.
 
 특히 스크린샷을 캡쳐할 땐 반드시 snapshot을 먼저 만들어야 해.  
 즉, navigate 이후 바로 take_screenshot을 실행하면 안 되고,  
 반드시 snapshot → take_screenshot 순서로 실행해야 해.
+
+모든 스텝이 끝난 뒤엔 전체 피드백을 주고, 반드시 아래 형식 그대로 응답해야 해.
 
 최종 JSON은 반드시 아래처럼 **```json 코드블럭 안에만** 포함시켜야 해.
 다른 설명은 JSON 블럭 바깥에 써도 되지만, JSON 그 자체는 무조건 ```json 으로 감싸야 해.
@@ -113,7 +114,8 @@ async def run_logic(agent, steps: List[str], screenshot_dir: str):
                 {"role": "system", "content": prompt.format()},
                 {"role": "user", "content": create_instruction(steps)},
             ]
-        }
+        },
+        config={"recursion_limit": 100},
     )
 
     # 스크린샷 저장
@@ -121,19 +123,23 @@ async def run_logic(agent, steps: List[str], screenshot_dir: str):
     saved_screenshot_files = []
 
     for event in agent_response["messages"]:
-        # 바로 event에서 ToolMessage 여부 검사
-        if isinstance(event, ToolMessage) and getattr(event, "artifact", None):
-            for artifact in event.artifact:
-                if getattr(artifact, "type", "") == "image" and hasattr(
-                    artifact, "data"
-                ):
-                    filename = f"{image_count}.png"
-                    filepath = os.path.join(screenshot_dir, filename)
-                    with open(filepath, "wb") as f:
-                        f.write(base64.b64decode(artifact.data))
-                    saved_screenshot_files.append(filename)
-                    print(f"스크린샷 저장됨: {filename}")
-                    image_count += 1
+        if isinstance(event, ToolMessage) and hasattr(event, "content"):
+            try:
+                # ToolMessage.content는 문자열 → JSON 배열로 파싱
+                content_items = json.loads(event.content)
+            except Exception as e:
+                continue
+
+            for item in content_items:
+                if isinstance(item, str) and item.startswith("[screenshot_path] "):
+                    source_path = item[len("[screenshot_path] ") :].strip()
+                    if os.path.exists(source_path) and os.path.isfile(source_path):
+                        filename = f"{image_count}.png"
+                        dest_path = os.path.join(screenshot_dir, filename)
+                        shutil.copy(source_path, dest_path)
+                        saved_screenshot_files.append(filename)
+                        print(f"스크린샷 저장됨: {filename}")
+                        image_count += 1
 
     last_message = agent_response["messages"][-1]
     json_text = extract_json_from_message(last_message)
