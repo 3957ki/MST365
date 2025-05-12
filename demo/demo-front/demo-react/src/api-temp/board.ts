@@ -13,7 +13,6 @@ export interface BoardListItem {
   id: number;
   userId: number; // camelCase
   title: string;
-  view: number;
   createdAt: string; // camelCase, ISO 8601 문자열
 }
 
@@ -81,7 +80,6 @@ export interface BoardDetail {
   userId: number;
   title: string;
   content: string;
-  view: number;
   createdAt: string; // ISO 8601
   updatedAt: string | null; // ISO 8601 or null
   deletedAt: string | null; // ISO 8601 or null
