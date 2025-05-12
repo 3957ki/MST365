@@ -325,9 +325,6 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
               <div>
                 <span className="font-semibold">작성자:</span> {userName ? userName : "로딩 중..."}
               </div>
-              <div>
-                <span className="font-semibold">조회수:</span> {board.view}
-              </div>
               <div className="md:col-span-1 md:text-right">
                 <span className="font-semibold">등록일:</span>{" "}
                 {formatDateTime(board.createdAt)}
