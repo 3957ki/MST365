@@ -25,18 +25,30 @@ class FailedStep(BaseModel):
     num: int
     message: str
 
+# 각 스텝 결과용 모델
+class StepResult(BaseModel):
+    num: int            # 스텝 번호
+    action: str         # 수행한 명령문
+    status: bool        # 성공/실패 여부
+    duration: float     # 소요 시간(초)
+    feedback: str       # 개별 피드백
+    fail: Optional[str] # 실패 사유(없으면 None)
+
+# 시나리오 결과 모델에 steps 필드 추가
 class WebTestResult(BaseModel):
     title: str
     status: bool
     duration: float
     feedback: str
     fail: Optional[List[FailedStep]]
+    steps: List[StepResult]   # ← 여기에 스텝별 결과가 리스트로 담깁니다.
 
 # Initialize output parser
 output_parser = PydanticOutputParser(pydantic_object=WebTestResult)
 
 # System prompt template
-system_prompt = """너는 아래 시나리오를 테스트하는 AI야.
+system_prompt = """\
+너는 아래 시나리오를 테스트하는 AI야.
 각 스텝에서 시키는 대로 행동하고, 실패한 스텝과 이유를 한글로 기록해.
 스텝에서 시키는 대로 할 수 없거나, 시킨 대로 한 결과가 이상하면 실패로 처리해.
 
@@ -49,6 +61,16 @@ system_prompt = """너는 아래 시나리오를 테스트하는 AI야.
 최종 JSON은 반드시 아래처럼 **```json 코드블럭 안에만** 포함시켜야 해.
 다른 설명은 JSON 블럭 바깥에 써도 되지만, JSON 그 자체는 무조건 ```json 으로 감싸야 해.
 
+# — 여기에 추가 —
+# JSON 안에 “steps” 배열을 포함해주세요.
+# 각 원소는 다음 필드를 가져야 합니다:
+#  1) num: 스텝 순서 (정수)
+#  2) action: 수행한 스텝 지시문 (문자열)
+#  3) status: 성공이면 true, 실패면 false (불리언)
+#  4) duration: 해당 스텝 수행 시간(단위: 초, 실수)
+#  5) feedback: 스텝 별 피드백 (문자열)
+#  6) fail: 실패 시 사유(문자열), 성공 시 null
+#
 {format_instructions}
 """
 
@@ -194,22 +216,13 @@ def generate_combined_html_report(
     passed_steps = sum(1 for _, r, _ in results if r.status)
     failed_steps = total_steps - passed_steps
 
-    # header & summary 부분은 TS 코드와 완전히 동일
+    # HTML 헤더와 summary (기존과 동일)
     html = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Test Report - {test_start.strftime('%Y-%m-%d %H:%M:%S')}</title>
-    <style>
-        body {{ font-family: Arial, sans-serif; margin: 20px; }}
-        .header {{ background: #f0f0f0; padding: 20px; border-radius: 5px; }}
-        .summary {{ margin: 20px 0; }}
-        .step {{ border: 1px solid #ddd; margin: 10px 0; padding: 15px; border-radius: 5px; }}
-        .success {{ background: #dff0d8; }}
-        .failed {{ background: #f2dede; }}
-        .screenshot {{ max-width: 600px; margin: 10px 0; border: 1px solid #ddd; }}
-        .comment {{ background: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 3px solid #337ab7; }}
-    </style>
+    <link rel="stylesheet" href="../../report.css">
 </head>
 <body>
     <div class="header">
@@ -220,39 +233,57 @@ def generate_combined_html_report(
     
     <div class="summary">
         <h2>요약</h2>
-        <p>총 단계: {total_steps}</p>
+        <p>총 시나리오: {total_steps}</p>
         <p>성공: {passed_steps}</p>
         <p>실패: {failed_steps}</p>
     </div>
     
     <div class="steps">
-        <h2>상세 단계</h2>
+        <h2>상세 시나리오</h2>
 """
 
-    # 각 결과(시나리오)를 TS 코드의 steps 배열처럼 찍어냅니다.
+    # 시나리오별 블록
     for idx, res, screenshots in results:
         status_str = "success" if res.status else "failed"
         html += f"""        <div class="step {status_str}">
             <h3>시나리오 {idx}: {res.title}</h3>
             <p>상태: {'성공' if res.status else '실패'}</p>
             <p>소요 시간: {res.duration:.2f}s</p>
-            <h4>피드백</h4>
+            <h4>시나리오 피드백</h4>
             <p>{res.feedback}</p>
 """
+
+        # (Optional) 시나리오 레벨 실패 사유
         if res.fail:
             html += "            <div class='fail'><h5>Fail Reasons</h5><ul>\n"
             for fs in res.fail:
                 html += f"                <li>Step {fs.num}: {fs.message}</li>\n"
             html += "            </ul></div>\n"
 
+        # **스텝 별 substep 출력 추가**  
+        html += "            <div class='substeps'>\n"
+        html += "                <h4>세부 스텝 결과</h4>\n"
+        for step in res.steps:
+            sc = "success" if step.status else "failed"
+            html += f"""                <div class="substep {sc}">
+                    <p><strong>Step {step.num}:</strong> {step.action}</p>
+                    <p>상태: {'✅ 성공' if step.status else '❌ 실패'} | 시간: {step.duration:.2f}s</p>
+                    <p>피드백: {step.feedback}</p>
+            """
+            if step.fail:
+                html += f"                    <p>실패 사유: {step.fail}</p>\n"
+            html += "                </div>\n"
+        html += "            </div>\n"
+
+        # 스크린샷 출력 (기존)
         for img in screenshots:
-            # TS 코드의 <img class="screenshot" ...> 형식 그대로
             html += f'            <img class="screenshot" src="{idx}/screenshots/{img}" alt="Screenshot"/>\n'
 
-        html += "        </div>\n"
+        html += "        </div>\n"  # 시나리오 블록 닫기
 
     html += "</div>\n</body>\n</html>"
 
+    # 파일로 저장
     with open(os.path.join(output_dir, "report.html"), "w", encoding="utf-8") as f:
         f.write(html)
 
