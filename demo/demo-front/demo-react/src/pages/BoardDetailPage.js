@@ -41,7 +41,7 @@ import { useState, useEffect } from "react";
 // import Link from "next/link"; // Will use Link from react-router-dom
 // import { useRouter } from "next/navigation"; // Will use useNavigate from react-router-dom
 import { useParams, useNavigate, Link } from "react-router-dom"; // Import hooks and Link
-import { getToken, getUserId } from "../api-temp/auth"; // Corrected API path
+import { getToken, getUserId, getUserInfo } from "../api-temp/auth"; // Corrected API path, getUserInfo 추가
 import { getBoardById, deleteBoard } from "../api-temp/board"; // Corrected API path
 import { createComment, getComments, updateComment, deleteComment, } from "../api-temp/comment"; // Corrected API path
 // interface BoardDetailPageProps removed
@@ -80,6 +80,15 @@ var BoardDetailPage = function () {
     var _b = useState([]), comments = _b[0], setComments = _b[1];
     var _c = useState(null), editingCommentId = _c[0], setEditingCommentId = _c[1];
     var _d = useState(""), editingContent = _d[0], setEditingContent = _d[1];
+    var _e = useState(null), board = _e[0], setBoard = _e[1];
+    var _f = useState(true), isLoading = _f[0], setIsLoading = _f[1];
+    var _g = useState(null), error = _g[0], setError = _g[1];
+    var _h = useState(false), isNotFound = _h[0], setIsNotFound = _h[1];
+    var _j = useState(null), currentUserId = _j[0], setCurrentUserId = _j[1];
+    var _k = useState(false), isDeleting = _k[0], setIsDeleting = _k[1]; // 삭제 로딩 상태 추가
+    var _l = useState(""), userName = _l[0], setUserName = _l[1]; // userName 상태 추가
+    var _m = useState(true), userNameLoading = _m[0], setUserNameLoading = _m[1]; // userName 로딩 상태 추가
+    var _o = useState({}), commentUserNamesMap = _o[0], setCommentUserNamesMap = _o[1]; // 댓글 사용자 이름 맵 상태 추가
     var fetchComments = function () { return __awaiter(void 0, void 0, void 0, function () {
         var data, err_1;
         return __generator(this, function (_a) {
@@ -161,12 +170,6 @@ var BoardDetailPage = function () {
             }
         });
     }); };
-    var _e = useState(null), board = _e[0], setBoard = _e[1];
-    var _f = useState(true), isLoading = _f[0], setIsLoading = _f[1];
-    var _g = useState(null), error = _g[0], setError = _g[1];
-    var _h = useState(false), isNotFound = _h[0], setIsNotFound = _h[1];
-    var _j = useState(null), currentUserId = _j[0], setCurrentUserId = _j[1];
-    var _k = useState(false), isDeleting = _k[0], setIsDeleting = _k[1]; // 삭제 로딩 상태 추가
     // 게시물 삭제 처리 함수
     var handleDeleteBoard = function () { return __awaiter(void 0, void 0, void 0, function () {
         var confirmDelete, token, err_4;
@@ -262,6 +265,117 @@ var BoardDetailPage = function () {
         }); };
         fetchBoardDetail();
     }, [board_id, navigate]); // 의존성 배열에 navigate 추가
+    useEffect(function () {
+        var fetchUserName = function () { return __awaiter(void 0, void 0, void 0, function () {
+            var token, userInfo, err_6;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!(board && board.userId)) return [3 /*break*/, 4];
+                        setUserNameLoading(true);
+                        token = getToken();
+                        if (!token) {
+                            console.error("토큰이 없어 사용자 이름을 가져올 수 없습니다.");
+                            setUserNameLoading(false);
+                            setUserName("ID: ".concat(board.userId)); // 토큰 없으면 ID 표시
+                            return [2 /*return*/];
+                        }
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, getUserInfo(board.userId, token)];
+                    case 2:
+                        userInfo = _a.sent();
+                        if (userInfo && userInfo.userName) {
+                            setUserName(userInfo.userName);
+                        }
+                        else {
+                            setUserName("ID: ".concat(board.userId)); // 이름을 못가져오면 ID 표시
+                        }
+                        return [3 /*break*/, 4];
+                    case 3:
+                        err_6 = _a.sent();
+                        console.error("사용자 이름 조회 중 오류 발생:", err_6);
+                        setUserName("ID: ".concat(board.userId)); // 에러 시 ID 표시
+                        return [3 /*break*/, 4];
+                    case 4:
+                        setUserNameLoading(false);
+                        return [2 /*return*/];
+                }
+            });
+        }); };
+        fetchUserName();
+    }, [board]); // board 객체가 변경될 때마다 실행
+    useEffect(function () {
+        var fetchCommentUserNames = function () { return __awaiter(void 0, void 0, void 0, function () {
+            var token_1, userIdsToFetch_1, userInfoPromises, userInfos_1, newCommentUserNames_1, err_7, fallbackNames_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!comments || comments.length === 0) {
+                            return [2 /*return*/];
+                        }
+                        token_1 = getToken();
+                        if (!token_1) {
+                            var defaultNames_1 = {};
+                            comments.forEach(function (comment) {
+                                if (!commentUserNamesMap[comment.userId]) {
+                                    defaultNames_1[comment.userId] = "ID: ".concat(comment.userId);
+                                }
+                            });
+                            if (Object.keys(defaultNames_1).length > 0) {
+                                setCommentUserNamesMap(function (prevMap) { return (Object.assign({}, prevMap, defaultNames_1)); });
+                            }
+                            return [2 /*return*/];
+                        }
+                        userIdsToFetch_1 = Array.from(new Set(comments.map(function (c) { return c.userId; })))
+                            .filter(function (id) { return !commentUserNamesMap[id] || commentUserNamesMap[id].startsWith("ID: "); });
+                        if (userIdsToFetch_1.length === 0) {
+                            return [2 /*return*/];
+                        }
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 3, , 4]);
+                        userInfoPromises = userIdsToFetch_1.map(function (id) { return getUserInfo(id, token_1); });
+                        return [4 /*yield*/, Promise.allSettled(userInfoPromises)];
+                    case 2:
+                        userInfos_1 = _a.sent();
+                        newCommentUserNames_1 = {};
+                        userInfos_1.forEach(function (result, index) {
+                            var userId = userIdsToFetch_1[index];
+                            if (result.status === 'fulfilled' && result.value && result.value.userName) {
+                                newCommentUserNames_1[userId] = result.value.userName;
+                            }
+                            else {
+                                if (!commentUserNamesMap[userId] || commentUserNamesMap[userId].startsWith("ID: ")) {
+                                    newCommentUserNames_1[userId] = "ID: ".concat(userId);
+                                }
+                                console.error("댓글 사용자 이름 조회 실패 (ID: ".concat(userId, "):"), result.status === 'rejected' ? result.reason : '사용자 이름 없음');
+                            }
+                        });
+                        if (Object.keys(newCommentUserNames_1).length > 0) {
+                            setCommentUserNamesMap(function (prevMap) { return (Object.assign({}, prevMap, newCommentUserNames_1)); });
+                        }
+                        return [3 /*break*/, 4];
+                    case 3:
+                        err_7 = _a.sent();
+                        console.error("댓글 사용자 이름 일괄 조회 중 오류 발생:", err_7);
+                        fallbackNames_1 = {};
+                        userIdsToFetch_1.forEach(function (id) {
+                            if (!commentUserNamesMap[id] || commentUserNamesMap[id].startsWith("ID: ")) {
+                                fallbackNames_1[id] = "ID: ".concat(id);
+                            }
+                        });
+                        if (Object.keys(fallbackNames_1).length > 0) {
+                            setCommentUserNamesMap(function (prevMap) { return (Object.assign({}, prevMap, fallbackNames_1)); });
+                        }
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
+                }
+            });
+        }); };
+        fetchCommentUserNames();
+    }, [comments, getToken]); // getToken을 의존성 배열에 추가
     // 로딩 중 UI
     if (isLoading) {
         return (_jsx("div", { className: "container mx-auto p-8 text-center", children: "\uAC8C\uC2DC\uBB3C \uC815\uBCF4\uB97C \uBD88\uB7EC\uC624\uB294 \uC911..." }));
@@ -276,11 +390,11 @@ var BoardDetailPage = function () {
     }
     // 게시물 상세 정보 표시 UI (성공 시)
     return (_jsxs("div", { className: "container mx-auto p-8", children: [_jsx("div", { className: "flex items-center mb-6", children: _jsxs(Link, { to: "/board", children: [" ", _jsx("img", { src: "/microsoft.png", alt: "Microsoft Logo", width: 50, height: 50, className: "mr-5 cursor-pointer" })] }) }), board && ( // board 데이터가 있을 때만 렌더링
-            _jsxs(_Fragment, { children: [_jsxs("div", { className: "bg-white shadow-md rounded-lg p-6 mb-6", children: [_jsx("h1", { className: "text-2xl font-bold text-black mb-4 border-b pb-2", children: board.title }), _jsxs("div", { className: "grid grid-cols-1 md:grid-cols-4 gap-4 border-b pb-2 mb-4 text-sm text-gray-600", children: [_jsxs("div", { children: [_jsx("span", { className: "font-semibold", children: "\uC791\uC131\uC790 ID:" }), " ", board.userId] }), _jsxs("div", { className: "md:col-span-1 md:text-right", children: [_jsx("span", { className: "font-semibold", children: "\uB4F1\uB85D\uC77C:" }), " ", formatDateTime(board.createdAt)] })] }), _jsx("div", { className: "prose max-w-none mb-6 text-black", style: { whiteSpace: "pre-wrap" }, children: board.content })] }), _jsxs("div", { className: "flex justify-end space-x-2 mt-5", children: [currentUserId === board.userId && ( // 현재 사용자가 작성자인 경우 수정/삭제 버튼 표시
-                            _jsxs(_Fragment, { children: [_jsxs(Link, { to: "/board/".concat(board.id, "/edit"), children: [" ", _jsx("button", { className: "bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg", children: "\uC218\uC815" })] }), _jsx("button", { className: "bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed", onClick: handleDeleteBoard, disabled: isDeleting, children: isDeleting ? "삭제 중..." : "삭제" })] })), _jsxs(Link, { to: "/board", children: [" ", _jsx("button", { className: "bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg", children: "\uBAA9\uB85D" })] })] })] })), _jsxs("div", { className: "bg-white shadow-md rounded-lg p-6", children: [_jsx("h3", { className: "text-black text-xl font-semibold mb-4 border-b pb-2", children: "\uB313\uAE00" }), _jsx("div", { className: "space-y-4 mb-6", children: comments.map(function (comment) { return (_jsxs("div", { className: "border rounded-md p-4 bg-gray-50", children: [_jsxs("div", { className: "flex justify-between items-center mb-2", children: [_jsxs("span", { className: "font-semibold text-blue-600", children: ["user ", comment.userId] }), _jsx("span", { className: "text-sm text-gray-500", children: comment.updatedAt && comment.updatedAt !== comment.createdAt
+            _jsxs(_Fragment, { children: [_jsxs("div", { className: "bg-white shadow-md rounded-lg p-6 mb-6", children: [_jsx("h1", { className: "text-2xl font-bold text-black mb-4 border-b pb-2", children: board.title }), _jsxs("div", { className: "grid grid-cols-1 md:grid-cols-4 gap-4 border-b pb-2 mb-4 text-sm text-gray-600", children: [_jsxs("div", { children: [_jsx("span", { className: "font-semibold", children: "\uC791\uC131\uC790:" }), " ", userNameLoading ? "로딩중..." : userName] }), _jsxs("div", { className: "md:col-span-1 md:text-right", children: [_jsx("span", { className: "font-semibold", children: "\uB4F1\uB85D\uC77C:" }), " ", formatDateTime(board.createdAt)] })] }), _jsx("div", { className: "prose max-w-none mb-6 text-black", style: { whiteSpace: "pre-wrap" }, children: board.content })] }), _jsxs("div", { className: "flex justify-end space-x-2 mt-5", children: [currentUserId === board.userId && ( // 현재 사용자가 작성자인 경우 수정/삭제 버튼 표시
+                            _jsxs(_Fragment, { children: [_jsxs(Link, { to: "/board/".concat(board.id, "/edit"), children: [" ", _jsx("button", { className: "bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg", children: "\uC218\uC815" })] }), _jsx("button", { className: "bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed", onClick: handleDeleteBoard, disabled: isDeleting, children: isDeleting ? "삭제 중..." : "삭제" })] })), _jsxs(Link, { to: "/board", children: [" ", _jsx("button", { className: "bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg", children: "\uBAA9\uB85D" })] })] })] })), _jsxs("div", { className: "bg-white shadow-md rounded-lg p-6", children: [_jsx("h3", { className: "text-black text-xl font-semibold mb-4 border-b pb-2", children: "\uB313\uAE00" }), _jsx("div", { className: "space-y-4 mb-6", children: comments.map(function (comment) { return (_jsxs("div", { className: "border rounded-md p-4 bg-gray-50", children: [_jsxs("div", { className: "flex justify-between items-center mb-2", children: [_jsx("span", { className: "font-semibold text-blue-600", children: commentUserNamesMap[comment.userId] || "ID: ".concat(comment.userId) }), _jsx("span", { className: "text-sm text-gray-500", children: comment.updatedAt && comment.updatedAt !== comment.createdAt
                                                 ? "\uC218\uC815\uB428 \u00B7 ".concat(new Date(comment.updatedAt).toLocaleString())
                                                 : new Date(comment.createdAt).toLocaleString() })] }), editingCommentId === comment.id ? (_jsxs(_Fragment, { children: [_jsx("textarea", { className: "w-full border border-gray-300 rounded-lg p-2 text-black mb-2", value: editingContent, onChange: function (e) { return setEditingContent(e.target.value); } }), _jsxs("div", { className: "flex justify-end space-x-2 mt-2", children: [_jsx("button", { onClick: function () { return __awaiter(void 0, void 0, void 0, function () {
-                                                        var token, err_6;
+                                                        var token, err_8;
                                                         return __generator(this, function (_a) {
                                                             switch (_a.label) {
                                                                 case 0:
@@ -301,8 +415,8 @@ var BoardDetailPage = function () {
                                                                     _a.sent();
                                                                     return [3 /*break*/, 5];
                                                                 case 4:
-                                                                    err_6 = _a.sent();
-                                                                    alert("\uC218\uC815 \uC2E4\uD328: ".concat(err_6.message));
+                                                                    err_8 = _a.sent();
+                                                                    alert("\uC218\uC815 \uC2E4\uD328: ".concat(err_8.message));
                                                                     return [3 /*break*/, 5];
                                                                 case 5: return [2 /*return*/];
                                                             }
