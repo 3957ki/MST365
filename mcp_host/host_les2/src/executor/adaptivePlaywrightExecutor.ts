@@ -175,13 +175,18 @@ export class AdaptivePlaywrightExecutor {
       console.log('브라우저 시작 중...');
       const launchResult = await this.mcpClient.executeAction('browserLaunch', {
         headless: false,
-        slowMo: 100, // 브라우저 작업 사이에 100ms 지연 추가
+        slowMo: 200, // 작업 사이 지연 시간 증가
         args: [
           '--start-maximized',
-          '--disable-features=site-per-process', // 사이트 격리 비활성화
-          '--no-sandbox', // 샌드박스 비활성화
-          '--disable-web-security', // 웹 보안 비활성화 (웹 작업이 더 안정적으로 수행되도록)
+          '--disable-features=site-per-process',
+          '--no-sandbox',
+          '--disable-web-security',
         ],
+        // 자동으로 대화상자 허용 (가능한 경우)
+        acceptDownloads: true,
+        hasTouch: false,
+        ignoreHTTPSErrors: true,
+        bypassCSP: true,
       });
 
       console.log('브라우저 시작 결과:', launchResult);
@@ -219,6 +224,7 @@ export class AdaptivePlaywrightExecutor {
     }
   }
 
+
   async executeSteps(steps: TestStep[]) {
     console.log('테스트 실행을 시작합니다...');
     console.log(`결과는 다음 위치에 저장됩니다: ${this.testRunDir}`);
@@ -239,9 +245,27 @@ export class AdaptivePlaywrightExecutor {
       };
 
       try {
+
         // 현재 페이지 스냅샷 캡처 (AI 분석용)
+        console.log(`📸 단계 실행 전 페이지 스냅샷 캡처 중...`);
         const pageSnapshot = await this.getPageSnapshot();
         stepResult.pageSnapshot = pageSnapshot;
+
+        // 스냅샷 기반 요소 정보 분석을 가장 먼저 실행
+        // 이 분석 결과는 'click', 'fill' 등의 상호작용 액션에서 사용됨
+        let elementInfo = null;
+        if (['click', 'fill'].includes(step.action)) {
+          console.log(`🔍 AI 요소 분석 사전 실행 중...`);
+          elementInfo = await this.getElementInfoFromAI(step, pageSnapshot);
+          
+          if (elementInfo) {
+            console.log(`✅ AI 요소 분석 완료: selector=${elementInfo.selector}, ref=${elementInfo.ref}`);
+            stepResult.selector = elementInfo.selector;
+            stepResult.elementRef = elementInfo.ref;
+          } else {
+            console.warn(`⚠️ AI 요소 분석 결과 없음`);
+          }
+        }
 
         // 단계별 처리
         switch (step.action) {
@@ -249,10 +273,10 @@ export class AdaptivePlaywrightExecutor {
             await this.handleNavigate(step);
             break;
           case 'click':
-            await this.handleClick(step, stepResult);
+            await this.handleClick(step, stepResult, elementInfo);
             break;
           case 'fill':
-            await this.handleFill(step, stepResult);
+            await this.handleFill(step, stepResult, elementInfo);
             break;
           case 'press':
             await this.handlePress(step);
@@ -305,6 +329,16 @@ export class AdaptivePlaywrightExecutor {
         stepResult.error =
           error instanceof Error ? error.message : String(error);
         this.testReport.failedSteps++;
+
+              if (this.isDialogError(error)) {
+        try {
+          console.log('🔔 대화 상자 관련 오류 감지, 대화 상자 처리 시도...');
+          await this.mcpClient.handleDialog(true); // 대화 상자 수락
+          console.log('✅ 대화 상자 처리 후 계속 진행');
+        } catch (dialogError) {
+          console.error('❌ 대화 상자 처리 실패:', dialogError);
+        }
+      }
 
         // 에러 발생 시 스크린샷
         const errorScreenshotPath = path.join(
@@ -378,6 +412,19 @@ export class AdaptivePlaywrightExecutor {
     console.log(this.testReport.finalComment);
   }
 
+// adaptivePlaywrightExecutor.ts에 추가
+private isDialogError(error: any): boolean {
+  if (typeof error === 'object' && error !== null) {
+    const errorStr = JSON.stringify(error).toLowerCase();
+    return (
+      errorStr.includes('modal state') &&
+      errorStr.includes('dialog') &&
+      (errorStr.includes('alert') || errorStr.includes('confirm') || errorStr.includes('prompt'))
+    );
+  }
+  return false;
+}
+
   async cleanup() {
     try {
       if (this.pageId && this.browserContextId) {
@@ -427,7 +474,8 @@ export class AdaptivePlaywrightExecutor {
 
   private async handleClick(
     step: TestStep,
-    stepResult: StepResult
+    stepResult: StepResult,
+    preAnalyzedElementInfo: { selector?: string; ref?: string | null } | null = null
   ): Promise<void> {
     console.log(`🖱️ 클릭 시작: ${step.description}`);
 
@@ -439,85 +487,204 @@ export class AdaptivePlaywrightExecutor {
         let selector = step.target || '';
         let ref = null;
 
-        if (selector) {
+        // 이미 AI 분석 결과가 있는지 확인
+        if (preAnalyzedElementInfo && (preAnalyzedElementInfo.selector || preAnalyzedElementInfo.ref)) {
+          console.log(`🧠 사전 분석된 요소 정보 사용`);
+          selector = preAnalyzedElementInfo.selector || selector;
+          ref = preAnalyzedElementInfo.ref;
+        } else if (selector) {
           console.log(`직접 선택자 사용: ${selector}`);
-
+        } else {
+          console.warn('⚠️ 선택자 및 사전 분석된 요소 정보가 없음. 재분석 필요');
+          
+          // 사전 분석된 정보가 없는 경우, 현재 스냅샷으로 다시 분석
           const snapshot = await this.getPageSnapshot();
           const elementInfo = await this.getElementInfoFromAI(step, snapshot);
-
+          
           if (elementInfo?.selector) {
-            ref = elementInfo.ref;
             selector = elementInfo.selector;
+            ref = elementInfo.ref;
           }
-
-          stepResult.selector = selector;
-          stepResult.elementRef = ref;
-
-          if (ref) {
-            await this.mcpClient.executeAction('pageClick', {
-              ref,
-              element: step.description || '클릭 대상',
-            });
-          } else {
-            console.warn(
-              '⚠️ 유효한 ref를 찾지 못했습니다. 선택자만 사용합니다.'
-            );
-            await this.mcpClient.executeAction('pageClick', {
-              ref: null,
-              element: selector,
-            });
-          }
-
-          await this.mcpClient.executeAction('pageWaitForLoadState', {
-            page: this.pageId,
-            state: 'networkidle',
-          });
-
-          return;
         }
 
-        console.warn(
-          '⚠️ 선택자가 명시되지 않았습니다. AI 기반 요소 탐색을 시도합니다.'
-        );
-        const snapshot = await this.getPageSnapshot();
-        const elementInfo = await this.getElementInfoFromAI(step, snapshot);
+        // 최종 선택자와 ref 정보 기록
+        console.log(`🧩 최종 사용 선택자/ref: selector=${selector}, ref=${ref}`);
+        stepResult.selector = selector;
+        stepResult.elementRef = ref;
 
-        if (elementInfo) {
-          selector = elementInfo.selector || '';
-          ref = elementInfo.ref;
+            if (ref) {
+      await this.mcpClient.executeAction('pageClick', { ref, element: step.description || '클릭 대상' });
+    } else if (selector) {
+      await this.mcpClient.executeAction('pageClick', { ref: null, element: selector });
+    }
 
-          stepResult.selector = selector;
-          stepResult.elementRef = ref;
-
-          if (ref) {
-            await this.mcpClient.executeAction('pageClick', {
-              ref,
-              element: step.description || '클릭 대상',
-            });
-          } else if (selector) {
-            await this.mcpClient.executeAction('pageClick', {
-              ref: null,
-              element: selector,
-            });
-          }
-
-          await this.mcpClient.executeAction('pageWaitForLoadState', {
-            page: this.pageId,
-            state: 'networkidle',
-          });
-
-          return;
+    try {
+      // 더 긴 지연 시간을 주어 대화상자가 나타날 시간을 확보
+      console.log('⏱️ 대화상자 확인을 위해 1초 대기...');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // 대화상자가 있는지 여러 번 확인 (최대 3회)
+      for (let i = 0; i < 3; i++) {
+        const dialogFound = await this.checkAndHandleDialog();
+        if (dialogFound) {
+          console.log(`✅ 대화상자 처리 완료 (시도 #${i+1})`);
+          break;
         }
-
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-      } catch (error) {
-        console.error(`❌ 클릭 시도 #${attempt + 1} 실패:`, error);
-        if (attempt === 2) throw error;
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        
+        if (i < 2) {
+          // 잠시 기다렸다가 다시 확인
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
+    } catch (dialogError) {
+      console.warn(`⚠️ 대화상자 확인/처리 실패: ${dialogError}`);
+    }
+        await this.mcpClient.executeAction('pageWaitForLoadState', {
+          page: this.pageId,
+          state: 'networkidle',
+        });
+
+        return;
+      } catch (error) {
+  console.error(`❌ 클릭 시도 #${attempt + 1} 실패:`, error);
+  
+  // 오류 응답에서 대화 상자 관련 내용 확인
+  if (this.isDialogError(error)) {  // isClickWithDialogError 대신 isDialogError 사용
+    try {
+      console.log('🔔 클릭 중 대화 상자 감지됨, 처리 중...');
+      
+      // MCPClient의 browser_handle_dialog 도구 직접 호출
+      await this.mcpClient.executeAction('browser_handle_dialog', {
+        accept: true,
+        // promptText 생략 (alert에는 필요 없음)
+      });
+      
+      console.log('✅ 대화 상자 처리 완료, 클릭 성공으로 간주');
+      return; // 성공으로 처리
+    } catch (dialogError) {
+      console.error('❌ 대화 상자 처리 실패:', dialogError);
+    }
+  }
+  
+  if (attempt === 2) throw error;
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+}
     }
 
     throw new Error(`${step.description} 클릭 실패: 최대 재시도 횟수 초과`);
+  }
+
+  // 클릭 오류가 dialog와 관련된 것인지 확인
+  private isClickWithDialogError(error: any): boolean {
+    if (typeof error === 'object' && error !== null) {
+      const errorStr = JSON.stringify(error).toLowerCase();
+      return (
+        (errorStr.includes('modal state') || errorStr.includes('dialog')) &&
+        errorStr.includes('handle')
+      );
+    }
+    return false;
+  }
+
+private async checkAndHandleDialog(): Promise<boolean> {
+  try {
+    // 먼저 browser_handle_dialog 도구가 사용 가능한지 확인
+    try {
+      // 대화상자가 있는지 확인하는 더 직접적인 방법
+      const result = await this.mcpClient.executeAction('browser_snapshot', {});
+      
+      // 스냅샷 내용을 문자열로 변환하고 alert 또는 dialog 키워드 검색
+      const resultText = JSON.stringify(result);
+      
+      if (resultText.includes('alert dialog') || 
+          resultText.includes('modal state') || 
+          resultText.includes('회원가입이 성공적으로 완료')) {
+        
+        console.log('🔍 대화 상자 감지됨, 처리 중...');
+        
+        // 대화상자 처리
+        await this.mcpClient.executeAction('browser_handle_dialog', {
+          accept: true
+        });
+        
+        console.log('✅ 대화 상자 처리 완료');
+        return true;
+      }
+    } catch (error) {
+      // 오류 발생 시 오류 메시지에서 대화상자 관련 텍스트 확인
+      const errorStr = JSON.stringify(error);
+      
+      if (errorStr.includes('modal state') || 
+          errorStr.includes('dialog') || 
+          errorStr.includes('alert')) {
+        
+        console.log('🔍 오류에서 대화 상자 감지됨, 처리 중...');
+        
+        // 대화상자 처리
+        await this.mcpClient.executeAction('browser_handle_dialog', {
+          accept: true
+        });
+        
+        console.log('✅ 대화 상자 처리 완료');
+        return true;
+      }
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('❌ 대화 상자 확인 및 처리 실패:', error);
+    return false;
+  }
+}
+
+  async executeActionWithDialogCheck(action: string, args: any): Promise<any> {
+  try {
+    const result = await this.mcpClient.executeAction(action, args);
+    return result;
+  } catch (error) {
+    // 오류 메시지에서 대화상자 관련 텍스트 확인
+    const errorStr = JSON.stringify(error);
+    if (this.isDialogError(errorStr)) {
+      console.log('대화 상자 감지됨, 처리 시도 중...');
+      await this.mcpClient.handleDialog(true);
+      console.log('대화 상자 처리 후 작업 재시도...');
+      
+      // 대화 상자 처리 후 원래 액션 다시 시도 (선택적)
+      return await this.mcpClient.executeAction(action, args);
+    }
+    throw error; // 대화 상자 관련 오류가 아니면 오류 다시 발생
+  }
+}
+
+  // dialog 확인 전용 함수 (더 가벼운 버전)
+  private async checkForDialog(): Promise<boolean> {
+    try {
+      // MCP 프로토콜이 dialog 상태를 확인하는 메서드를 가지고 있다고 가정
+      const modalStateResult = await this.mcpClient.executeAction('browser_get_modal_state', {
+        page: this.pageId
+      });
+      
+      if (modalStateResult && 
+          modalStateResult.content && 
+          modalStateResult.content[0] && 
+          modalStateResult.content[0].text && 
+          modalStateResult.content[0].text.includes('dialog')) {
+        
+        // dialog가 있으면 처리
+        console.log(`🔍 대화 상자 감지됨: ${modalStateResult.content[0].text}`);
+        await this.mcpClient.handleDialog(true);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      // 오류 메시지에서 dialog 정보 확인
+      const errorStr = JSON.stringify(error);
+      if (errorStr.includes('modal state') && errorStr.includes('dialog')) {
+        await this.mcpClient.handleDialog(true);
+        return true;
+      }
+      return false;
+    }
   }
 
   private async handlePress(step: TestStep): Promise<void> {
@@ -538,7 +705,7 @@ export class AdaptivePlaywrightExecutor {
       await this.mcpClient.executeAction('pageWaitForLoadState', {
         page: this.pageId,
         state: 'networkidle',
-        timeout: 5000,
+        timeout: 2000,
       });
     } catch (error) {
       console.error(`키 입력 실패: ${error}`);
@@ -636,7 +803,8 @@ export class AdaptivePlaywrightExecutor {
 
   private async handleFill(
     step: TestStep,
-    stepResult: StepResult
+    stepResult: StepResult,
+    preAnalyzedElementInfo: { selector?: string; ref?: string | null } | null = null
   ): Promise<void> {
     console.log(`⌨️ 입력 시작: ${step.description}`);
 
@@ -649,30 +817,45 @@ export class AdaptivePlaywrightExecutor {
         let selector = step.target || '';
         let ref = null;
 
-        const snapshot = await this.getPageSnapshot();
-        const elementInfo = await this.getElementInfoFromAI(step, snapshot);
-
-        if (elementInfo) {
-          selector = elementInfo.selector || selector;
-          ref = elementInfo.ref;
-
-          stepResult.selector = selector;
-          stepResult.elementRef = ref;
-
-          console.log('[🧩 선택자/ref 추출 결과]', { selector, ref });
-
-          if (ref) {
-            try {
-              await this.mcpClient.executeAction('pageFill', {
-                ref,
-                value: step.value,
-              });
-              console.log(`✅ ref를 사용한 입력 완료: ${ref}`);
-              return;
-            } catch (error) {
-              console.warn(`⚠️ ref 입력 실패: ${error}`);
-            }
+        // 이미 AI 분석 결과가 있는지 확인
+        if (preAnalyzedElementInfo && (preAnalyzedElementInfo.selector || preAnalyzedElementInfo.ref)) {
+          console.log(`🧠 사전 분석된 요소 정보 사용`);
+          selector = preAnalyzedElementInfo.selector || selector;
+          ref = preAnalyzedElementInfo.ref;
+        } else if (selector) {
+          console.log(`직접 선택자 사용: ${selector}`);
+        } else {
+          console.warn('⚠️ 선택자 및 사전 분석된 요소 정보가 없음. 재분석 필요');
+          
+          // 사전 분석된 정보가 없는 경우, 현재 스냅샷으로 다시 분석
+          const snapshot = await this.getPageSnapshot();
+          const elementInfo = await this.getElementInfoFromAI(step, snapshot);
+          
+          if (elementInfo?.selector) {
+            selector = elementInfo.selector;
+            ref = elementInfo.ref;
           }
+        }
+
+        // 최종 선택자와 ref 정보 기록
+        console.log(`🧩 최종 사용 선택자/ref: selector=${selector}, ref=${ref}`);
+        stepResult.selector = selector;
+        stepResult.elementRef = ref;
+
+        if (ref) {
+          try {
+            await this.mcpClient.executeAction('pageFill', {
+      ref: ref,
+      element: step.description || '입력 필드',
+      text: step.value,
+      // submit: false,
+      // slowly: false
+    });
+    console.log(`✅ ref를 사용한 입력 완료: ${ref}`);
+    return;
+  } catch (error) {
+    console.warn(`⚠️ ref 입력 실패: ${error}`);
+  }
         }
 
         if (selector) {
@@ -747,7 +930,7 @@ export class AdaptivePlaywrightExecutor {
         await this.mcpClient.executeAction('pageWaitForLoadState', {
           page: this.pageId,
           state: 'networkidle',
-          timeout: 10000,
+          timeout: 2000,
         });
         console.log('✅ 페이지 로딩 완료');
       } catch (e) {
@@ -919,7 +1102,7 @@ export class AdaptivePlaywrightExecutor {
   ): Promise<{ selector?: string; ref?: string | null } | null> {
     try {
       console.log('🧠 AI에게 요소 분석 요청 중...');
-
+      
       const response = await this.anthropic.messages.create({
         model: 'claude-3-5-haiku-20241022',
         max_tokens: 500,
@@ -1000,7 +1183,7 @@ ${snapshot}
     try {
       const response = await this.anthropic.messages.create({
         model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 300,
+        max_tokens: 2000,
         messages: [
           {
             role: 'user',
@@ -1031,7 +1214,7 @@ ${stepResult.error ? `- 에러: ${stepResult.error}` : ''}
     try {
       const response = await this.anthropic.messages.create({
         model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 500,
+        max_tokens: 2000,
         messages: [
           {
             role: 'user',

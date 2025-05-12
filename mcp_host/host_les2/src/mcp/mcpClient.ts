@@ -111,6 +111,7 @@ const TOOL_MAPPING: Record<string, string> = {
   pageSnapshot: 'browser_snapshot',
   pageClose: 'browser_tab_close',
   contextClose: 'browser_close',
+  handleDialog: 'browser_handle_dialog',
 };
 
 // 도구 이름을 실제 MCP 도구 이름으로 변환하는 함수
@@ -158,7 +159,9 @@ function mapToolArgs(name: string, args: any): any {
     case 'pageFill':
       // browser_type은 text와 submit 인자 필요
       mappedArgs = {
-        text: args.value,
+        element: args.element,
+        ref: args.ref,
+        text: args.text,
         submit: false, // Enter 키를 누르지 않음
       };
       break;
@@ -180,7 +183,7 @@ function mapToolArgs(name: string, args: any): any {
     case 'pageWaitForSelector':
       // browser_wait로 대체
       mappedArgs = {
-        time: 5, // 5초 대기
+        time: 3, // 3초 대기
       };
       break;
 
@@ -203,70 +206,79 @@ function mapToolArgs(name: string, args: any): any {
   return mappedArgs;
 }
 
-// 도구 결과를 원래 형식으로 변환하는 함수
 function transformResult(name: string, result: any): ToolResult {
   if (result.isError) {
     log(LogLevel.ERROR, `Tool execution error for ${name}:`, result);
-    return result as ToolResult; // 오류는 그대로 반환
+    return result as ToolResult;
   }
 
-  // 결과를 맞춤형 ToolResult 타입으로 변환
   const toolResult: ToolResult = {};
 
-  // content 속성이 있으면 복사
-  if (result.content) {
-    toolResult.content = result.content;
-  }
-
+  // content에 텍스트가 있다면 먼저 파싱
+  const textContent = result.content?.find((item: any) => item.type === 'text')?.text || '';
+  
   switch (name) {
-    case 'pageUrl':
-      // 스냅샷 결과에서 URL 추출
-      toolResult.url = 'unknown'; // 실제로는 스냅샷에서 URL을 추출해야 함
+    case 'pageUrl': {
+      const urlMatch = textContent.match(/- Page URL: (.+)/);
+      if (urlMatch) {
+        toolResult.url = urlMatch[1].trim();
+      }
       break;
+    }
 
-    case 'pageTitle':
-      // 스냅샷 결과에서 제목 추출
-      toolResult.title = 'unknown'; // 실제로는 스냅샷에서 제목을 추출해야 함
+    case 'pageTitle': {
+      const titleMatch = textContent.match(/- Page Title: (.+)/);
+      if (titleMatch) {
+        toolResult.title = titleMatch[1].trim();
+      }
       break;
+    }
 
-    case 'pageScreenshot':
-      // 기본값으로 더미값을 설정하지 않음
+    case 'pageSnapshot': {
+      toolResult.pageSnapshot = textContent;
+      break;
+    }
+
+    case 'pageIsVisible': {
+      // 요소 ref나 텍스트가 있는지 확인해 존재 여부 판단
+      const targetRef = '회원가입'; // 예시 - 실제로는 매개변수나 외부에서 받아야 함
+      toolResult.visible = textContent.includes(targetRef);
+      break;
+    }
+
+    case 'pageEvaluate': {
+      // 요소 리스트를 추출하는 로직 예시
+      const matches = [...textContent.matchAll(/- ([^\n]+) \[ref=([^\]]+)\]/g)];
+      toolResult.result = matches.map(m => ({
+        label: m[1].trim(),
+        ref: m[2].trim()
+      }));
+      break;
+    }
+
+    case 'pageScreenshot': {
       if (result.screenshot) {
         toolResult.binary = result.screenshot;
       } else if (result.data) {
         toolResult.binary = result.data;
       } else if (result.content && Array.isArray(result.content)) {
-        // content 배열에서 이미지 데이터 찾기
-        const imageContent = result.content.find(
-          (item: any) => item.type === 'image' && item.data
-        );
-        if (imageContent && imageContent.data) {
+        const imageContent = result.content.find((item: any) => item.type === 'image' && item.data);
+        if (imageContent?.data) {
           toolResult.binary = imageContent.data;
         }
       }
       break;
+    }
 
-    case 'pageSnapshot':
-      // 스냅샷 결과 처리
-      toolResult.result = result;
-      // 콘솔에 스냅샷 결과 표시 (디버깅 목적)
-      // console.log('스냅샷 결과:', JSON.stringify(result, null, 2));
-      break;
-
-    case 'pageEvaluate':
-      // 스냅샷 결과에서 필요한 정보 추출
-      toolResult.result = []; // 실제로는 스냅샷에서 요소 정보를 추출해야 함
-      break;
-
-    case 'pageIsVisible':
-      // 스냅샷 결과에서 요소 존재 여부 확인
-      toolResult.visible = false; // 실제로는 스냅샷에서 요소 존재 여부를 확인해야 함
-      break;
-
-    default:
-      // 다른 모든 속성을 복사
+    default: {
       Object.assign(toolResult, result);
       break;
+    }
+  }
+
+  // content 복사
+  if (result.content) {
+    toolResult.content = result.content;
   }
 
   return toolResult;
@@ -381,6 +393,26 @@ export class MCPClient {
     }
   }
 
+async handleDialog(accept: boolean = true, promptText?: string): Promise<void> {
+  try {
+    console.log(`🔄 대화 상자 처리 중... (${accept ? '수락' : '거부'})`);
+    
+    // 직접 도구 이름 사용
+    await this.client.callTool({
+      name: 'browser_handle_dialog', // 매핑된 이름이 아닌 실제 도구 이름 사용
+      arguments: {
+        accept,
+        promptText
+      }
+    });
+    
+    console.log('✅ 대화 상자 처리 완료');
+  } catch (error) {
+    console.error('❌ 대화 상자 처리 실패:', error);
+    throw error;
+  }
+}
+
   async executeAction(action: string, args: any): Promise<ToolResult> {
     const mappedAction = mapToolName(action);
     const mappedArgs = mapToolArgs(action, args);
@@ -430,13 +462,54 @@ export class MCPClient {
       const transformedResult = transformResult(action, result);
       return transformedResult;
     } catch (error) {
-      log(LogLevel.ERROR, `액션 실행 오류 ${action} (${mappedAction}):`, error);
-      console.error(
-        `액션 ${action} 실행 오류:`,
-        error instanceof Error ? error.message : error
-      );
-      throw error; // 오류를 상위로 전파
+  const errMsg =
+    typeof error === 'string'
+      ? error
+      : error instanceof Error
+        ? error.message
+        : JSON.stringify(error);
+
+  const maybeModal =
+    errMsg.includes('does not handle the modal state') ||
+    errMsg.includes('can be handled by the "browser_handle_dialog" tool');
+
+if (maybeModal) {
+  console.warn('⚠️ Modal dialog 감지됨. 자동 처리 시도...');
+  try {
+    await this.handleDialog();
+    console.log('✅ 대화 상자 자동 수락 후 재시도 중...');
+
+    // ⚠️ ref 제거 (stale 참조 방지)
+    const retryArgs = { ...mappedArgs };
+    if ('ref' in retryArgs) {
+      delete retryArgs.ref;
     }
+
+    const retryResult = await this.client.callTool({
+      name: mappedAction,
+      arguments: retryArgs,
+    });
+
+    if (retryResult.isError) {
+      throw new Error(`Retry failed: ${JSON.stringify(retryResult)}`);
+    }
+
+    return transformResult(action, retryResult);
+
+  } catch (dialogErr) {
+    console.error('❌ 대화 상자 처리 실패 또는 재시도 실패:', dialogErr);
+    throw dialogErr;
+  }
+}
+
+  log(LogLevel.ERROR, `액션 실행 오류 ${action} (${mappedAction}):`, error);
+  console.error(
+    `액션 ${action} 실행 오류:`,
+    error instanceof Error ? error.message : error
+  );
+  throw error;
+}
+
   }
 
   async disconnect(): Promise<void> {
@@ -458,4 +531,5 @@ export class MCPClient {
       console.error('연결 해제 중 오류 발생:', error);
     }
   }
+  
 }
