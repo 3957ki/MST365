@@ -4,16 +4,26 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getToken, getUserId } from "../../api/auth";
+import { getToken, getUserId, getUserInfo, UserInfoData } from "../../api/auth";
 import { getBoardById, BoardDetail, deleteBoard } from "../../api/board";
 import {
   createComment,
   getComments,
   updateComment,
   deleteComment,
-  CommentData,
 } from "@/app/api/comment";
 import "./page.css";
+
+interface CommentData {
+  id: number;
+  boardId: number;
+  userId: number;
+  content: string;
+  createdAt: string;
+  updatedAt: string | null;
+  deleted: boolean;
+  userName?: string;
+}
 
 interface BoardDetailPageProps {
   params: {
@@ -57,7 +67,34 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
   const fetchComments = async () => {
     try {
       const data = await getComments(Number(board_id));
-      setComments(data.filter((comment) => !comment.deleted)); // 🔥 삭제되지 않은 것만 표시
+      const commentsWithUserNames = await Promise.all(
+        data
+          .filter((comment) => !comment.deleted)
+          .map(async (comment) => {
+            const token = getToken();
+            if (token) {
+              try {
+                const userInfo = await getUserInfo(comment.userId, token);
+                return {
+                  ...comment,
+                  userName: userInfo ? userInfo.userName : `ID: ${comment.userId}`,
+                };
+              } catch (error) {
+                console.error("사용자 이름 조회 중 오류 발생:", error);
+                return {
+                  ...comment,
+                  userName: `ID: ${comment.userId}`,
+                };
+              }
+            } else {
+              return {
+                ...comment,
+                userName: `ID: ${comment.userId}`,
+              };
+            }
+          })
+      );
+      setComments(commentsWithUserNames);
     } catch (err: any) {
       console.error("댓글 불러오기 실패:", err.message);
     }
@@ -109,6 +146,30 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
   const [isNotFound, setIsNotFound] = useState<boolean>(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false); // 삭제 로딩 상태 추가
+  const [userName, setUserName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      if (board && board.userId) {
+        const token = getToken();
+        if (token) {
+          try {
+            const userInfo = await getUserInfo(board.userId, token);
+            if (userInfo && userInfo.userName) {
+              setUserName(userInfo.userName);
+            } else {
+              setUserName(`ID: ${board.userId}`); // 사용자 이름이 없을 경우 ID 표시
+            }
+          } catch (error) {
+            console.error("사용자 이름 조회 중 오류 발생:", error);
+            setUserName(`ID: ${board.userId}`); // 오류 발생 시 ID 표시
+          }
+        }
+      }
+    };
+
+    fetchUserName();
+  }, [board]);
 
   // 게시물 삭제 처리 함수
   const handleDeleteBoard = async () => {
@@ -263,11 +324,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
             {/* 메타 정보 (작성자, 조회수, 등록일, 수정일) */}
             <div className="meta-info-grid">
               <div>
-                <span className="font-semibold">작성자 ID:</span> {board.userId}
-                {/* TODO: 사용자 이름 표시 기능 추가 */}
-              </div>
-              <div>
-                <span className="font-semibold">조회수:</span> {board.view}
+                <span className="font-semibold">작성자:</span> {userName ? userName : "로딩 중..."}
               </div>
               <div className="meta-info-date">
                 <span className="font-semibold">등록일:</span>{" "}
@@ -321,7 +378,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
         {comments.map((comment) => (
           <div key={comment.id} className="comment-item-container">
             <div className="comment-item-header">
-              <span className="comment-user-id">user {comment.userId}</span>
+              <span className="comment-user-id">{comment.userName}</span>
               <span className="comment-date">
                 {comment.updatedAt && comment.updatedAt !== comment.createdAt
                   ? `수정됨 · ${new Date(comment.updatedAt).toLocaleString()}`
