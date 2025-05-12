@@ -45,6 +45,7 @@ const BoardPage = () => {
 
     try {
       const fetchedBoards = await getBoards(token, currentPage, pageSize);
+      console.log("Fetched boards:", fetchedBoards); // 추가
       setBoards((prevBoards) => [...prevBoards, ...fetchedBoards]);
 
       // 더 로드할 데이터 있는지 확인
