@@ -7,26 +7,19 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# 2. 실행 스테이지
-FROM node:22.13.0-alpine AS runner
+# 2. 실행 스테이지 (Nginx 사용)
+FROM nginx:stable-alpine AS runner
 
-WORKDIR /app
-
-# http-server 설치
-RUN npm install -g http-server
-
-# 빌드된 정적 파일 복사
-COPY --from=builder /app/dist /app/dist
-
-# 한국 시간 설정
+# 시간대 설정 (선택)
 RUN apk add --no-cache tzdata && \
     ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime && \
     echo "Asia/Seoul" > /etc/timezone && \
     apk del tzdata
 
-# 포트 설정 (컨테이너 내부 포트)
-ENV PORT=3000
-EXPOSE 3000
+# Nginx 설정 복사 (SPA fallback 처리 포함)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# http-server 실행 (SPA 대응 포함, 포트 3000)
-CMD ["http-server", "dist", "-p", "3000", "-s"]
+# 정적 파일 복사
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+EXPOSE 3000
