@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex flex-col justify-center items-center bg-white">
+  <div class="min-h-screen flex flex-col justify-center items-center">
     <div class="max-w-2xl w-full text-center bg-blue-50 p-10 rounded-lg shadow-md">
       <div class="mb-6 flex justify-center items-center">
         <img src="/microsoft.png" alt="Microsoft Logo" width="80" height="80" class="mr-6" />
