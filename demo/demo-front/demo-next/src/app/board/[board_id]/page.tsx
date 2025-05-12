@@ -4,15 +4,25 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getToken, getUserId } from "../../api/auth";
+import { getToken, getUserId, getUserInfo, UserInfoData } from "../../api/auth";
 import { getBoardById, BoardDetail, deleteBoard } from "../../api/board";
 import {
   createComment,
   getComments,
   updateComment,
   deleteComment,
-  CommentData,
 } from "@/app/api/comment";
+
+interface CommentData {
+  id: number;
+  boardId: number;
+  userId: number;
+  content: string;
+  createdAt: string;
+  updatedAt: string | null;
+  deleted: boolean;
+  userName?: string; // userName 속성 추가
+}
 
 interface BoardDetailPageProps {
   params: {
@@ -56,7 +66,34 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
   const fetchComments = async () => {
     try {
       const data = await getComments(Number(board_id));
-      setComments(data.filter((comment) => !comment.deleted)); // 🔥 삭제되지 않은 것만 표시
+      const commentsWithUserNames = await Promise.all(
+        data
+          .filter((comment) => !comment.deleted)
+          .map(async (comment) => {
+            const token = getToken();
+            if (token) {
+              try {
+                const userInfo = await getUserInfo(comment.userId, token);
+                return {
+                  ...comment,
+                  userName: userInfo ? userInfo.userName : `ID: ${comment.userId}`,
+                };
+              } catch (error) {
+                console.error("사용자 이름 조회 중 오류 발생:", error);
+                return {
+                  ...comment,
+                  userName: `ID: ${comment.userId}`,
+                };
+              }
+            } else {
+              return {
+                ...comment,
+                userName: `ID: ${comment.userId}`,
+              };
+            }
+          })
+      );
+      setComments(commentsWithUserNames);
     } catch (err: any) {
       console.error("댓글 불러오기 실패:", err.message);
     }
@@ -108,6 +145,30 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
   const [isNotFound, setIsNotFound] = useState<boolean>(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false); // 삭제 로딩 상태 추가
+  const [userName, setUserName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      if (board && board.userId) {
+        const token = getToken();
+        if (token) {
+          try {
+            const userInfo = await getUserInfo(board.userId, token);
+            if (userInfo && userInfo.userName) {
+              setUserName(userInfo.userName);
+            } else {
+              setUserName(`ID: ${board.userId}`); // 사용자 이름이 없을 경우 ID 표시
+            }
+          } catch (error) {
+            console.error("사용자 이름 조회 중 오류 발생:", error);
+            setUserName(`ID: ${board.userId}`); // 오류 발생 시 ID 표시
+          }
+        }
+      }
+    };
+
+    fetchUserName();
+  }, [board]);
 
   // 게시물 삭제 처리 함수
   const handleDeleteBoard = async () => {
@@ -262,8 +323,7 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
             {/* 메타 정보 (작성자, 조회수, 등록일, 수정일) */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border-b pb-2 mb-4 text-sm text-gray-600">
               <div>
-                <span className="font-semibold">작성자 ID:</span> {board.userId}
-                {/* TODO: 사용자 이름 표시 기능 추가 */}
+                <span className="font-semibold">작성자:</span> {userName ? userName : "로딩 중..."}
               </div>
               <div>
                 <span className="font-semibold">조회수:</span> {board.view}
@@ -315,82 +375,91 @@ const BoardDetailPage: React.FC<BoardDetailPageProps> = ({ params }) => {
       )}
 
       <div className="bg-white shadow-md rounded-lg p-6">
-        <h3 className="text-black text-xl font-semibold mb-4 border-b pb-2">댓글</h3>
+        <h3 className="text-black text-xl font-semibold mb-4 border-b pb-2">
+          댓글
+        </h3>
         <div className="space-y-4 mb-6">
-        {comments.map((comment) => (
-          <div key={comment.id} className="border rounded-md p-4 bg-gray-50">
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-semibold text-blue-600">user {comment.userId}</span>
-              <span className="text-sm text-gray-500">
-                {comment.updatedAt && comment.updatedAt !== comment.createdAt
-                  ? `수정됨 · ${new Date(comment.updatedAt).toLocaleString()}`
-                  : new Date(comment.createdAt).toLocaleString()}
-              </span>
-            </div>
+          {comments.map((comment) => (
+            <div key={comment.id} className="border rounded-md p-4 bg-gray-50">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-semibold text-blue-600">
+                  {comment.userName}
+                </span>
+                <span className="text-sm text-gray-500">
+                  {comment.updatedAt && comment.updatedAt !== comment.createdAt
+                    ? `수정됨 · ${new Date(comment.updatedAt).toLocaleString()}`
+                    : new Date(comment.createdAt).toLocaleString()}
+                </span>
+              </div>
 
-            {editingCommentId === comment.id ? (
-              <>
-                <textarea
-                  className="w-full border border-gray-300 rounded-lg p-2 text-black mb-2"
-                  value={editingContent}
-                  onChange={(e) => setEditingContent(e.target.value)}
-                />
-                <div className="flex justify-end space-x-2 mt-2">
-                  <button
-                    onClick={async () => {
-                      const token = getToken();
-                      if (!token) return alert("로그인이 필요합니다.");
-                      try {
-                        await updateComment(Number(board_id), comment.id, editingContent, token);
-                        alert("댓글이 수정되었습니다.");
-                        setEditingCommentId(null);
-                        setEditingContent("");
-                        await fetchComments();
-                      } catch (err: any) {
-                        alert(`수정 실패: ${err.message}`);
-                      }
-                    }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
-                  >
-                    저장
-                  </button>
-                  <button
-                    onClick={() => {
-                      setEditingCommentId(null);
-                      setEditingContent("");
-                    }}
-                    className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded-lg text-sm"
-                  >
-                    취소
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-gray-800">{comment.content}</p>
-                {currentUserId === comment.userId && (
+              {editingCommentId === comment.id ? (
+                <>
+                  <textarea
+                    className="w-full border border-gray-300 rounded-lg p-2 text-black mb-2"
+                    value={editingContent}
+                    onChange={(e) => setEditingContent(e.target.value)}
+                  />
                   <div className="flex justify-end space-x-2 mt-2">
                     <button
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
-                      onClick={() => {
-                        setEditingCommentId(comment.id);
-                        setEditingContent(comment.content);
+                      onClick={async () => {
+                        const token = getToken();
+                        if (!token) return alert("로그인이 필요합니다.");
+                        try {
+                          await updateComment(
+                            Number(board_id),
+                            comment.id,
+                            editingContent,
+                            token
+                          );
+                          alert("댓글이 수정되었습니다.");
+                          setEditingCommentId(null);
+                          setEditingContent("");
+                          await fetchComments();
+                        } catch (err: any) {
+                          alert(`수정 실패: ${err.message}`);
+                        }
                       }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
                     >
-                      수정
+                      저장
                     </button>
                     <button
-                      className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
-                      onClick={() => handleDelete(comment.id)}
+                      onClick={() => {
+                        setEditingCommentId(null);
+                        setEditingContent("");
+                      }}
+                      className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded-lg text-sm"
                     >
-                      삭제
+                      취소
                     </button>
                   </div>
-                )}
-              </>
-            )}
-          </div>
-        ))}
+                </>
+              ) : (
+                <>
+                  <p className="text-gray-800">{comment.content}</p>
+                  {currentUserId === comment.userId && (
+                    <div className="flex justify-end space-x-2 mt-2">
+                      <button
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
+                        onClick={() => {
+                          setEditingCommentId(comment.id);
+                          setEditingContent(comment.content);
+                        }}
+                      >
+                        수정
+                      </button>
+                      <button
+                        className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-lg text-sm"
+                        onClick={() => handleDelete(comment.id)}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          ))}
         </div>
         <div>
           <h4 className="text-black text-lg font-semibold mb-2">댓글 작성</h4>
