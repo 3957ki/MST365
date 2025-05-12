@@ -88,12 +88,17 @@ const BoardTable: React.FC<BoardTableProps> = ({ boards, token }) => {
   return (
     <table className="w-full border-collapse border border-gray-300 mb-4 text-black">
       <thead className="bg-gray-100">
-        <tr><th className="border p-2 w-16">번호</th><th className="border p-2">제목</th><th className="border p-2 w-32">작성자</th><th className="border p-2 w-32">작성일</th><th className="border p-2 w-20">조회수</th></tr>
+        <tr>
+          <th className="border p-2 w-16">번호</th>
+          <th className="border p-2">제목</th>
+          <th className="border p-2 w-32">작성자</th>
+          <th className="border p-2 w-32">작성일</th>
+        </tr>
       </thead>
       <tbody>
         {boards.length === 0 ? (
           <tr>
-            <td colSpan={5} className="text-center p-4 border">
+            <td colSpan={4} className="text-center p-4 border">
               작성된 게시글이 없습니다. {/* 메시지 수정 */}
             </td>
           </tr>
@@ -101,10 +106,16 @@ const BoardTable: React.FC<BoardTableProps> = ({ boards, token }) => {
           boards.map((board) => (
             <tr key={board.id} className="hover:bg-gray-50">
               <td className="border p-2 text-center">{board.id}</td>
-              <td className="border p-2 hover:underline"><Link to={`/board/${board.id}`}>{board.title}</Link></td>
-              <td className="border p-2 text-center">{userNamesMap[board.userId] || (loadingUserNames ? "로딩중..." : `ID: ${board.userId}`)}</td>
-              <td className="border p-2 text-center">{formatDate(board.createdAt)}</td>
-              <td className="border p-2 text-center">{board.view}</td>
+              <td className="border p-2 hover:underline">
+                <Link to={`/board/${board.id}`}>{board.title}</Link>
+              </td>
+              <td className="border p-2 text-center">
+                {userNamesMap[board.userId] ||
+                  (loadingUserNames ? "로딩중..." : `ID: ${board.userId}`)}
+              </td>
+              <td className="border p-2 text-center">
+                {formatDate(board.createdAt)}
+              </td>
             </tr>
           ))
         )}

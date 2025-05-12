@@ -272,9 +272,6 @@ const BoardDetailPage: React.FC = () => {
                 <span className="font-semibold">작성자 ID:</span> {board.userId}
                 {/* TODO: 사용자 이름 표시 기능 추가 */}
               </div>
-              <div>
-                <span className="font-semibold">조회수:</span> {board.view}
-              </div>
               <div className="md:col-span-1 md:text-right">
                 <span className="font-semibold">등록일:</span>{" "}
                 {formatDateTime(board.createdAt)}
