@@ -44,8 +44,10 @@
         </h1>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 border-b pb-2 mb-4 text-sm text-gray-600">
           <div>
-            <span class="font-semibold">작성자 ID:</span> {{ board.userId }}
-            <!-- TODO: 사용자 이름 표시 (userNamesMap과 유사한 로직 필요 시 추가) -->
+            <span class="font-semibold">작성자:</span>
+            <span>
+              {{ userName || (isLoadingUser ? "로딩중..." : `ID: ${board.userId}`) }}
+            </span>
           </div>
           <div>
             <span class="font-semibold">조회수:</span> {{ board.view }}
@@ -90,7 +92,10 @@
         <div class="space-y-4 mb-6">
           <div v-for="comment in comments" :key="comment.id" class="border rounded-md p-4 bg-gray-50">
             <div class="flex justify-between items-center mb-2">
-              <span class="font-semibold text-blue-600">user {{ comment.userId }}</span>
+              <span class="font-semibold text-blue-600">
+                {{ commentUserNames[comment.userId] || (isLoadingCommentUserMap[comment.userId] ? '로딩중...' : `ID: ${comment.userId}`) }}
+              </span>
+
               <span class="text-sm text-gray-500">
                 {{ comment.updatedAt && comment.updatedAt !== comment.createdAt
                   ? `수정됨 · ${new Date(comment.updatedAt).toLocaleString()}`
@@ -142,7 +147,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { getToken, getUserId } from '@/services/api/auth.js';
+import { getUserInfo, getToken, getUserId } from '@/services/api/auth.js';
 import { getBoardById, deleteBoard } from '@/services/api/board.js';
 // Placeholder for comment API functions - will be properly imported after comment.js migration
 import { getComments, createComment, updateComment, deleteComment } from '@/services/api/comment.js';
@@ -162,6 +167,73 @@ const comments = ref([]);
 const commentContent = ref('');
 const editingCommentId = ref(null);
 const editingContent = ref('');
+
+
+const userName = ref('');
+const isLoadingUser = ref(false);
+
+const commentUserNames = ref({});
+const isLoadingCommentUserMap = ref({});
+
+const fetchUserNamesForComments = async () => {
+  const token = getToken();
+  if (!token || comments.value.length === 0) return;
+
+  const userIdsToFetch = Array.from(
+    new Set(comments.value.map(c => c.userId))
+  ).filter(userId =>
+    !commentUserNames.value[userId] && !isLoadingCommentUserMap.value[userId]
+  );
+
+  if (userIdsToFetch.length === 0) return;
+
+  userIdsToFetch.forEach(id => isLoadingCommentUserMap.value[id] = true);
+
+  try {
+    const results = await Promise.all(
+      userIdsToFetch.map(id =>
+        getUserInfo(id, token).catch(() => null)
+      )
+    );
+
+    const newMap = { ...commentUserNames.value };
+    results.forEach(user => {
+      if (user && user.id && user.userName) {
+        newMap[user.id] = user.userName;
+      }
+    });
+    commentUserNames.value = newMap;
+  } finally {
+    userIdsToFetch.forEach(id => isLoadingCommentUserMap.value[id] = false);
+  }
+};
+
+const fetchCommentsData = async () => {
+  try {
+    const data = await getComments(Number(boardId.value));
+    comments.value = data.filter(comment => !comment.deleted);
+    await fetchUserNamesForComments();  // ← 여기 추가
+  } catch (err) {
+    console.error("댓글 불러오기 실패:", err.message);
+  }
+};
+
+
+
+const fetchUserName = async () => {
+  const token = getToken();
+  if (!token || !board.value?.userId) return;
+
+  isLoadingUser.value = true;
+  try {
+    const userInfo = await getUserInfo(board.value.userId, token);
+    userName.value = userInfo?.userName || '';
+  } catch (err) {
+    console.error("작성자 이름 불러오기 실패:", err.message);
+  } finally {
+    isLoadingUser.value = false;
+  }
+};
 
 
 const boardId = ref(route.params.id); // board_id from route
@@ -209,7 +281,9 @@ const fetchBoardData = async () => {
       isNotFound.value = true;
     } else {
       board.value = fetchedBoard;
-      await fetchCommentsData(); // Fetch comments after board data is loaded
+
+      await fetchUserName();           // ✅ 작성자 이름 가져오기
+      await fetchCommentsData();       // 댓글 불러오기
     }
   } catch (err) {
     error.value = err.message || "게시물 정보를 불러오는 중 오류가 발생했습니다.";
@@ -243,15 +317,6 @@ const handleDeleteBoard = async () => {
   }
 };
 
-const fetchCommentsData = async () => {
-  try {
-    const data = await getComments(Number(boardId.value));
-    comments.value = data.filter(comment => !comment.deleted);
-  } catch (err) {
-    console.error("댓글 불러오기 실패:", err.message);
-    // Optionally set an error state for comments
-  }
-};
 
 const handleCommentSubmit = async () => {
   const token = getToken();
