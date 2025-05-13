@@ -168,16 +168,16 @@ export class AdaptivePlaywrightExecutor {
       // MCP 클라이언트 연결
       await this.mcpClient.connect();
 
-      // 연결 후 잠시 대기 (안정화를 위해)
+      // 연결 후 잠시 대기 (안정화)
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      // 브라우저 시작 - 명시적 옵션 지정
+      // 브라우저 시작
       console.log('브라우저 시작 중...');
       const launchResult = await this.mcpClient.executeAction('browserLaunch', {
         headless: false,
         slowMo: 200, // 작업 사이 지연 시간 증가
         args: [
-          '--start-maximized',
+          '--window-size=1920,1080',
           '--disable-features=site-per-process',
           '--no-sandbox',
           '--disable-web-security',
@@ -451,9 +451,10 @@ private isDialogError(error: any): boolean {
   // 실제 액션 구현
 
   private async handleNavigate(step: TestStep): Promise<void> {
-    const url = step.target || step.value;
+    const url = [step.value, step.target].find((v) => typeof v === 'string' && v.startsWith('http'));
+
     if (!url) {
-      throw new Error('URL이 지정되지 않았습니다.');
+      throw new Error('유효한 URL이 지정되지 않았습니다.');
     }
 
     console.log(`${url}로 이동 중...`);
@@ -463,8 +464,7 @@ private isDialogError(error: any): boolean {
     });
 
     await this.mcpClient.executeAction('pageWaitForLoadState', {
-      page: this.pageId,
-      state: 'networkidle',
+      time: 2,
     });
 
     // 페이지 로딩 대기
@@ -1054,23 +1054,6 @@ private async checkAndHandleDialog(): Promise<boolean> {
         }
       }
 
-      // 디버깅을 위해 처음 몇 개 요소 정보 출력
-      if (elements.length > 0) {
-        console.log('📋 첫 3개 요소 샘플:');
-        for (let i = 0; i < Math.min(3, elements.length); i++) {
-          console.log(
-            `  요소 ${i}: ${elements[i].tagName} - ${
-              elements[i].buttonText ||
-              elements[i].text ||
-              elements[i].placeholder ||
-              elements[i].name ||
-              elements[i].id ||
-              '(텍스트 없음)'
-            }`
-          );
-        }
-      }
-
       return JSON.stringify(
         {
           url,
@@ -1101,10 +1084,11 @@ private async checkAndHandleDialog(): Promise<boolean> {
     snapshot: string
   ): Promise<{ selector?: string; ref?: string | null } | null> {
     try {
-      console.log('🧠 AI에게 요소 분석 요청 중...');
+      console.log('🧠 AI에게 스냅샷 분석 요청중...');
       
       const response = await this.anthropic.messages.create({
         model: 'claude-3-5-haiku-20241022',
+        // model: 'claude-3-haiku-20240307',
         max_tokens: 500,
         messages: [
           {
@@ -1188,13 +1172,13 @@ ${snapshot}
           {
             role: 'user',
             content: `테스트 단계를 분석해주세요:
-- 단계 설명: ${step.description}
-- 액션: ${step.action}
-- 대상: ${step.target || step.value}
-- 결과: ${stepResult.status}
-${stepResult.error ? `- 에러: ${stepResult.error}` : ''}
+            - 단계 설명: ${step.description}
+            - 액션: ${step.action}
+            - 대상: ${step.target || step.value}
+            - 결과: ${stepResult.status}
+            ${stepResult.error ? `- 에러: ${stepResult.error}` : ''}
 
-이 단계의 실행 결과에 대해 간단히 평가해주세요. 실패한 경우 개선 방안을 제시해주세요.`,
+            이 단계의 실행 결과에 대해 간단히 평가해주세요. 실패한 경우 개선 방안을 제시해주세요.`,
           },
         ],
       });
@@ -1219,10 +1203,10 @@ ${stepResult.error ? `- 에러: ${stepResult.error}` : ''}
           {
             role: 'user',
             content: `전체 테스트 결과를 분석해주세요:
-- 총 단계: ${this.testReport.totalSteps}
-- 성공: ${this.testReport.passedSteps}
-- 실패: ${this.testReport.failedSteps}
-- 실행 시간: ${this.testReport.duration}ms
+            - 총 단계: ${this.testReport.totalSteps}
+            - 성공: ${this.testReport.passedSteps}
+            - 실패: ${this.testReport.failedSteps}
+            - 실행 시간: ${this.testReport.duration}ms
 
 각 단계:
 ${this.testReport.steps

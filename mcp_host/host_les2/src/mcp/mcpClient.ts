@@ -66,7 +66,6 @@ async function log(level: LogLevel, ...args: any[]) {
   }
 }
 
-// MCP 도구의 결과를 더 유연하게 타입 정의
 type ContentItem = {
   type: string;
   text?: string;
@@ -99,7 +98,7 @@ const TOOL_MAPPING: Record<string, string> = {
   pageClick: 'browser_click',
   pageFill: 'browser_type',
   pagePress: 'browser_press_key',
-  pageWaitForLoadState: 'browser_wait',
+  pageWaitForLoadState: 'browser_wait_for',
   pageWaitForSelector: 'browser_snapshot', // 직접 wait 기능 없으므로 snapshot으로 대체
   pageEvaluate: 'browser_snapshot', // 별도 evaluate tool 없음
   pageUrl: 'browser_snapshot',
@@ -125,25 +124,21 @@ function mapToolArgs(name: string, args: any): any {
 
   switch (name) {
     case 'browserLaunch':
-      // browser_install은 인자가 필요 없음
       mappedArgs = {};
       break;
 
     case 'browserNewContext':
     case 'contextNewPage':
-      // browser_snapshot은 인자가 필요 없음
       mappedArgs = {};
       break;
 
     case 'pageGoto':
-      // browser_navigate는 url 인자 필요
       mappedArgs = {
         url: args.url,
       };
       break;
 
     case 'pageWaitForLoadState':
-      // browser_wait는 time 인자 필요
       mappedArgs = {
         time: args.timeout ? Math.min(args.timeout / 1000, 10) : 5, // 최대 10초
       };
@@ -157,7 +152,6 @@ function mapToolArgs(name: string, args: any): any {
       break;
 
     case 'pageFill':
-      // browser_type은 text와 submit 인자 필요
       mappedArgs = {
         element: args.element,
         ref: args.ref,
@@ -167,7 +161,6 @@ function mapToolArgs(name: string, args: any): any {
       break;
 
     case 'pagePress':
-      // browser_press_key는 key 인자 필요
       mappedArgs = {
         key: args.key,
       };
@@ -183,18 +176,16 @@ function mapToolArgs(name: string, args: any): any {
     case 'pageWaitForSelector':
       // browser_wait로 대체
       mappedArgs = {
-        time: 3, // 3초 대기
+        time: 3, // 초단위
       };
       break;
 
     case 'pageIsVisible':
-      // browser_snapshot은 인자가 필요 없음
       mappedArgs = {};
       break;
 
     case 'pageClose':
     case 'contextClose':
-      // browser_close는 인자가 필요 없음
       mappedArgs = {};
       break;
 
@@ -349,7 +340,6 @@ export class MCPClient {
       log(LogLevel.INFO, 'Transport를 통해 MCP 서버에 연결 중...');
       await this.client.connect(this.transport);
 
-      // 콘솔에는 간략한 정보만 출력
       console.log('MCP 서버에 성공적으로 연결되었습니다');
 
       log(LogLevel.INFO, 'Playwright MCP 서버에 성공적으로 연결되었습니다');
@@ -386,7 +376,6 @@ export class MCPClient {
     } catch (error) {
       log(LogLevel.ERROR, 'MCP 서버 연결 실패:', error);
 
-      // 콘솔에 오류 표시
       console.error('MCP 서버 연결 실패:', error);
 
       throw error;
