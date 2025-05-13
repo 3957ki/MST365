@@ -1,9 +1,9 @@
 "use client";
 
-import React from 'react'; // Removed useState, useEffect
-import Link from 'next/link'; // Added Link import
-import { UserPostItem } from '../../api/auth'; // Corrected UserPostItem import path
-import './UserPostsList.css';
+import React from "react"; // Removed useState, useEffect
+import Link from "next/link"; // Added Link import
+import { UserPostItem } from "../../api/auth"; // Corrected UserPostItem import path
+import "./UserPostsList.css";
 
 // Define the structure for component props
 interface UserPostsListProps {
@@ -45,45 +45,51 @@ export default function UserPostsList({ posts }: UserPostsListProps) {
       {/* Render list if posts array exists and is not empty */}
       {posts && posts.length > 0 && (
         <ul className="posts-list">
-          {posts.map((post: UserPostItem) => ( // Added type annotation for post
-            <li key={post.id} className="post-item">
-              {/* Link to the post detail page */}
-              <Link href={`/board/${post.id}`} className="post-link">
-                <p className="post-title">{post.title}</p>
-                {/* Use created_at field and format date safely */}
-                <p className="post-meta">
-                  작성일: {(() => {
-                    // Removed debugging console.log
-                    try {
-                      // Use post.createdAt (camelCase)
-                      const datePart = post.createdAt.split('T')[0];
-                      const [year, month, day] = datePart.split('-').map(Number);
+          {posts.map(
+            (
+              post: UserPostItem // Added type annotation for post
+            ) => (
+              <li key={post.id} className="post-item">
+                {/* Link to the post detail page */}
+                <Link href={`/board/${post.id}`} className="post-link">
+                  <p className="post-title">{post.title}</p>
+                  {/* Use created_at field and format date safely */}
+                  <p className="post-meta">
+                    작성일:{" "}
+                    {(() => {
+                      // Removed debugging console.log
+                      try {
+                        // Use post.createdAt (camelCase)
+                        const datePart = post.createdAt.split("T")[0];
+                        const [year, month, day] = datePart
+                          .split("-")
+                          .map(Number);
 
-                      // Create Date object using year, month (0-indexed), day
-                      // Validate parts before creating Date
-                      if (!year || !month || !day) {
-                        throw new Error("Invalid date parts");
-                      }
-                      // Month is 0-indexed (0 = January, 11 = December)
-                      const date = new Date(year, month - 1, day);
+                        // Create Date object using year, month (0-indexed), day
+                        // Validate parts before creating Date
+                        if (!year || !month || !day) {
+                          throw new Error("Invalid date parts");
+                        }
+                        // Month is 0-indexed (0 = January, 11 = December)
+                        const date = new Date(year, month - 1, day);
 
-                      // Check if the date object is valid
-                      if (isNaN(date.getTime())) {
-                         throw new Error("Invalid Date object");
+                        // Check if the date object is valid
+                        if (isNaN(date.getTime())) {
+                          throw new Error("Invalid Date object");
+                        }
+                        // Format date as YYYY. MM. DD
+                        return `${year}. ${month}. ${day}`;
+                      } catch (e) {
+                        // Use post.createdAt in error log
+                        console.error("Error parsing date:", post.createdAt, e);
+                        return "날짜 형식 오류"; // Return error message if parsing fails
                       }
-                      // Format date as YYYY. MM. DD
-                      return `${year}. ${month}. ${day}`;
-                    } catch (e) {
-                      // Use post.createdAt in error log
-                      console.error("Error parsing date:", post.createdAt, e);
-                      return "날짜 형식 오류"; // Return error message if parsing fails
-                    }
-                  })()}
-                </p>
-              </Link>
-              <p className="post-views">조회수: {post.view}</p> {/* Display view count */}
-            </li>
-          ))}
+                    })()}
+                  </p>
+                </Link>
+              </li>
+            )
+          )}
         </ul>
       )}
       {/* Add pagination if needed */}
