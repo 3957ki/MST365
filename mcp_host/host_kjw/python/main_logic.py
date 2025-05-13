@@ -206,23 +206,132 @@ async def _run_scenario(
 
 # Generate single combined HTML report at root of output_dir
 def generate_combined_html_report(
-    results: List[Tuple[int, WebTestResult, List[str]]],
-    output_dir: str,
-    test_start: datetime,
-    test_duration_ms: float
+        results: List[Tuple[int, WebTestResult, List[str]]],
+        output_dir: str,
+        test_start: datetime,
+        test_duration_ms: float
 ):
     build_id = os.path.basename(output_dir)
     total_steps = len(results)
     passed_steps = sum(1 for _, r, _ in results if r.status)
     failed_steps = total_steps - passed_steps
 
-    # HTML 헤더와 summary (기존과 동일)
+    # Inline CSS to embed directly in the HTML
+    css = '''
+/* Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  background: #f9f9f9;
+  color: #333;
+  padding: 20px;
+}
+
+/* 헤더 */
+.header {
+  background: #4a90e2;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+.header h1 {
+  font-size: 1.8rem;
+  margin-bottom: 5px;
+}
+.header p {
+  opacity: 0.9;
+}
+
+/* 요약 */
+.summary {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+.summary div {
+  background: white;
+  padding: 10px 15px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 시나리오 카드 */
+.step {
+  background: white;
+  border-radius: 8px;
+  padding: 15px 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s;
+}
+.step:hover {
+  transform: translateY(-3px);
+}
+.step.success {
+  border-left: 6px solid #28a745;
+}
+.step.failed {
+  border-left: 6px solid #dc3545;
+  background: #fcebea;
+}
+
+/* 서브스텝 */
+.substeps {
+  margin-top: 15px;
+}
+.substep {
+  background: #f7f9fc;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  border-left: 4px solid #777;
+}
+.substep.success {
+  border-color: #28a745;
+}
+.substep.failed {
+  border-color: #dc3545;
+}
+.substep p {
+  margin: 4px 0;
+  font-size: 0.95rem;
+}
+
+/* 스크린샷 갤러리 */
+.screenshots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+.screenshots img {
+  width: calc(33.333% - 10px);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 반응형 */
+@media (max-width: 600px) {
+  .screenshots img {
+    width: 100%;
+  }
+}
+'''
+
+    # Build HTML
     html = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Test Report - {test_start.strftime('%Y-%m-%d %H:%M:%S')}</title>
-    <link rel="stylesheet" href="../../report.css">
+    <style>
+{css}
+    </style>
 </head>
 <body>
     <div class="header">

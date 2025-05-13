@@ -9,7 +9,7 @@
                     <tr>
                         <td>
                             <!-- 뷰로 넘길 파라미터는 전체 폴더명(dirName)을 쓰거나, 숫자(number)를 써도 됩니다 -->
-                            <a href="view?build=${b.dirName}">
+                            <a href="report?build=${b.dirName}">
                                 ${b.displayName}
                             </a>
                         </td>
