@@ -1085,6 +1085,7 @@ private async checkAndHandleDialog(): Promise<boolean> {
   ): Promise<{ selector?: string; ref?: string | null } | null> {
     try {
       console.log('🧠 AI에게 스냅샷 분석 요청중...');
+      console.log(snapshot);
       
       const response = await this.anthropic.messages.create({
         model: 'claude-3-5-haiku-20241022',
@@ -1110,7 +1111,7 @@ ${snapshot}
 \`\`\`json
 {
   "selector": "가장 적합한 선택자 (img, link.. 등등)",
-  "ref": "요소 인덱스 기반 참조 ([ref=s0e5]라면 s0e5)",
+  "ref": "요소 인덱스 기반 참조 ([ref=e5]라면 e5)",
   "confidence": 0.9,
   "reasoning": "이 요소를 선택한 이유"
 }
