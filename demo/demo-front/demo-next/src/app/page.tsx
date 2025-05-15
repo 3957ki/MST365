@@ -15,9 +15,11 @@ export default function Home() {
           />
           <h1 className="text-4xl font-bold text-blue-700">Demo Web</h1>
         </div>
+
         <p className="text-lg text-gray-600 mb-8 font-bold">
           Microsoft Playwright MCP 기본 테스트
         </p>
+        
         <div className="flex justify-center space-x-6">
           <Link
             href="/login"
