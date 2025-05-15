@@ -2,21 +2,83 @@
 
 ## Introduction
 
-이 플러그인은 Jenkins 환경에서 **Playwright MCP**를 활용하여 **대화형 E2E(End-to-End) 자동화 테스트 파이프라인**을 구축하고 실행할 수 있도록 지원합니다.
+This plugin supports building and executing an **E2E (End-to-End) automated test pipeline based on natural language scripts** within the Jenkins environment using **Playwright MCP**.
 
-최근 LLM(Large Language Model) 및 MCP(Model Context Protocol) 기술의 발전과 함께, 전통적인 자동화 테스트 방식을 넘어서는 새로운 가능성이 열리고 있습니다. 본 플러그인은 Microsoft의 강력한 E2E 테스트 도구인 Playwright와 이러한 대화형 기술을 결합하여, 개발자 및 QA 엔지니어가 보다 유연하고 지능적으로 자동화 테스트를 관리하고 실행할 수 있도록 돕습니다.
+With the recent advancements in LLM (Large Language Model) and MCP (Model Context Protocol) technologies, new possibilities are opening up beyond traditional automated testing methods. By combining Microsoft's powerful Playwright E2E test tool with LLMs, this plugin helps developers and QA engineers manage and execute automated tests more flexibly through natural language.
 
-이 플러그인을 사용하면 Jenkins CI/CD 파이프라인 내에서 대화형 테스트 스크립트를 쉽게 통합하고 실행할 수 있으며, LLM을 활용한 테스트 케이스 관리, 실행 결과 분석 등 자동화 테스트 프로세스의 효율성을 크게 향상시킬 수 있습니다. CI/CD에 자동화된 E2E 테스트를 도입하거나 고도화하려는 분들에게 유용합니다.
+Using this plugin, you can easily integrate and execute test scripts within your Jenkins CI/CD pipeline, significantly improving the efficiency of the automated testing process, including management and execution results analysis. It is useful for those looking to introduce or enhance automated E2E testing in their CI/CD pipelines.
 
 ## Getting started
 
-TODO Tell users how to configure your plugin here, include screenshots, pipeline examples and
-configuration-as-code examples.
+### 📦 Prerequisites
+
+The following items must be installed:
+
+- Python 3.12
+- Node.js (latest recommended)
+
+### ⚙️ Environment Setup
+
+- Configure the plugin environment
+
+```bash
+set -e
+
+echo "🔧 Setting up apt sources..."
+echo -e "deb http://deb.debian.org/debian bullseye main\n\
+deb http://security.debian.org/ bullseye-security main\n\
+deb http://deb.debian.org/debian bullseye-updates main" > /etc/apt/sources.list
+
+echo "Running apt update & upgrade..."
+apt update
+apt upgrade -y
+
+echo "Installing Python 3, venv, pip..."
+apt install python3 python3-venv python3-pip -y
+
+echo "Installing Node.js LTS..."
+curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
+apt install -y nodejs
+```
+
+### Create .env File
+
+```
+LLM_PROVIDER={openai or anthropic}
+LLM_MODEL={model to use}
+LLM_API_KEY={API key}
+```
+
+- Supported Models:
+
+**Claude:** claude-3-7-sonnet-latest, claude-3-5-sonnet-latest, claude-3-5-haiku-latest
+**GPT:** gpt-4o, gpt-4o-mini
+
+- The .env file contents (especially LLM_API_KEY) should be registered as Jenkins credentials for secure storage and use within the plugin configuration.
+
+### How to Use the Plugin
+
+- Pipeline Example
+
+```bash
+pipeline {
+  agent any
+  stages {
+    stage('CoreLogic') {
+      steps {
+        // Pass the script title and credentialsId
+        runCoreLogic input: 'script title', envFileCredentialsId: 'credentialsId'
+        echo ">>> CoreLogic was invoked!"
+      }
+    }
+  }
+}
+```
 
 ## Issues
 
-TODO Decide where you're going to host your issues, the default is Jenkins JIRA, but you can also enable GitHub issues,
-If you use GitHub issues there's no need for this section; else add the following line:
+When running Jenkins as a Docker Container, it must be run with Root privileges.
+(Otherwise, normal execution will not be possible.)
 
 Report issues and enhancements in the [Jenkins issue tracker](https://issues.jenkins.io/).
 
