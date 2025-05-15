@@ -27,16 +27,19 @@ export async function login(
   userName: string,
   password: string
 ): Promise<LoginSuccessData> {
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/session`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      user_name: userName,
-      password: password,
-    }),
-  });
+  const response = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/session`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_name: userName,
+        password: password,
+      }),
+    }
+  );
 
   const result = await response.json();
 
@@ -110,14 +113,17 @@ interface LogoutResponse {
 
 // 로그아웃 API 호출 함수
 export async function logout(token: string): Promise<void> {
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/session`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`, // 인증 헤더 추가
-      // DELETE 요청은 보통 Content-Type 불필요
-    },
-    // DELETE 요청은 보통 body 없음
-  });
+  const response = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/session`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`, // 인증 헤더 추가
+        // DELETE 요청은 보통 Content-Type 불필요
+      },
+      // DELETE 요청은 보통 body 없음
+    }
+  );
 
   if (!response.ok) {
     // 로그아웃 실패 시에도 클라이언트에서는 토큰을 제거하는 것이 일반적이지만,
@@ -152,13 +158,16 @@ export async function withdrawUser(
   userId: number,
   token: string
 ): Promise<void> {
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/users/${userId}`, {
-    // 경로 변수 포함
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`, // 인증 헤더 추가
-    },
-  });
+  const response = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/api/v1/users/${userId}`,
+    {
+      // 경로 변수 포함
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`, // 인증 헤더 추가
+      },
+    }
+  );
 
   if (!response.ok) {
     // 실패 시 에러 처리 (401, 403, 404, 500 등)
@@ -202,18 +211,21 @@ export async function changePassword(
   token: string
 ): Promise<void> {
   // 성공 시 반환값 없음
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/users/change-password`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`, // 인증 헤더 추가
-    },
-    body: JSON.stringify({
-      current_password: currentPassword, // snake_case 필드 이름 사용
-      new_password: newPassword,
-      new_password_confirm: newPasswordConfirm,
-    } as PasswordChangeRequest), // 타입 명시
-  });
+  const response = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/api/v1/users/change-password`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // 인증 헤더 추가
+      },
+      body: JSON.stringify({
+        current_password: currentPassword, // snake_case 필드 이름 사용
+        new_password: newPassword,
+        new_password_confirm: newPasswordConfirm,
+      } as PasswordChangeRequest), // 타입 명시
+    }
+  );
 
   if (!response.ok) {
     // 실패 시 에러 처리 (400, 401, 500 등)
@@ -265,12 +277,15 @@ export async function getUserInfo(
   userId: number,
   token: string
 ): Promise<UserInfoData> {
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/users/${userId}`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`, // 인증 헤더 추가
-    },
-  });
+  const response = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/api/v1/users/${userId}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`, // 인증 헤더 추가
+      },
+    }
+  );
 
   if (!response.ok) {
     // 실패 시 에러 처리 (401, 403, 404, 500 등)
@@ -303,7 +318,6 @@ export interface UserPostItem {
   id: number;
   user_id: number; // 백엔드 응답 필드명 확인 (user_id vs userId) - API 명세에 따라 user_id 사용 (이것도 확인 필요)
   title: string;
-  view: number;
   createdAt: string; // 필드명을 createdAt (camelCase)으로 수정
 }
 
@@ -319,12 +333,15 @@ export async function getUserPosts(
   userId: number,
   token: string
 ): Promise<UserPostItem[]> {
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/users/${userId}/boards`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`, // 인증 헤더 추가
-    },
-  });
+  const response = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/api/v1/users/${userId}/boards`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`, // 인증 헤더 추가
+      },
+    }
+  );
 
   const result = await response.json();
 
@@ -374,12 +391,15 @@ export async function getUserComments(
   userId: number,
   token: string
 ): Promise<UserCommentItem[]> {
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/users/${userId}/comments`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`, // 인증 헤더 추가
-    },
-  });
+  const response = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/api/v1/users/${userId}/comments`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`, // 인증 헤더 추가
+      },
+    }
+  );
 
   const result = await response.json();
 
@@ -421,19 +441,22 @@ export async function signup(
   userName: string,
   password: string
 ): Promise<SignupResponse> {
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/register`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      // 회원가입 요청 시 필드 이름 확인 필요 (userName vs user_name)
-      // 이전 요청에서 user_name을 사용했으므로 일관성을 위해 user_name 사용
-      // 만약 오류 발생 시 userName으로 변경 시도 필요
-      user_name: userName,
-      password: password,
-    }),
-  });
+  const response = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/register`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        // 회원가입 요청 시 필드 이름 확인 필요 (userName vs user_name)
+        // 이전 요청에서 user_name을 사용했으므로 일관성을 위해 user_name 사용
+        // 만약 오류 발생 시 userName으로 변경 시도 필요
+        user_name: userName,
+        password: password,
+      }),
+    }
+  );
 
   const result = await response.json();
 

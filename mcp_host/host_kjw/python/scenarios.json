@@ -2,7 +2,7 @@
   "title": "test1",
   "scenarios": [
     {
-      "title": "로그인 테스트",
+      "title": "유튜브 테스트",
       "steps": [
         "https://k12s111.p.ssafy.io 에 접속한다.",
         "로그인 버튼을 누른다.",

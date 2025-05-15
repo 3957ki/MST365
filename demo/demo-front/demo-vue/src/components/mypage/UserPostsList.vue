@@ -10,7 +10,6 @@
             작성일: {{ formatDate(post.createdAt) }}
           </p>
         </router-link>
-        <p class="text-sm text-gray-500">조회수: {{ post.view }}</p>
       </li>
     </ul>
   </div>

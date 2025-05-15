@@ -93,8 +93,6 @@ export default function UserPostsList({ posts }: UserPostsListProps) {
                     })()}
                   </p>
                 </Link>
-                <p className="text-sm text-gray-500">조회수: {post.view}</p>{" "}
-                {/* Display view count */}
               </li>
             )
           )}

@@ -6,7 +6,7 @@
         <th class="border p-2">제목</th>
         <th class="border p-2 w-32">작성자</th>
         <th class="border p-2 w-32">작성일</th>
-        <th class="border p-2 w-20">조회수</th>
+        
       </tr>
     </thead>
     <tbody>
@@ -26,7 +26,7 @@
         <td class="border p-2 text-center">
           {{ formatDate(board.createdAt) }}
         </td>
-        <td class="border p-2 text-center">{{ board.view }}</td>
+        
       </tr>
     </tbody>
   </table>

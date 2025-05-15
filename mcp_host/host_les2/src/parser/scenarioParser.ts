@@ -26,7 +26,8 @@ export class ScenarioParser {
       messages: [
         {
           role: 'user',
-          content: `다음 테스트 시나리오를 분석하여 구체적인 테스트 단계로 변환해주세요. 각 단계는 다음 형식으로 반환해주세요:
+          content: `다음 테스트 시나리오를 분석하여 구체적인 테스트 단계로 변환해주세요.
+JSON 배열 형식으로, 다른 설명 없이 이 형식으로만 응답해주세요:
 
 {
   "action": "액션 타입 (navigate, click, fill, etc.)",

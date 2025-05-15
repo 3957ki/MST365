@@ -91,13 +91,12 @@ const BoardTable: React.FC<BoardTableProps> = ({ boards, token }) => {
           <th className="table-header-cell">제목</th>
           <th className="table-header-cell-author">작성자</th> {/* 작성자 ID -> 작성자 */}
           <th className="table-header-cell-date">작성일</th>
-          <th className="table-header-cell-views">조회수</th>
         </tr>
       </thead>
       <tbody>
         {boards.length === 0 ? (
           <tr>
-            <td colSpan={5} className="no-posts-cell">
+            <td colSpan={4} className="no-posts-cell">
               작성된 게시글이 없습니다. {/* 메시지 수정 */}
             </td>
           </tr>
@@ -117,8 +116,6 @@ const BoardTable: React.FC<BoardTableProps> = ({ boards, token }) => {
                 {formatDate(board.createdAt)}
               </td>
               {/* createdAt 포맷팅 */}
-              <td className="table-body-cell">{board.view}</td>{" "}
-              {/* views -> view */}
             </tr>
           ))
         )}

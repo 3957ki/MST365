@@ -395,7 +395,11 @@ class PageSnapshot {
   }
   async _snapshotFrame(frame) {
     const frameIndex = this._frameLocators.push(frame) - 1;
-    const snapshotString = await frame.locator("body").ariaSnapshot({ ref: true, emitGeneric: true });
+    const snapshotString = await frame.locator("body").ariaSnapshot({
+      ref: true,
+      emitGeneric: false,
+      includeHidden: false,
+    });
     const snapshot = yaml_1.default.parseDocument(snapshotString);
     const visit = async (node) => {
       if (yaml_1.default.isPair(node)) {

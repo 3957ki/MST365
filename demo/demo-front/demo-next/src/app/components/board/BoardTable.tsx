@@ -70,12 +70,14 @@ const BoardTable: React.FC<BoardTableProps> = ({ boards, token }) => {
       if (isNaN(date.getTime())) {
         return "유효하지 않은 날짜";
       }
-      return date.toLocaleDateString("ko-KR", {
-        // 한국 시간 기준 및 형식
-        year: "numeric", // 중복 제거
-        month: "2-digit",
-        day: "2-digit",
-      }).replace(/\.$/, ''); // 마지막 점 제거
+      return date
+        .toLocaleDateString("ko-KR", {
+          // 한국 시간 기준 및 형식
+          year: "numeric", // 중복 제거
+          month: "2-digit",
+          day: "2-digit",
+        })
+        .replace(/\.$/, ""); // 마지막 점 제거
     } catch (error) {
       console.error("Error formatting date:", error);
       return "날짜 형식 오류"; // 오류 발생 시 대체 텍스트
@@ -88,15 +90,14 @@ const BoardTable: React.FC<BoardTableProps> = ({ boards, token }) => {
         <tr>
           <th className="border p-2 w-16">번호</th>
           <th className="border p-2">제목</th>
-          <th className="border p-2 w-32">작성자</th> {/* 작성자 ID -> 작성자 */}
+          <th className="border p-2 w-32">작성자</th>
           <th className="border p-2 w-32">작성일</th>
-          <th className="border p-2 w-20">조회수</th>
         </tr>
       </thead>
       <tbody>
         {boards.length === 0 ? (
           <tr>
-            <td colSpan={5} className="text-center p-4 border">
+            <td colSpan={4} className="text-center p-4 border">
               작성된 게시글이 없습니다. {/* 메시지 수정 */}
             </td>
           </tr>
@@ -116,8 +117,6 @@ const BoardTable: React.FC<BoardTableProps> = ({ boards, token }) => {
                 {formatDate(board.createdAt)}
               </td>
               {/* createdAt 포맷팅 */}
-              <td className="border p-2 text-center">{board.view}</td>{" "}
-              {/* views -> view */}
             </tr>
           ))
         )}
