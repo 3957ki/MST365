@@ -130,7 +130,9 @@ function mapToolArgs(name: string, args: any): any {
 
     case 'browserNewContext':
     case 'contextNewPage':
-      mappedArgs = {};
+      mappedArgs = {
+        incognito: true,
+      };
       break;
 
     case 'pageGoto':
@@ -141,7 +143,7 @@ function mapToolArgs(name: string, args: any): any {
 
     case 'pageWaitForLoadState':
       mappedArgs = {
-        time: args.timeout ? Math.min(args.timeout / 1000, 10) : 5, // 최대 10초
+        time: args.timeout ? Math.min(args.timeout / 1000, 10) : 0.5,
       };
       break;
 
@@ -172,7 +174,7 @@ function mapToolArgs(name: string, args: any): any {
     case 'pageWaitForSelector':
       // browser_wait로 대체
       mappedArgs = {
-        time: 3, // 초단위
+        time: 1, // 초단위
       };
       break;
 
@@ -329,7 +331,7 @@ export class MCPClient {
       });
 
       // 프로세스가 시작되기를 잠시 기다림
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       this.transport = new StdioClientTransport({
         command: npm,
@@ -418,15 +420,84 @@ async executeAction(action: string, args: any): Promise<ToolResult> {
     throw new Error(errorMsg);
   }
 
+  // 선제적으로 대화 상자가 나타날 가능성이 있는 액션 리스트
+  const actionsThatMightShowDialog = ['pageClick', 'pageFill', 'pagePress', 'pageGoto'];
+  
   try {
     // MCP 클라이언트 호출
-    console.log(mappedAction);
-    const result = await this.client.callTool({
-      name: mappedAction,
-      arguments: mappedArgs,
-    });
-
-    console.log('여기까지는 옴');
+    // console.log(mappedAction);
+    
+    // 결과를 저장할 변수를 미리 선언 (타입 충돌 방지)
+    let result: any;
+    
+    // 선제적 대화 상자 처리 설정 (click, fill, press 등 상호작용 액션의 경우)
+    if (actionsThatMightShowDialog.includes(action)) {
+      log(LogLevel.INFO, `${action} 액션이 대화 상자를 표시할 수 있어 타임아웃 로직을 적용합니다.`);
+      
+      // 1. 타임아웃 Promise 설정 (5초)
+      let completed = false;
+      const timeoutPromise = new Promise<any>((_, reject) => {
+        setTimeout(() => {
+          if (!completed) {
+            log(LogLevel.WARN, '도구 호출 타임아웃. 대화 상자가 활성화되었을 수 있습니다.');
+            reject(new Error('도구 호출 타임아웃.'));
+          }
+        }, 5000);
+      });
+      
+      // 2. 실제 도구 호출 Promise
+      const toolCallPromise = new Promise<any>(async (resolve) => {
+        try {
+          const toolResult = await this.client.callTool({
+            name: mappedAction,
+            arguments: mappedArgs,
+          });
+          completed = true;
+          resolve(toolResult);
+        } catch (error) {
+          completed = true;
+          throw error;
+        }
+      });
+      
+      // 3. Promise.race로 어느 것이 먼저 끝나는지 확인
+      try {
+        result = await Promise.race([toolCallPromise, timeoutPromise]);
+      } catch (error) {
+        // 타임아웃이나 오류 발생 시 대화 상자 처리 시도
+        log(LogLevel.WARN, '액션 실행 중 타임아웃 또는 오류 발생. 대화 상자 처리 시도:', error);
+        
+        try {
+          // 브라우저 대화 상자 처리 시도
+          await this.client.callTool({
+            name: 'browser_handle_dialog',
+            arguments: {
+              accept: true
+            }
+          });
+          
+          log(LogLevel.INFO, '대화 상자 처리 완료. 액션을 계속 진행합니다.');
+          
+          // 대화 상자 처리 후 원래 액션 결과 반환 (이미 수행된 작업의 영향으로 상태가 변경되었을 수 있음)
+          return {
+            content: [{ 
+              type: 'text', 
+              text: '대화 상자 처리 완료 후 계속 진행' 
+            }]
+          };
+        } catch (dialogError) {
+          log(LogLevel.ERROR, '대화 상자 처리 실패:', dialogError);
+          // 대화 상자 처리에 실패해도 계속 진행 (원래 에러 다시 발생시킴)
+          throw error;
+        }
+      }
+    } else {
+      // 대화 상자를 발생시킬 가능성이 낮은 액션인 경우 일반적으로 처리
+      result = await this.client.callTool({
+        name: mappedAction,
+        arguments: mappedArgs,
+      });
+    }
 
     // 디버그 정보 로깅
     if (action === 'pageSnapshot') {
@@ -457,11 +528,16 @@ async executeAction(action: string, args: any): Promise<ToolResult> {
           ? error.message 
           : JSON.stringify(error);
 
-    // 모달 대화 상자 감지 로직 개선
+    // 모달 대화 상자 감지 로직 개선 - 더 많은 패턴 추가
     const maybeModal = 
       errMsg.includes('does not handle the modal state') || 
       errMsg.includes('can be handled by the "browser_handle_dialog" tool') ||
-      errMsg.includes('dialog'); // 추가: dialog 관련 오류 포착
+      errMsg.includes('dialog') ||
+      errMsg.includes('timeout') ||
+      errMsg.includes('타임아웃') ||
+      errMsg.includes('alert') ||
+      errMsg.includes('confirm') ||
+      errMsg.includes('prompt');
 
     if (maybeModal) {
       console.warn('⚠️ Modal dialog 감지됨. 자동 처리 시도...');
@@ -469,9 +545,9 @@ async executeAction(action: string, args: any): Promise<ToolResult> {
       try {
         // 대화 상자 처리 - 도구 목록에 맞게 직접 호출
         await this.client.callTool({
-          name: 'browser_handle_dialog', // 직접 도구 이름 사용
+          name: 'browser_handle_dialog',
           arguments: {
-            accept: true // 대화 상자 수락
+            accept: true
           }
         });
         
@@ -480,20 +556,26 @@ async executeAction(action: string, args: any): Promise<ToolResult> {
         // 대화 상자 처리 후 잠시 대기 (페이지 상태 안정화)
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // 중요: 대화 상자가 성공적으로 처리되면 성공으로 간주
-        return {
-          content: [{ 
-            type: 'text', 
-            text: '대화 상자 처리 완료 (성공)' 
-          }]
-        };
+        // 액션에 따라 처리 방법 결정
+        if (actionsThatMightShowDialog.includes(action)) {
+          // 이미 액션이 수행되었을 수 있으므로 다시 시도하지 않고 성공으로 간주
+          return {
+            content: [{ 
+              type: 'text', 
+              text: '대화 상자 처리 완료 (성공)' 
+            }]
+          };
+        } else {
+          // 다른 유형의 액션인 경우 다시 시도
+          console.log('대화 상자 처리 후 액션 재시도 중...');
+          return await this.executeAction(action, args);
+        }
       } catch (dialogErr) {
         // 대화 상자 처리 실패 시 원래 오류 외에 추가 정보 기록
         log(LogLevel.ERROR, '❌ 대화 상자 처리 실패:', dialogErr);
         console.error('❌ 대화 상자 처리 실패:', dialogErr);
         
         // 에러를 throw하는 대신 가능한 경우 계속 진행
-        // 대화 상자가 자동으로 닫혔을 수 있으므로
         return {
           content: [{ 
             type: 'text', 
