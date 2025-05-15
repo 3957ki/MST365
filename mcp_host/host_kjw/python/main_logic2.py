@@ -19,6 +19,7 @@ from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 import re
 import shutil
+import time
 
 # Pydantic models for parsing AI output
 class FailedStep(BaseModel):
@@ -48,29 +49,39 @@ output_parser = PydanticOutputParser(pydantic_object=WebTestResult)
 
 # System prompt template
 system_prompt = """\
-너는 아래 시나리오를 테스트하는 AI야.
-각 스텝에서 시키는 대로 행동하고, 실패한 스텝과 이유를 한글로 기록해.
-스텝에서 시키는 대로 할 수 없거나, 시킨 대로 한 결과가 이상하면 실패로 처리해.
+너는 웹 테스트 시나리오를 수행하는 AI야.
 
-특히 스크린샷을 캡쳐할 땐 반드시 snapshot을 먼저 만들어야 해.
-즉, navigate 이후 바로 take_screenshot을 실행하면 안 되고,
-반드시 snapshot → take_screenshot 순서로 실행해야 해.
+- 각 스텝에서 지시한 행동을 **순서대로 정확히** 수행해야 해.
+- 지시에 맞게 행동할 수 없거나, 결과가 예상과 다르거나 이상하면 그 스텝은 **실패로 처리**해. 실패한 이유는 **한글로 명확히 설명**해야 해.
+- 테스트 중 브라우저 화면을 캡처해야 할 경우, 반드시 `browser_take_screenshot` 툴만 사용해야 해.
+  - `browser_snapshot` 툴은 사용하지 마.
+  - 캡처는 **지금 브라우저 화면에 보이는 그대로** 찍는 거야.
 
-모든 스텝이 끝난 뒤엔 전체 피드백을 주고, 반드시 아래 형식 그대로 응답해야 해.
+- **브라우저 종료 주의사항**:
+  - 시나리오에 **명시적으로 브라우저를 닫으라는 지시가 있는 경우에만** `browser_close` 툴을 사용해야 해.
+  - 그렇지 않으면 **절대로 `browser_close`를 호출하지 마.**
 
-최종 JSON은 반드시 아래처럼 **```json 코드블럭 안에만** 포함시켜야 해.
-다른 설명은 JSON 블럭 바깥에 써도 되지만, JSON 그 자체는 무조건 ```json 으로 감싸야 해.
+- AI Output Message에서 tool을 사용한다면 **무조건 한번에 하나의 tool**만 사용해야해.
+- 모든 테스트 스텝이 끝난 후에는 **전체적인 피드백**을 제공해.
+- 시나리오를 진행하던 중에 스텝에서 **실패**가 발생한다면, 해당 시나리오의 결과는 **실패**가 되어야 해.
+- 실패를 했다면 시나리오 피드백에 어떤 스텝에서 어떻게 실패했는지 자세하게 피드백을 작성해야 해. 
+---
 
-# — 여기에 추가 —
-# JSON 안에 “steps” 배열을 포함해주세요.
-# 각 원소는 다음 필드를 가져야 합니다:
+### 출력 형식 (아래 지침을 반드시 따를 것):
+
+1. 최종 응답은 **무조건 JSON 코드블록 안에 포함**되어야 해. 반드시 아래와 같은 형식으로 출력해:
+   - JSON 블록은 **```json** 으로 시작하고 **```** 으로 끝나야 해.
+   - JSON 바깥에 다른 텍스트를 출력해도 되지만, JSON 내부는 절대 수정하지 말고 포맷만 유지해.
+
+2. JSON에는 아래 항목이 반드시 포함되어야 해:
 #  1) num: 스텝 순서 (정수)
 #  2) action: 수행한 스텝 지시문 (문자열)
 #  3) status: 성공이면 true, 실패면 false (불리언)
 #  4) duration: 해당 스텝 수행 시간(단위: 초, 실수)
 #  5) feedback: 스텝 별 피드백 (문자열)
 #  6) fail: 실패 시 사유(문자열), 성공 시 null
-#
+
+테스트 시나리오를 충실하게 실행한 후, 아래 포맷대로 응답해.
 {format_instructions}
 """
 
@@ -196,11 +207,24 @@ async def _run_scenario(
     index: int,
     output_dir: str
 ) -> Tuple[int, WebTestResult, List[str]]:
+
+    # 시나리오 시작 시각 측정
+    scenario_start = time.perf_counter()
+
     scenario_dir = os.path.join(output_dir, f"{index}")
     screenshot_dir = os.path.join(scenario_dir, 'screenshots')
     os.makedirs(screenshot_dir, exist_ok=True)
 
+    # AI 호출 및 결과 저장
     result, screenshots = await _run_logic(agent, scenario.get('steps', []), screenshot_dir)
+
+    # 시나리오 종료 시각 측정 및 duration 덮어쓰기
+    scenario_end = time.perf_counter()
+    result.duration = scenario_end - scenario_start
+
+    # AI가 준 title 대신, 실제 시나리오의 title 사용
+    result.title = scenario.get("title", "")
+
     save_result(scenario, result, screenshots, scenario_dir)
     return index, result, screenshots
 
@@ -265,12 +289,10 @@ body {
   background: white;
   border-radius: 8px;
   padding: 15px 20px;
+  margin-top: 15px;
   margin-bottom: 25px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s;
-}
-.step:hover {
-  transform: translateY(-3px);
 }
 .step.success {
   border-left: 6px solid #28a745;
@@ -336,8 +358,8 @@ body {
 <body>
     <div class="header">
         <h1>테스트 실행 보고서</h1>
-        <p>실행 시간: {test_start.strftime('%Y-%m-%d %H:%M:%S')}</p>
-        <p>소요 시간: {int(test_duration_ms)}ms</p>
+        <p>실행 시각: {test_start.strftime('%Y-%m-%d %H:%M:%S')}</p>
+        <p>소요 시간: {test_duration_ms/1000:.2f}s</p>
     </div>
     
     <div class="summary">
@@ -376,7 +398,7 @@ body {
             sc = "success" if step.status else "failed"
             html += f"""                <div class="substep {sc}">
                     <p><strong>Step {step.num}:</strong> {step.action}</p>
-                    <p>상태: {'✅ 성공' if step.status else '❌ 실패'} | 시간: {step.duration:.2f}s</p>
+                    <p>상태: {'✅ 성공' if step.status else '❌ 실패'}</p>
                     <p>피드백: {step.feedback}</p>
             """
             if step.fail:
