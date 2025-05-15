@@ -109,10 +109,10 @@ def extract_json_from_message(msg: AIMessage) -> str:
 
 # Save JSON result per scenario
 def save_result(
-        scenario: dict,
-        result: WebTestResult,
-        screenshots: List[str],
-        scenario_dir: str
+    scenario: dict,
+    result: WebTestResult,
+    screenshots: List[str],
+    scenario_dir: str
 ):
     payload = {
         "title": scenario.get("title", ""),
@@ -127,16 +127,16 @@ def save_result(
 
 # Core logic: run steps and collect results
 def run_logic(
-        agent,
-        steps: List[str],
-        screenshot_dir: str
+    agent,
+    steps: List[str],
+    screenshot_dir: str
 ) -> asyncio.Task[Tuple[WebTestResult, List[str]]]:
     return asyncio.create_task(_run_logic(agent, steps, screenshot_dir))
 
 async def _run_logic(
-        agent,
-        steps: List[str],
-        screenshot_dir: str
+    agent,
+    steps: List[str],
+    screenshot_dir: str
 ) -> Tuple[WebTestResult, List[str]]:
     response = await agent.ainvoke(
         {"messages":[
@@ -183,18 +183,18 @@ async def _run_logic(
 
 # Execute a single scenario
 def run_scenario(
-        agent,
-        scenario: dict,
-        index: int,
-        output_dir: str
+    agent,
+    scenario: dict,
+    index: int,
+    output_dir: str
 ) -> asyncio.Task[Tuple[int, WebTestResult, List[str]]]:
     return asyncio.create_task(_run_scenario(agent, scenario, index, output_dir))
 
 async def _run_scenario(
-        agent,
-        scenario: dict,
-        index: int,
-        output_dir: str
+    agent,
+    scenario: dict,
+    index: int,
+    output_dir: str
 ) -> Tuple[int, WebTestResult, List[str]]:
     scenario_dir = os.path.join(output_dir, f"{index}")
     screenshot_dir = os.path.join(scenario_dir, 'screenshots')
@@ -209,8 +209,7 @@ def generate_combined_html_report(
         results: List[Tuple[int, WebTestResult, List[str]]],
         output_dir: str,
         test_start: datetime,
-        test_duration_ms: float,
-        test_id: str
+        test_duration_ms: float
 ):
     build_id = os.path.basename(output_dir)
     total_steps = len(results)
@@ -370,7 +369,7 @@ body {
                 html += f"                <li>Step {fs.num}: {fs.message}</li>\n"
             html += "            </ul></div>\n"
 
-        # **스텝 별 substep 출력 추가**
+        # **스텝 별 substep 출력 추가**  
         html += "            <div class='substeps'>\n"
         html += "                <h4>세부 스텝 결과</h4>\n"
         for step in res.steps:
@@ -385,15 +384,9 @@ body {
             html += "                </div>\n"
         html += "            </div>\n"
 
-        # 스크린샷 출력 (수정)
+        # 스크린샷 출력 (기존)
         for img in screenshots:
-            # build 변수는 report 호출 시 사용된 build ID 문자열
-            # idx 는 현재 시나리오 번호 (1부터)
-            html += (
-                f'            <img class="screenshot" '
-                f'src="screenshot?build={test_id}&scenario={idx}&file={img}" '
-                f'alt="Screenshot"/>\n'
-            )
+            html += f'            <img class="screenshot" src="{idx}/screenshots/{img}" alt="Screenshot"/>\n'
 
         html += "        </div>\n"  # 시나리오 블록 닫기
 
@@ -405,12 +398,12 @@ body {
 
 # Main test runner
 async def run_test(
-        scenarios: List[dict],
-        build_num: int,
-        base_dir: str,
-        provider: str,
-        llm_model: str,
-        api_key: str
+    scenarios: List[dict],
+    build_num: int,
+    base_dir: str,
+    provider: str,
+    llm_model: str,
+    api_key: str
 ):
     test_start = datetime.now()
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
@@ -443,7 +436,7 @@ async def run_test(
     # Generate one single HTML report
     test_end = datetime.now()
     duration_ms = (test_end - test_start).total_seconds() * 1000
-    generate_combined_html_report(results, output_dir, test_start, duration_ms, test_id)
+    generate_combined_html_report(results, output_dir, test_start, duration_ms)
     print(f"모든 테스트 완료: {output_dir}/report.html")
 
 # Entry point

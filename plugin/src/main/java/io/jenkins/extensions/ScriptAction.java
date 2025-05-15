@@ -19,7 +19,7 @@ import java.util.*;
 
 @Extension
 public class ScriptAction implements RootAction {
-    @Override public String getIconFileName() { return "script.gif"; }
+    @Override public String getIconFileName() { return "clipboard.png"; }
     @Override public String getDisplayName()    { return "Scripts"; }
     @Override public String getUrlName()        { return "scripts"; }
 
