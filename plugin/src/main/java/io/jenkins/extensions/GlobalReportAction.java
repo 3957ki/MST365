@@ -1,11 +1,15 @@
 package io.jenkins.extensions;
 
 import hudson.Extension;
+import hudson.FilePath;
+import hudson.model.DirectoryBrowserSupport;
 import hudson.model.RootAction;
 import io.jenkins.extensions.dto.BuildEntry;
 import io.jenkins.extensions.dto.ReportDetail;
 import jenkins.model.Jenkins;
+import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
+import hudson.util.HttpResponses;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +20,7 @@ import java.util.*;
 import java.util.Base64;
 
 import net.sf.json.JSONObject;
+import org.kohsuke.stapler.StaplerRequest;
 
 @Extension
 public class GlobalReportAction implements RootAction {
@@ -123,4 +128,42 @@ public class GlobalReportAction implements RootAction {
         return "data:image/png;base64," + Base64.getEncoder().encodeToString(bytes);
     }
 
+    /**
+     * report.html 파일을 그대로 내려주는 Stapler 엔드포인트
+     * URL: /jenkins/mcp-reports/report?build=<빌드폴더명>
+     */
+    public HttpResponse doReport(@QueryParameter String build) throws IOException {
+        File html = new File(
+                Jenkins.get().getRootDir(),
+                "results" + File.separator + build + File.separator + "report.html"
+        );
+        // ── 디버깅 로그 ─────────────────────────────
+        System.out.println("[GlobalReportAction] Looking for report at: "
+                + html.getAbsolutePath()
+                + " (exists=" + html.exists() + ", readable=" + html.canRead() + ")");
+        // ─────────────────────────────────────────────
+        if (!html.exists()) {
+            return HttpResponses.error(404, "report.html not found for build: " + build);
+        }
+        return HttpResponses.staticResource(html);
+    }
+
+    /**
+     * screenshot 이미지를 서빙.
+     * URL: /mcp-reports/screenshot?build={build}&scenario={scenario}&file={file}
+     */
+    public HttpResponse doScreenshot(
+            @QueryParameter("build") String build,
+            @QueryParameter("scenario") String scenario,
+            @QueryParameter("file") String fileName
+    ) throws IOException {
+        File img = new File(
+                Jenkins.get().getRootDir(),
+                "results/" + build + "/" + scenario + "/screenshots/" + fileName
+        );
+        if (!img.isFile()) {
+            return HttpResponses.error(404, "Screenshot not found");
+        }
+        return HttpResponses.staticResource(img);
+    }
 }
