@@ -63,6 +63,7 @@ system_prompt = """
   - 근데 step에서 스냅샷을 찍으라고 명시했다면 browser_snapshot 툴을 사용해.
   
 - browser_type을 호출하는 경우 parameter로 exact는 넣지 마.
+- 요소를 확인하는 step은 snapshot 정보를 활용해서 확인해.
 
 - **브라우저 종료 주의사항**:
   - 시나리오에 **명시적으로 브라우저를 닫으라는 지시가 있는 경우에만** `browser_close` 툴을 사용해야 해.
