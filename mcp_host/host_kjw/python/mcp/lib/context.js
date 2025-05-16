@@ -164,13 +164,10 @@ class Context {
       };
     }
     const tab = this.currentTabOrDie();
-    // TODO: race against modal dialogs to resolve clicks.
     let actionResult;
     try {
-      if (waitForNetwork)
-        actionResult =
-          (await (0, utils_1.waitForCompletion)(this, tab.page, async () => racingAction?.())) ?? undefined;
-      else actionResult = (await racingAction?.()) ?? undefined;
+      // Always execute the action without waiting for network completion
+      actionResult = (await racingAction?.()) ?? undefined;
     } finally {
       if (captureSnapshot && !this._javaScriptBlocked()) await tab.captureSnapshot();
     }
@@ -217,7 +214,7 @@ ${code.join("\n")}
     };
     let result;
     try {
-      await Promise.race([action().then((r) => (result = r)), this._pendingAction.dialogShown]);
+      result = await action();
     } finally {
       this._pendingAction = undefined;
     }
@@ -235,7 +232,6 @@ ${code.join("\n")}
       },
       tab
     );
-    this._pendingAction?.dialogShown.resolve();
   }
   _onPageCreated(page) {
     const tab = new Tab(this, page, (tab) => this._onPageClosed(tab));
@@ -270,9 +266,12 @@ ${code.join("\n")}
       this._browserContext = context.browserContext;
       for (const page of this._browserContext.pages()) this._onPageCreated(page);
       this._browserContext.on("page", (page) => {
-        page.on("dialog", async (dialog) => {
+        page.on("dialog", (dialog) => {
           console.log(`Dialog detected: ${dialog.type()} - ${dialog.message()}`);
-          await dialog.accept();
+          this.dialogShown(
+            this._tabs.find((tab) => tab.page === page),
+            dialog
+          );
         });
         this._onPageCreated(page);
       });
@@ -339,9 +338,9 @@ class Tab {
         this
       );
     });
-    page.on("dialog", async (dialog) => {
+    page.on("dialog", (dialog) => {
       console.log(`Dialog detected: ${dialog.type()} - ${dialog.message()}`);
-      await dialog.accept();
+      this.context.dialogShown(this, dialog);
     });
     page.setDefaultNavigationTimeout(60000);
     page.setDefaultTimeout(5000);
