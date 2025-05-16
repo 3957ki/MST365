@@ -11,14 +11,18 @@ import demo.demo_back.repository.CommentRepository;
 import demo.demo_back.repository.UserRepository;
 import demo.demo_back.service.CommentService;
 
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 댓글(Comment) 관련 서비스 구현체.
+ * 댓글 작성, 수정, 삭제, 조회 등의 기능을 제공합니다.
+ */
 @Service
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
@@ -27,6 +31,9 @@ public class CommentServiceImpl implements CommentService {
     private final BoardRepository boardRepository;
     private final UserRepository userRepository;
 
+    /**
+     * 댓글 생성
+     */
     @Override
     public CommentResponseDto createComment(Long boardId, Long userId, String content) {
         Board board = boardRepository.findById(boardId)
@@ -43,19 +50,21 @@ public class CommentServiceImpl implements CommentService {
                 .build();
 
         Comment saved = commentRepository.save(comment);
-
         return toDto(saved);
     }
 
+    /**
+     * 게시글 기준 댓글 목록 조회
+     */
     @Override
     public List<CommentResponseDto> getCommentsByBoardId(Long boardId) {
         List<Comment> comments = commentRepository.findByBoard_IdAndIsDeletedFalseOrderByCreatedAtAsc(boardId);
-
-        return comments.stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+        return comments.stream().map(this::toDto).collect(Collectors.toList());
     }
 
+    /**
+     * 댓글 수정
+     */
     @Override
     public CommentResponseDto updateComment(Long boardId, Long commentId, Long userId, String newContent) {
         boardRepository.findById(boardId)
@@ -74,6 +83,9 @@ public class CommentServiceImpl implements CommentService {
         return toDto(commentRepository.save(comment));
     }
 
+    /**
+     * 댓글 삭제 (Soft delete)
+     */
     @Override
     public void deleteComment(Long boardId, Long commentId, Long userId) {
         boardRepository.findById(boardId)
@@ -91,19 +103,19 @@ public class CommentServiceImpl implements CommentService {
         commentRepository.save(comment);
     }
 
+    /**
+     * 사용자 기준 댓글 목록 조회 (삭제된 게시글 제외)
+     */
     @Override
     @Transactional(readOnly = true)
     public List<CommentResponseDto> getCommentsByUserId(Long userId) {
-        List<Comment> comments = commentRepository
-                .findByUserIdAndIsDeletedFalseAndBoard_IsDeletedFalse(userId); // 게시글까지 고려
-
-        return comments.stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+        List<Comment> comments = commentRepository.findByUserIdAndIsDeletedFalseAndBoard_IsDeletedFalse(userId);
+        return comments.stream().map(this::toDto).collect(Collectors.toList());
     }
 
-
-    // 중복 제거용 private 메서드
+    /**
+     * Comment -> DTO 변환 유틸 메서드
+     */
     private CommentResponseDto toDto(Comment comment) {
         return CommentResponseDto.builder()
                 .id(comment.getId())
