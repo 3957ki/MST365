@@ -57,12 +57,6 @@ export default function BoardEditPage() {
           // 데이터 로딩 성공 시 폼 상태 업데이트
           setTitle(boardData.title);
           setContent(boardData.content);
-          // 필요하다면 여기서 사용자 ID 검증 로직 추가 가능 (프론트엔드 레벨)
-          // const userInfo = getUserInfoFromToken(token); // 예시: 토큰에서 사용자 정보 추출
-          // if (userInfo?.id !== boardData.userId) {
-          //   setErrorLoading("이 게시물을 수정할 권한이 없습니다.");
-          //   // 또는 접근 불가 페이지로 리다이렉션
-          // }
         }
       } catch (error) {
         // getBoardById에서 throw된 에러 처리 (401, 403, 500 등)
@@ -100,8 +94,6 @@ export default function BoardEditPage() {
     }
 
     try {
-      // updateBoard 호출 시 업데이트할 데이터만 포함하는 객체 생성
-      // 백엔드 API는 title, content 필드를 소문자로 받음
       const updateData = {
         title: title, // 현재 폼의 title 상태 값
         content: content, // 현재 폼의 content 상태 값

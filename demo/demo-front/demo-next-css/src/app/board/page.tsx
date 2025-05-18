@@ -61,20 +61,6 @@ const BoardPage = () => {
     }
   }, [currentPage, pageSize, router, currentToken]); // currentToken 의존성 추가
 
-  // 컴포넌트 마운트 시 토큰 설정 및 첫 페이지 로드 트리거
-  useEffect(() => {
-    const tokenFromStorage = getToken();
-    setCurrentToken(tokenFromStorage);
-    // 토큰 설정 후 첫 로드 시작 (currentPage가 0이므로 loadBoards 호출)
-    // loadBoards(); // 아래 useEffect에서 currentPage 변경으로 호출됨
-  }, []); // 마운트 시 한 번만 실행
-
-  // currentPage 변경 시 데이터 로드
-  useEffect(() => {
-    if (currentToken !== null && hasMore) { // 토큰이 설정되고 더 로드할 페이지가 있을 때만 실행
-        loadBoards();
-    }
-  }, [currentPage, currentToken, hasMore, loadBoards]); // currentToken, hasMore, loadBoards 의존성 추가
 
   // 스크롤 이벤트 핸들러
   const handleScroll = useCallback(() => {

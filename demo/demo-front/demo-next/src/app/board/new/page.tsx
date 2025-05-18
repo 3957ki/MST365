@@ -29,9 +29,9 @@ const WritePage = () => {
     }
 
     try {
-      await createBoard({ title, content, userId }, token); // ✅ camelCase 기반 input 객체 전달
+      await createBoard({ title, content, userId }, token);
       alert("게시글이 작성되었습니다.");
-      router.push("/board"); // 게시판 목록 페이지로 이동
+      router.push("/board");
     } catch (err: any) {
       alert(`에러 발생: ${err.message}`);
     }
@@ -41,13 +41,7 @@ const WritePage = () => {
     <div className="container mx-auto p-8">
       <div className="flex items-center mb-6">
         <Link href="/board">
-          <Image
-            src="/microsoft.png"
-            alt="Microsoft Logo"
-            width={50}
-            height={50}
-            className="mr-5 cursor-pointer"
-          />
+          <Image src="/microsoft.png" alt="Microsoft Logo" width={50} height={50} className="mr-5 cursor-pointer" />
         </Link>
         <h1 className="text-3xl font-bold text-black">게시물 작성</h1>
       </div>
@@ -72,10 +66,7 @@ const WritePage = () => {
             placeholder="내용을 입력하세요"
           />
         </div>
-        <button
-          type="submit"
-          className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
-        >
+        <button type="submit" className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
           작성하기
         </button>
       </form>

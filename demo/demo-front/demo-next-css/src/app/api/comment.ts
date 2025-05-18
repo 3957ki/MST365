@@ -1,5 +1,3 @@
-// src/app/api/comment.ts
-
 import { getToken } from "@/app/api/auth";
 const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
 

@@ -1,44 +1,45 @@
-"use client"; // 클라이언트 컴포넌트로 선언
+"use client";
 
 import { useState, useEffect, FormEvent } from "react";
-import { useRouter, useParams } from "next/navigation"; // next/navigation 사용
+import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getToken } from "@/app/api/auth"; // 경로 수정 (@ 사용)
-import { getBoardById, updateBoard, BoardDetail } from "@/app/api/board"; // 경로 수정 (@ 사용) 및 BoardDetail 임포트
+import { getToken } from "@/app/api/auth";
+import { getBoardById, updateBoard, BoardDetail } from "@/app/api/board";
 
 export default function BoardEditPage() {
   const router = useRouter();
-  const params = useParams(); // useParams 훅 사용
+  const params = useParams();
   const board_id = params.board_id as string; // board_id 추출 및 타입 단언
 
-  // 폼 입력 상태
-  const [title, setTitle] = useState<string>("");
-  const [content, setContent] = useState<string>("");
-
-  // 데이터 로딩 상태
+  // 게시물 로딩 상태
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorLoading, setErrorLoading] = useState<string | null>(null);
   const [notFound, setNotFound] = useState<boolean>(false);
-
+  
   // 게시물 수정 상태
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [errorUpdating, setErrorUpdating] = useState<string | null>(null);
 
+  // 입력 상태
+  const [title, setTitle] = useState<string>("");
+  const [content, setContent] = useState<string>("");
+
   // 초기 데이터 로딩 useEffect
   useEffect(() => {
+    // board_id가 없는 경우 (이론상 발생하기 어려움)
     if (!board_id) {
-      // board_id가 없는 경우 (이론상 발생하기 어려움)
       setErrorLoading("게시물 ID를 찾을 수 없습니다.");
       setIsLoading(false);
       return;
     }
 
+    // 게시물 데이터 로딩 함수
     const fetchBoardData = async () => {
       const token = getToken();
       if (!token) {
         alert("로그인이 필요합니다.");
-        router.push("/login"); // 로그인 페이지로 리다이렉션
+        router.push("/login");
         return;
       }
 
@@ -56,12 +57,6 @@ export default function BoardEditPage() {
           // 데이터 로딩 성공 시 폼 상태 업데이트
           setTitle(boardData.title);
           setContent(boardData.content);
-          // 필요하다면 여기서 사용자 ID 검증 로직 추가 가능 (프론트엔드 레벨)
-          // const userInfo = getUserInfoFromToken(token); // 예시: 토큰에서 사용자 정보 추출
-          // if (userInfo?.id !== boardData.userId) {
-          //   setErrorLoading("이 게시물을 수정할 권한이 없습니다.");
-          //   // 또는 접근 불가 페이지로 리다이렉션
-          // }
         }
       } catch (error) {
         // getBoardById에서 throw된 에러 처리 (401, 403, 500 등)
@@ -74,13 +69,13 @@ export default function BoardEditPage() {
     };
 
     fetchBoardData();
-  }, [board_id, router]); // 의존성 배열에 board_id와 router 추가
+  }, [board_id, router]);
 
   // 폼 제출 핸들러
   const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault(); // 기본 폼 제출 방지
+    event.preventDefault();
 
-    // 클라이언트 측 유효성 검사: 제목 또는 내용이 비어있는지 확인
+    // 제목 또는 내용이 모두 비어 있을 경우 경고
     if (!title.trim() && !content.trim()) {
       setErrorUpdating("수정할 제목이나 내용을 입력해주세요.");
       return;
@@ -100,10 +95,9 @@ export default function BoardEditPage() {
 
     try {
       // updateBoard 호출 시 업데이트할 데이터만 포함하는 객체 생성
-      // 백엔드 API는 title, content 필드를 소문자로 받음
       const updateData = {
-        title: title, // 현재 폼의 title 상태 값
-        content: content, // 현재 폼의 content 상태 값
+        title: title,
+        content: content,
       };
 
       // API 호출 (board_id, 업데이트 데이터, 토큰 전달)

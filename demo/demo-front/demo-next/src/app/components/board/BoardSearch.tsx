@@ -7,25 +7,28 @@ interface BoardSearchProps {
 }
 
 const BoardSearch: React.FC<BoardSearchProps> = ({ onSearch }) => {
+  // 상태: 검색어와 검색 타입
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchType, setSearchType] = useState("title"); // 기본 검색 타입을 'title'로 설정
+  const [searchType, setSearchType] = useState("title");
 
+  // 입력창 변경 처리
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
 
+  // 드롭다운 변경 처리
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSearchType(event.target.value);
   };
 
-  // 초기화: 검색어, 타입 초기화 및 전체 목록 표시 요청
+  // 초기화: 입력값과 타입 모두 초기화하고 부모에 알림
   const handleReset = () => {
     setSearchTerm("");
-    setSearchType("title"); // 검색 타입도 기본값으로
-    onSearch("", "title"); // 부모에게 초기화 알림 (빈 검색어 전달)
+    setSearchType("title");
+    onSearch("", "title");
   };
 
-  // 검색 실행: 현재 검색어와 타입으로 부모에게 검색 요청
+  // 검색 실행
   const handleSearch = () => {
     onSearch(searchTerm, searchType);
   };
@@ -35,14 +38,11 @@ const BoardSearch: React.FC<BoardSearchProps> = ({ onSearch }) => {
       <div className="flex gap-2">
         <select
           className="border border-gray-300 p-2 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          value={searchType} // 상태와 연결
-          onChange={handleSelectChange} // 변경 핸들러 연결
+          value={searchType}
+          onChange={handleSelectChange}
         >
-          {/* value 속성 추가 */}
           <option value="title">제목</option>
           <option value="author">작성자</option>
-          {/* <option value="content">내용</option> */}{" "}
-          {/* 내용 검색은 추후 추가 */}
         </select>
         <input
           type="text"

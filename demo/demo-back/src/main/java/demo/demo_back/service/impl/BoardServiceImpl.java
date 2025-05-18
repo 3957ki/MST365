@@ -22,6 +22,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 게시판 서비스 구현체.
+ * 게시물 작성, 조회, 수정, 삭제 기능을 담당합니다.
+ */
 @Service
 @Transactional
 public class BoardServiceImpl implements BoardService {
@@ -35,6 +39,9 @@ public class BoardServiceImpl implements BoardService {
         this.userRepository = userRepository;
     }
 
+    /**
+     * 게시물 생성
+     */
     @Override
     public Board createBoard(Long userId, String title, String content) {
         User user = userRepository.findById(userId)
@@ -48,6 +55,9 @@ public class BoardServiceImpl implements BoardService {
         return boardRepository.save(board);
     }
 
+    /**
+     * 전체 게시물 목록 조회 (페이징)
+     */
     @Override
     @Transactional(readOnly = true)
     public BoardListResponseDto getAllBoards(Pageable pageable) {
@@ -66,6 +76,9 @@ public class BoardServiceImpl implements BoardService {
         return new BoardListResponseDto("게시물 목록을 성공적으로 조회했습니다.", boardItems);
     }
 
+    /**
+     * 사용자별 게시물 조회
+     */
     @Override
     @Transactional(readOnly = true)
     public List<BoardListResponseDto.BoardItemDto> getBoardsByUserId(Long userId) {
@@ -82,6 +95,9 @@ public class BoardServiceImpl implements BoardService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 게시물 상세 조회 + 조회수 증가
+     */
     @Override
     @Transactional(readOnly = true)
     public BoardDetailResponseDto getBoardById(Long boardId) {
@@ -105,6 +121,9 @@ public class BoardServiceImpl implements BoardService {
                 ));
     }
 
+    /**
+     * 게시물 삭제 (Soft delete)
+     */
     @Override
     @Transactional
     public MessageResponseDto deleteBoard(Long boardId, Long userId) {
@@ -126,6 +145,9 @@ public class BoardServiceImpl implements BoardService {
         return new MessageResponseDto("게시물이 성공적으로 삭제되었습니다.");
     }
 
+    /**
+     * 게시물 수정
+     */
     @Override
     @Transactional
     public BoardDetailResponseDto updateBoard(Long boardId, Long userId, BoardUpdateRequestDto request) {

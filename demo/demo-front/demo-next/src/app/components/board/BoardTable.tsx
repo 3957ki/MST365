@@ -1,21 +1,20 @@
 import Link from "next/link";
-import { useState, useEffect } from "react"; // useState, useEffect 임포트
+import { useState, useEffect } from "react";
 import { BoardListItem } from "../../api/board";
-import { getUserInfo, UserInfoData } from "../../api/auth"; // getUserInfo 및 타입 임포트
+import { getUserInfo, UserInfoData } from "../../api/auth";
 
 interface BoardTableProps {
   boards: BoardListItem[];
-  token: string | null; // token prop 추가
+  token: string | null;
 }
 
-// userId를 키로, userName을 값으로 가지는 맵 타입
 interface UserNameMap {
   [key: number]: string;
 }
 
 const BoardTable: React.FC<BoardTableProps> = ({ boards, token }) => {
   const [userNamesMap, setUserNamesMap] = useState<UserNameMap>({});
-  const [loadingUserNames, setLoadingUserNames] = useState<boolean>(false); // 사용자 이름 로딩 상태
+  const [loadingUserNames, setLoadingUserNames] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchUserNames = async () => {
@@ -24,9 +23,9 @@ const BoardTable: React.FC<BoardTableProps> = ({ boards, token }) => {
       }
 
       // 아직 이름 정보가 없는 고유한 userId 추출
-      const uniqueUserIds = Array.from(
-        new Set(boards.map((board) => board.userId))
-      ).filter((userId) => !userNamesMap[userId]);
+      const uniqueUserIds = Array.from(new Set(boards.map((board) => board.userId))).filter(
+        (userId) => !userNamesMap[userId]
+      );
 
       if (uniqueUserIds.length === 0) {
         return; // 새로 가져올 userId가 없으면 중지
@@ -36,9 +35,7 @@ const BoardTable: React.FC<BoardTableProps> = ({ boards, token }) => {
 
       try {
         // Promise.all을 사용하여 여러 사용자 정보를 병렬로 요청
-        const userInfoPromises = uniqueUserIds.map((userId) =>
-          getUserInfo(userId, token)
-        );
+        const userInfoPromises = uniqueUserIds.map((userId) => getUserInfo(userId, token));
         const userInfos = await Promise.all(userInfoPromises);
 
         // 가져온 사용자 정보로 userNamesMap 업데이트
@@ -98,7 +95,7 @@ const BoardTable: React.FC<BoardTableProps> = ({ boards, token }) => {
         {boards.length === 0 ? (
           <tr>
             <td colSpan={4} className="text-center p-4 border">
-              작성된 게시글이 없습니다. {/* 메시지 수정 */}
+              작성된 게시글이 없습니다.
             </td>
           </tr>
         ) : (
@@ -109,14 +106,9 @@ const BoardTable: React.FC<BoardTableProps> = ({ boards, token }) => {
                 <Link href={`/board/${board.id}`}>{board.title}</Link>
               </td>
               <td className="border p-2 text-center">
-                {userNamesMap[board.userId] || // 사용자 이름 표시 시도
-                  (loadingUserNames ? "로딩중..." : `ID: ${board.userId}`)}
-                {/* 없으면 로딩 상태 또는 ID 표시 */}
+                {userNamesMap[board.userId] || (loadingUserNames ? "로딩중..." : `ID: ${board.userId}`)}
               </td>
-              <td className="border p-2 text-center">
-                {formatDate(board.createdAt)}
-              </td>
-              {/* createdAt 포맷팅 */}
+              <td className="border p-2 text-center">{formatDate(board.createdAt)}</td>
             </tr>
           ))
         )}
