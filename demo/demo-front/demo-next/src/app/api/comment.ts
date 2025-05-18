@@ -1,5 +1,3 @@
-// src/app/api/comment.ts
-
 import { getToken } from "@/app/api/auth";
 const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -87,10 +85,10 @@ export async function getComments(boardId: number): Promise<CommentData[]> {
     throw new Error("댓글 목록이 배열 형식이 아닙니다.");
   }
 
-  return result; // 배열 그대로 반환
+  return result;
 }
 
-// 댓글 수정 함수 (PATCH로 변경 + boardId 포함)
+// 댓글 수정 함수
 export async function updateComment(
   boardId: number,
   commentId: number,

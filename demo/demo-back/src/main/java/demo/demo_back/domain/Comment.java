@@ -1,67 +1,88 @@
 package demo.demo_back.domain;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * 댓글(Comment) 엔티티 클래스.
+ * 하나의 게시물(Board)에 속하며, 사용자(User)가 작성합니다.
+ */
 @Entity
 @Table(name = "comments")
-@Data // @Data는 @Getter, @Setter, @ToString, @EqualsAndHashCode 등을 포함
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString(exclude = {"user", "board"})
+@EqualsAndHashCode(of = "id")
 public class Comment {
+
+    /**
+     * 댓글 ID (기본 키, 자동 증가)
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 댓글 작성자 User Entity 참조 (ManyToOne 관계)
+    /**
+     * 댓글 작성자 (User와 다대일 관계)
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // 댓글이 속한 Board Entity 참조 (ManyToOne 관계)
-    // Board Entity의 comments 필드에 @OneToMany 관계가 설정되어 있다면
-    // Comment 쪽에서는 @ToString.Exclude 등을 붙일 필요가 없습니다.
+    /**
+     * 댓글이 달린 게시물 (Board와 다대일 관계)
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false)
     private Board board;
 
-    // 댓글 내용 컬럼
+    /**
+     * 댓글 본문 내용
+     */
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    // 댓글 생성 시각 컬럼
+    /**
+     * 댓글 생성 시각
+     */
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    // 댓글 최종 수정 시각 컬럼 (nullable)
-    @Column(name = "updated_at") // ERD에 맞춰 nullable = true (기본값)으로 변경
+    /**
+     * 댓글 최종 수정 시각 (nullable 허용)
+     */
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // 소프트 삭제 플래그 컬럼
-    @Column(name = "is_deleted", nullable = false) // ERD에서 NN이므로 nullable=false 유지
+    /**
+     * 댓글 삭제 여부
+     */
+    @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
 
+    /**
+     * 삭제된 시각 (nullable)
+     */
     private LocalDateTime deletedAt;
 
+    /**
+     * 댓글 생성 시 자동 호출되는 메서드
+     */
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-        // updatedAt은 ERD에서 nullable이므로 생성 시점에 여기서 설정하지 않음 (필요시)
     }
 
+    /**
+     * 댓글 수정 시 자동 호출되는 메서드
+     */
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now(); // 수정 시각 업데이트
+        updatedAt = LocalDateTime.now();
     }
-
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
-    }
-
 }
