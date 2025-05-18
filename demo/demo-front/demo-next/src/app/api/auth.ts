@@ -55,13 +55,12 @@ export function removeToken(): void {
 
 // --- 회원가입 API 함수 ---
 
-// 회원가입 응답 타입 정의 (백엔드 명세 기반)
+// 회원가입 응답 타입 정의
 interface SignupResponseData {
   userId: number;
 }
 
 export interface SignupResponse {
-  // export 키워드를 올바른 위치에 추가하고 중복 제거
   message: string;
   data: SignupResponseData;
 }
@@ -74,9 +73,6 @@ export async function signup(userName: string, password: string): Promise<Signup
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      // 회원가입 요청 시 필드 이름 확인 필요 (userName vs user_name)
-      // 이전 요청에서 user_name을 사용했으므로 일관성을 위해 user_name 사용
-      // 만약 오류 발생 시 userName으로 변경 시도 필요
       user_name: userName,
       password: password,
     }),
@@ -85,7 +81,7 @@ export async function signup(userName: string, password: string): Promise<Signup
   const result = await response.json();
 
   if (!response.ok) {
-    const errorResponse = result as ApiErrorResponse; // 기존 오류 타입 재활용
+    const errorResponse = result as ApiErrorResponse;
     throw new Error(errorResponse.details || errorResponse.error || `회원가입 실패 (HTTP ${response.status})`);
   }
 
@@ -93,7 +89,7 @@ export async function signup(userName: string, password: string): Promise<Signup
   return result as SignupResponse;
 }
 
-// --- 로그인인 API 함수 ---
+// --- 로그인 API 함수 ---
 
 // 로그인 API 호출 함수 (반환 타입 수정)
 export async function login(userName: string, password: string): Promise<LoginSuccessData> {
@@ -172,7 +168,6 @@ export async function logout(token: string): Promise<void> {
 // --- 회원탈퇴 API 함수 ---
 
 interface WithdrawResponse {
-  // 성공 응답 타입 (메시지만 있음)
   message: string;
 }
 
@@ -182,14 +177,14 @@ export async function withdrawUser(userId: number, token: string): Promise<void>
     // 경로 변수 포함
     method: "DELETE",
     headers: {
-      Authorization: `Bearer ${token}`, // 인증 헤더 추가
+      Authorization: `Bearer ${token}`,
     },
   });
 
   if (!response.ok) {
     // 실패 시 에러 처리 (401, 403, 404, 500 등)
     try {
-      const errorResult = (await response.json()) as ApiErrorResponse; // 기존 에러 타입 재활용
+      const errorResult = (await response.json()) as ApiErrorResponse;
       throw new Error(errorResult.details || errorResult.error || `회원 탈퇴 실패 (HTTP ${response.status})`);
     } catch (e) {
       throw new Error(`회원 탈퇴 실패 (HTTP ${response.status})`);

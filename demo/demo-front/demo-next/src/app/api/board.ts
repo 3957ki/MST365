@@ -88,7 +88,11 @@ export async function getBoardById(boardId: number | string, token: string): Pro
   }
 
   const successResponse = result as GetBoardDetailResponse;
-  if (!successResponse.data || typeof successResponse.data.id !== "number" || typeof successResponse.data.title !== "string") {
+  if (
+    !successResponse.data ||
+    typeof successResponse.data.id !== "number" ||
+    typeof successResponse.data.title !== "string"
+  ) {
     console.error("Invalid board detail response structure:", successResponse);
     throw new Error("게시물 상세 정보 응답 형식이 올바르지 않습니다.");
   }
@@ -144,7 +148,11 @@ interface UpdateBoardResponse {
   data: BoardDetail;
 }
 
-export async function updateBoard(boardId: number | string, updateData: UpdateBoardInput, token: string): Promise<BoardDetail> {
+export async function updateBoard(
+  boardId: number | string,
+  updateData: UpdateBoardInput,
+  token: string
+): Promise<BoardDetail> {
   const response = await fetch(`${baseURL}/api/v1/boards/${boardId}`, {
     method: "PATCH",
     headers: {
@@ -173,14 +181,17 @@ export async function updateBoard(boardId: number | string, updateData: UpdateBo
   }
 
   const successResponse = result as UpdateBoardResponse;
-  if (!successResponse.data || typeof successResponse.data.id !== "number" || typeof successResponse.data.title !== "string") {
+  if (
+    !successResponse.data ||
+    typeof successResponse.data.id !== "number" ||
+    typeof successResponse.data.title !== "string"
+  ) {
     console.error("Invalid update board response structure:", successResponse);
     throw new Error("게시물 수정 응답 형식이 올바르지 않습니다.");
   }
 
   return successResponse.data;
 }
-
 
 // ===  게시물 삭제 ===
 export async function deleteBoard(boardId: number | string, token: string): Promise<void> {
