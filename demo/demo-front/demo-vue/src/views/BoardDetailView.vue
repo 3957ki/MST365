@@ -49,9 +49,6 @@
               {{ userName || (isLoadingUser ? "로딩중..." : `ID: ${board.userId}`) }}
             </span>
           </div>
-          <div>
-            <span class="font-semibold">조회수:</span> {{ board.view }}
-          </div>
           <div class="md:col-span-1 md:text-right">
             <span class="font-semibold">등록일:</span>
             {{ formatDateTime(board.createdAt) }}
