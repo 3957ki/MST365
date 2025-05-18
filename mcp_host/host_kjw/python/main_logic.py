@@ -19,7 +19,7 @@ from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 import re
 import shutil
-
+import time
 
 # Pydantic models for parsing AI output
 class FailedStep(BaseModel):
@@ -51,14 +51,19 @@ class WebTestResult(BaseModel):
 output_parser = PydanticOutputParser(pydantic_object=WebTestResult)
 
 # System prompt template
-system_prompt = """\
+system_prompt = """
 너는 웹 테스트 시나리오를 수행하는 AI야.
 
 - 각 스텝에서 지시한 행동을 **순서대로 정확히** 수행해야 해.
 - 지시에 맞게 행동할 수 없거나, 결과가 예상과 다르거나 이상하면 그 스텝은 **실패로 처리**해. 실패한 이유는 **한글로 명확히 설명**해야 해.
-- 테스트 중 브라우저 화면을 캡처해야 할 경우, 반드시 `browser_take_screenshot` 툴만 사용해야 해.
+
+- 테스트 중 스크린샷을 캡처해야 할 경우, 반드시 `browser_take_screenshot` 툴만 사용해야 해.
   - `browser_snapshot` 툴은 사용하지 마.
   - 캡처는 **지금 브라우저 화면에 보이는 그대로** 찍는 거야.
+  - 근데 step에서 스냅샷을 찍으라고 명시했다면 browser_snapshot 툴을 사용해.
+  
+- browser_type을 호출하는 경우 parameter로 exact는 넣지 마.
+- 요소를 확인하는 step은 snapshot 정보를 활용해서 확인해.
 
 - **브라우저 종료 주의사항**:
   - 시나리오에 **명시적으로 브라우저를 닫으라는 지시가 있는 경우에만** `browser_close` 툴을 사용해야 해.
@@ -66,7 +71,8 @@ system_prompt = """\
 
 - AI Output Message에서 tool을 사용한다면 **무조건 한번에 하나의 tool**만 사용해야해.
 - 모든 테스트 스텝이 끝난 후에는 **전체적인 피드백**을 제공해.
-
+- 시나리오를 진행하던 중에 스텝에서 **실패**가 발생한다면, 해당 시나리오의 결과는 **실패**가 되어야 해.
+- 실패를 했다면 시나리오 피드백에 어떤 스텝에서 어떻게 실패했는지 자세하게 피드백을 작성해야 해. 
 ---
 
 ### 출력 형식 (아래 지침을 반드시 따를 것):
@@ -204,26 +210,40 @@ def run_scenario(
 
 
 async def _run_scenario(
-    agent, scenario: dict, index: int, output_dir: str
+    agent,
+    scenario: dict,
+    index: int,
+    output_dir: str
 ) -> Tuple[int, WebTestResult, List[str]]:
+
+    # 시나리오 시작 시각 측정
+    scenario_start = time.perf_counter()
+
     scenario_dir = os.path.join(output_dir, f"{index}")
-    screenshot_dir = os.path.join(scenario_dir, "screenshots")
+    screenshot_dir = os.path.join(scenario_dir, 'screenshots')
     os.makedirs(screenshot_dir, exist_ok=True)
 
-    result, screenshots = await _run_logic(
-        agent, scenario.get("steps", []), screenshot_dir
-    )
+    # AI 호출 및 결과 저장
+    result, screenshots = await _run_logic(agent, scenario.get('steps', []), screenshot_dir)
+
+    # 시나리오 종료 시각 측정 및 duration 덮어쓰기
+    scenario_end = time.perf_counter()
+    result.duration = scenario_end - scenario_start
+
+    # AI가 준 title 대신, 실제 시나리오의 title 사용
+    result.title = scenario.get("title", "")
+
     save_result(scenario, result, screenshots, scenario_dir)
     return index, result, screenshots
 
 
 # Generate single combined HTML report at root of output_dir
 def generate_combined_html_report(
-    results: List[Tuple[int, WebTestResult, List[str]]],
-    output_dir: str,
-    test_start: datetime,
-    test_duration_ms: float,
-    test_id: str,
+        results: List[Tuple[int, WebTestResult, List[str]]],
+        output_dir: str,
+        test_start: datetime,
+        test_duration_ms: float,
+        test_id: str
 ):
     build_id = os.path.basename(output_dir)
     total_steps = len(results)
@@ -231,7 +251,7 @@ def generate_combined_html_report(
     failed_steps = total_steps - passed_steps
 
     # Inline CSS to embed directly in the HTML
-    css = """
+    css = '''
 /* Reset */
 * {
   box-sizing: border-box;
@@ -279,12 +299,10 @@ body {
   background: white;
   border-radius: 8px;
   padding: 15px 20px;
+  margin-top: 15px;
   margin-bottom: 25px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s;
-}
-.step:hover {
-  transform: translateY(-3px);
 }
 .step.success {
   border-left: 6px solid #28a745;
@@ -335,7 +353,7 @@ body {
     width: 100%;
   }
 }
-"""
+'''
 
     # Build HTML
     html = f"""<!DOCTYPE html>
@@ -351,7 +369,7 @@ body {
     <div class="header">
         <h1>테스트 실행 보고서</h1>
         <p>실행 시각: {test_start.strftime('%Y-%m-%d %H:%M:%S')}</p>
-        <p>소요 시간: {int(test_duration_ms)}ms</p>
+        <p>소요 시간: {test_duration_ms/1000:.2f}s</p>
     </div>
     
     <div class="summary">
@@ -378,19 +396,19 @@ body {
 
         # (Optional) 시나리오 레벨 실패 사유
         if res.fail:
-            html += "            <div class='fail'><h5>실패 사유</h5><ul>\n"
+            html += "            <div class='fail'><h5>Fail Reasons</h5><ul>\n"
             for fs in res.fail:
                 html += f"                <li>Step {fs.num}: {fs.message}</li>\n"
             html += "            </ul></div>\n"
 
-        # **스텝 별 substep 출력 추가**
+        # **스텝 별 substep 출력 추가**  
         html += "            <div class='substeps'>\n"
         html += "                <h4>세부 스텝 결과</h4>\n"
         for step in res.steps:
             sc = "success" if step.status else "failed"
             html += f"""                <div class="substep {sc}">
                     <p><strong>Step {step.num}:</strong> {step.action}</p>
-                    <p>상태: {'✅ 성공' if step.status else '❌ 실패'} | 시간: {step.duration:.2f}s</p>
+                    <p>상태: {'✅ 성공' if step.status else '❌ 실패'}</p>
                     <p>피드백: {step.feedback}</p>
             """
             if step.fail:
@@ -407,7 +425,7 @@ body {
                 f'src="screenshot?build={test_id}&scenario={idx}&file={img}" '
                 f'alt="Screenshot"/>\n'
             )
-
+        
         html += "        </div>\n"  # 시나리오 블록 닫기
 
     html += "</div>\n</body>\n</html>"

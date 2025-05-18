@@ -221,7 +221,7 @@ const type = (0, tool_1.defineTool)({
     return {
       code,
       action: () => steps.reduce((acc, step) => acc.then(step), Promise.resolve()),
-      captureSnapshot: true,
+      captureSnapshot: false,
       waitForNetwork: true,
     };
   },
