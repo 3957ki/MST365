@@ -5,7 +5,10 @@
          xmlns:f="/lib/form">
 
     <l:layout permission="ADMINISTER">
+        <!-- Jenkins 기본 head(crumb 메타 등)를 보존하고
+             추가 리소스만 덧붙이는 l:head -->
         <l:head>
+            <!-- raw HTML로도 넣을 수 있습니다 -->
             <link rel="stylesheet"
                   href="${rootURL}/plugin/playwright-e2e-test/io/jenkins/extensions/ScriptAction/input.css"
                   type="text/css"/>
@@ -14,14 +17,16 @@
         </l:head>
 
         <l:main-panel>
+            <!-- ① 서버 모델 로드 -->
             <j:set var="m" value="${it.getIt(request.getParameter('script'))}"/>
 
             <h1 style="margin-bottom:24px;">
                 ${m.title ?: '새 스크립트'}
             </h1>
 
+            <!-- ② CSRF 크럼은 crumb="true" 에서 자동으로 처리 -->
             <f:form method="post" action="save" crumb="true">
-                <!-- 제목 -->
+                <!-- ③ 제목 -->
                 <f:entry title="스크립트 제목">
                     <f:textbox name="title"
                                id="scriptTitle"
@@ -29,15 +34,7 @@
                                value="${m.title}"/>
                 </f:entry>
 
-                <!-- 🔽 형식 선택 드롭다운 -->
-                <f:entry title="입력 형식 선택">
-                    <f:select name="format" id="formatSelector">
-                        <f:option value="json" selected="true">JSON</f:option>
-                        <f:option value="txt">TXT</f:option>
-                    </f:select>
-                </f:entry>
-
-                <!-- 시나리오 템플릿 -->
+                <!-- ④ 숨김 템플릿 -->
                 <div id="scenario-template" style="display:none">
                     <div class="scenario">
                         <div>
@@ -58,7 +55,7 @@
                     </div>
                 </div>
 
-                <!-- 🔘 JSON 에디터 -->
+                <!-- ⑤ 기존 시나리오 렌더 -->
                 <div id="editor">
                     <j:forEach items="${m.scenarios}" var="sc">
                         <div class="scenario">
@@ -83,27 +80,17 @@
                     </j:forEach>
                 </div>
 
-                <!-- ➕ JSON 편집일 때만 노출 -->
+                <!-- ⑥ 새 시나리오 추가 -->
                 <button type="button" id="addScenario">+ 시나리오 추가</button>
 
-                <!-- 📝 TXT 입력 에디터 (초기엔 숨김) -->
-                <div id="txtEditor" style="display:none; margin-top:20px;">
-                    <f:entry title="TXT 입력">
-                        <f:textarea name="txtContent"
-                                    id="txtContent"
-                                    style="width:100%; height:200px;">
-                        </f:textarea>
-                    </f:entry>
-                </div>
-
-                <!-- 숨겨진 저장 데이터 -->
+                <!-- ⑦ 저장용 JSON 필드 -->
                 <input type="hidden" name="jsonData" id="jsonData"/>
 
-                <!-- 저장 버튼 -->
+                <!-- ⑧ 저장 버튼 -->
                 <button type="submit" id="saveButton">저장</button>
             </f:form>
 
-            <!-- 서버 모델 주입 -->
+            <!-- ⑨ 서버 모델을 JSON으로 주입 -->
             <script id="modelData" type="application/json">
                 ${m.toJson()}
             </script>
