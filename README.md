@@ -53,30 +53,33 @@
 - demo 폴더 내부 각 프레임워크, 라이브러리에 따라 구분된 폴더 별로 dockerfile, jenkinsfile 위치
 - 따라서, 각 프론트엔드 프레임워크 별로 pipeline이 존재하고 필요할 경우 각 파이프라인 빌드를 통해 배포된 웹사이트의 프레임워크를 바꿔서 사용하는 형태
 - gitlab push 이벤트 발생 시 hook
-1. demo
+
+1. **demo**
 - demo-back
     - Spring boot 데모 웹사이트를 위한 Spring boot 프로젝트 폴더
 - demo-front
     - demo-react, demo-next 등 프레임워크 별 프로젝트 폴더
 
-2. mcp host
+2. **mcp host**
 - host 개발을 맡은 담당자들의 host 프로젝트 폴더
-3. plugin
+3. **plugin**
 - Jenkins plugin 개발 용 폴더
 
 ## ERD
-
-
 ---
-## 시스템 구조도
-
-
+![mysql_erd.png](mysql_erd.png)
+---
+## 데모 웹사이트 시스템 구조도
 ---
 
+---
 ## 화면 예시
+---
+### Jenkins UI
+
+### 데모 웹사이트
 
 ---
-
 ## 링크
 ---
 - **노션**:
