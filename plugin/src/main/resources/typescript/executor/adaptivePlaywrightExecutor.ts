@@ -1307,7 +1307,9 @@ ${this.testReport.steps
           const statusClass = step.status === "success" ? "success" : "failure";
           const screenshotHtml = step.screenshot
             ? `<div class="screenshot"><img src="screenshot?build=${
-                this.buildNumber
+                  path.basename(
+                      this.testRunDir
+                  )
               }&scenario=1&file=${path.basename(
                 step.screenshot
               )}" alt="Screenshot" width="800" /></div>`
