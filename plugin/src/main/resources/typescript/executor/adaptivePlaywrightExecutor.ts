@@ -175,7 +175,7 @@ export class AdaptivePlaywrightExecutor {
     );
     this.screenshotsDir = path.join(this.testRunDir, "1", "screenshots");
     this.mcpClient = new MCPClient();
-    this.anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    this.anthropic = new Anthropic({ apiKey: process.env.LLM_API_KEY });
     this.testReport = {
       testName: "Natural Language Test",
       startTime: "",

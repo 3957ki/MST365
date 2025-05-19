@@ -15,7 +15,7 @@ export class ScenarioParser {
 
   constructor() {
     this.anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
+      apiKey: process.env.LLM_API_KEY,
     });
   }
 
