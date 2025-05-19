@@ -1,82 +1,117 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const jsonStr = document.getElementById('modelData').textContent.trim();
     let existingModel = {};
-    try { existingModel = JSON.parse(jsonStr); } catch(e) { console.error(e); }
+    try {
+        existingModel = JSON.parse(jsonStr);
+    } catch (e) {
+        console.error(e);
+    }
 
-    const editor   = document.getElementById('editor');
+    const editor = document.getElementById('editor');
+    const txtEditor = document.getElementById('txtEditor');
+    const formatSelector = document.getElementById('formatSelector');
+    const addButton = document.getElementById('addScenario');
     const template = document.getElementById('scenario-template').querySelector('.scenario');
 
     function bindStep(stepElem) {
         stepElem.querySelector('.del-step')
-                .addEventListener('click', () => stepElem.remove());
+            .addEventListener('click', () => stepElem.remove());
     }
 
     function bindScenario(scn) {
         scn.querySelector('.add-step')
-                .addEventListener('click', () => {
-                    const stepsDiv = scn.querySelector('.steps');
-                    const newStep  = template.cloneNode(true)
-                            .querySelector('.steps > div')
-                            .cloneNode(true);
-                    newStep.querySelector('input.st-text').value = '';
-                    bindStep(newStep);
-                    stepsDiv.appendChild(newStep);
-                });
+            .addEventListener('click', () => {
+                const stepsDiv = scn.querySelector('.steps');
+                const newStep = template.cloneNode(true).querySelector('.steps > div').cloneNode(true);
+                newStep.querySelector('input.st-text').value = '';
+                bindStep(newStep);
+                stepsDiv.appendChild(newStep);
+            });
+
         scn.querySelector('.del-scenario')
-                .addEventListener('click', () => scn.remove());
+            .addEventListener('click', () => scn.remove());
+
         scn.querySelectorAll('.steps > div').forEach(bindStep);
     }
 
     editor.querySelectorAll('.scenario').forEach(bindScenario);
 
-    document.getElementById('addScenario')
-            .addEventListener('click', () => {
-                const newScn = template.cloneNode(true);
-                newScn.querySelector('input.sc-title').value = '';
-                newScn.querySelectorAll('input.st-text').forEach(i => i.value = '');
-                editor.appendChild(newScn);
-                bindScenario(newScn);
-            });
+    addButton.addEventListener('click', () => {
+        const newScn = template.cloneNode(true);
+        newScn.querySelector('input.sc-title').value = '';
+        newScn.querySelectorAll('input.st-text').forEach(i => i.value = '');
+        editor.appendChild(newScn);
+        bindScenario(newScn);
+    });
 
-    window.prepareSave = function() {
-        const model = {
-            title: document.getElementById('scriptTitle').value,
-            scenarios: []
-        };
-        editor.querySelectorAll('.scenario').forEach(scn => {
-            const title = scn.querySelector('input.sc-title').value;
-            const steps = Array.from(
-                    scn.querySelectorAll('input.st-text')
-            ).map(i => i.value);
-            model.scenarios.push({ title, steps });
+    // ✅ 형식에 따라 UI를 토글하는 함수
+    function toggleFormatUI(format) {
+        console.log('[DEBUG] 포맷 선택됨:', format);
+
+        if (format === 'json') {
+            editor.style.display = 'block';
+            addButton.style.display = 'inline-block';
+            txtEditor.style.display = 'none';
+        } else if (format === 'txt') {
+            editor.style.display = 'none';
+            addButton.style.display = 'none';
+            txtEditor.style.display = 'block';
+        }
+    }
+
+    // ✅ formatSelector 존재할 때만 동작
+    if (formatSelector) {
+        if (!formatSelector.value) {
+            formatSelector.value = 'json'; // 기본값 설정
+        }
+
+        // 최초 상태 반영
+        toggleFormatUI(formatSelector.value);
+
+        // 값 변경 시 동작
+        formatSelector.addEventListener('change', function () {
+            console.log('[DEBUG] 드롭다운 변경됨 ->', this.value);
+            toggleFormatUI(this.value);
         });
-        document.getElementById('jsonData').value =
-                JSON.stringify(model, null, 2);
+    } else {
+        console.error('❌ formatSelector 요소를 찾을 수 없습니다!');
+    }
+
+    // 저장 전 직렬화
+    window.prepareSave = function () {
+        const selectedFormat = formatSelector.value;
+        const title = document.getElementById('scriptTitle').value;
+
+        if (selectedFormat === 'json') {
+            const model = {
+                title: title,
+                scenarios: []
+            };
+            editor.querySelectorAll('.scenario').forEach(scn => {
+                const title = scn.querySelector('input.sc-title').value;
+                const steps = Array.from(scn.querySelectorAll('input.st-text')).map(i => i.value);
+                model.scenarios.push({ title, steps });
+            });
+            document.getElementById('jsonData').value = JSON.stringify(model, null, 2);
+        } else {
+            const txtContent = document.getElementById('txtContent').value;
+            document.getElementById('jsonData').value = txtContent;
+        }
     };
 
     const saveButton = document.getElementById('saveButton');
     if (saveButton) {
-        saveButton.addEventListener('click', function() {
+        saveButton.addEventListener('click', function () {
             prepareSave();
-            // 버튼이 속한 form을 찾아 submit합니다.
-            // saveButton.form 또는 가장 가까운 form을 찾는 로직이 필요할 수 있습니다.
-            // 여기서는 saveButton이 f:form 내에 직접 있다고 가정하고,
-            // f:form이 실제 HTML form 태그로 렌더링된다고 가정합니다.
-            // 가장 확실한 방법은 form에 id를 부여하고 해당 id로 찾는 것입니다.
-            // 우선은 간단하게 button의 form 속성을 사용해봅니다.
             if (this.form) {
                 this.form.submit();
             } else {
-                // Fallback: DOM 트리에서 가장 가까운 form을 찾습니다.
                 let parent = this.parentNode;
                 while (parent && parent.tagName !== 'FORM') {
                     parent = parent.parentNode;
                 }
-                if (parent) {
-                    parent.submit();
-                } else {
-                    console.error('Save button is not inside a form.');
-                }
+                if (parent) parent.submit();
+                else console.error('Save button is not inside a form.');
             }
         });
     }
