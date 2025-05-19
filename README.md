@@ -69,16 +69,34 @@
 ---
 ![mysql_erd.png](mysql_erd.png)
 ---
-## 데모 웹사이트 시스템 구조도
----
-
----
 ## 화면 예시
 ---
 ### Jenkins UI
-
+- Jenkins UI 추가 예시
+![ui.png](ui.png)
+- 스크립트 목록
+![script_list.png](script_list.png)
+- 스크립트 생성,작성 및 수정
+![make_script.png](make_script.png)
+- 리포트 리스트
+![reports.png](reports.png)
+- 리포트 (python)
+![report_v1.png](report_v1.png)
+- 리포트 (typescript)
+![report_v2.png](report_v2.png)
 ### 데모 웹사이트
-
+- 데모 메인 화면
+![demo_main.png](demo_main.png)
+- 데모 로그인 화면
+![demo_login.png](demo_login.png)
+- 데모 회원가입 화면
+![demo_signup.png](demo_signup.png)
+- 데모 게시판 화면
+![demo_list.png](demo_list.png)
+- 데모 게시글 화면
+![demo_text.png](demo_text.png)
+- 데모 마이페이지 화면
+![demo_mypage.png](demo_mypage.png)
 ---
 ## 링크
 ---
