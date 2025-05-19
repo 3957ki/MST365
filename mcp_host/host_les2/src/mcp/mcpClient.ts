@@ -724,11 +724,11 @@ export class MCPClient {
       log(LogLevel.INFO, "한글 폰트 설치 확인 중...");
 
       // 한글 폰트 패키지 설치
-      await exec("sudo apt-get update");
-      await exec("sudo apt-get install -y fonts-nanum fonts-noto-cjk");
+      await exec("apt-get update");
+      await exec("apt-get install -y fonts-nanum fonts-noto-cjk");
 
       // 폰트 캐시 업데이트
-      await exec("sudo fc-cache -f -v");
+      await exec("fc-cache -f -v");
 
       log(LogLevel.INFO, "한글 폰트 설치 및 캐시 업데이트 완료");
       console.log("한글 폰트 설치 완료");
