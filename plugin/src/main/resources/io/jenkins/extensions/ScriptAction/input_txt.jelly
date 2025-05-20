@@ -1,0 +1,37 @@
+<?jelly escape-by-default='false' encoding='UTF-8'?>
+<j:jelly xmlns:j="jelly:core"
+         xmlns:l="/lib/layout"
+         xmlns:f="/lib/form">
+
+    <!-- 모델 it을 m 변수로 바인딩 -->
+    <j:set var="m" value="${it}"/>
+
+    <l:layout permission="ADMINISTER">
+        <l:head>
+            <link rel="stylesheet"
+                  href="${rootURL}/plugin/playwright-e2e-test/io/jenkins/extensions/ScriptAction/input_txt.css"
+                  type="text/css"/>
+        </l:head>
+
+        <l:main-panel>
+            <!-- saveTxt 핸들러로 title,content 그대로 POST, cssClass로 패딩 적용 -->
+            <f:form method="post" action="saveTxt" cssClass="pane">
+                <f:entry title="스크립트 제목">
+                    <input type="text" name="title" class="txt-title" value="${m.title}"/>
+                </f:entry>
+
+                <f:entry title="시나리오">
+                    <textarea name="content" class="txt-content" rows="10">${m.content}</textarea>
+                </f:entry>
+
+                <input type="hidden" name="jsonData" id="jsonData"/>
+                <input type="hidden" name="action" id="action" value="save"/>
+
+                <button type="submit">저장</button>
+                <j:if test="${m.title}">
+                    <button type="submit" name="action" value="delete">삭제</button>
+                </j:if>
+            </f:form>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

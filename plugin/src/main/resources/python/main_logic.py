@@ -21,6 +21,7 @@ import re
 import shutil
 import time
 
+
 # Pydantic models for parsing AI output
 class FailedStep(BaseModel):
     num: int
@@ -55,11 +56,14 @@ system_prompt = """
 너는 웹 테스트 시나리오를 수행하는 AI야.
 
 - 각 스텝에서 지시한 행동을 **순서대로 정확히** 수행해야 해.
-- 지시에 맞게 행동할 수 없거나, 결과가 예상과 다르거나 이상하면 그 스텝은 **실패로 처리**해. 실패한 이유는 **한글로 명확히 설명**해야 해.
+- 지시에 맞게 행동할 수 없거나 이상하면 그 스텝은 **실패로 처리**해. 실패한 이유는 **한글로 명확히 설명**해야 해.
+- 각 스텝에서 작은 따옴표 '' 안에 있는 글자는 있는 글자 그대로 적용해야해. 대충 비슷한 단어를 선택하면 안돼.
 
 - 테스트 중 스크린샷을 캡처해야 할 경우, 반드시 `browser_take_screenshot` 툴만 사용해야 해.
   - `browser_snapshot` 툴은 사용하지 마.
   - 캡처는 **지금 브라우저 화면에 보이는 그대로** 찍는 거야.
+  - 캡처하기 이전 step을 하고나서 웹페이지 로딩이 끝난 후에 스크린샷을 찍어야해.
+  - 캡처하기전 무조건 browser_wait으로 1초는 대기한 다음 찍어야해.
   - 근데 step에서 스냅샷을 찍으라고 명시했다면 browser_snapshot 툴을 사용해.
   
 - browser_type을 호출하는 경우 parameter로 exact는 넣지 마.
@@ -72,6 +76,7 @@ system_prompt = """
 - AI Output Message에서 tool을 사용한다면 **무조건 한번에 하나의 tool**만 사용해야해.
 - 모든 테스트 스텝이 끝난 후에는 **전체적인 피드백**을 제공해.
 - 시나리오를 진행하던 중에 스텝에서 **실패**가 발생한다면, 해당 시나리오의 결과는 **실패**가 되어야 해.
+    - 다만 dialog때문에 timeout이 발생했고, 이후 dialog를 처리해서 스텝이 잘 진행되었다면 해당 스텝은 **성공**이야.
 - 실패를 했다면 시나리오 피드백에 어떤 스텝에서 어떻게 실패했는지 자세하게 피드백을 작성해야 해. 
 ---
 
@@ -132,7 +137,7 @@ def extract_json_from_message(msg: AIMessage) -> str:
 
 # Save JSON result per scenario
 def save_result(
-        scenario: dict, result: WebTestResult, screenshots: List[str], scenario_dir: str
+    scenario: dict, result: WebTestResult, screenshots: List[str], scenario_dir: str
 ):
     payload = {
         "title": scenario.get("title", ""),
@@ -148,13 +153,13 @@ def save_result(
 
 # Core logic: run steps and collect results
 def run_logic(
-        agent, steps: List[str], screenshot_dir: str
+    agent, steps: List[str], screenshot_dir: str
 ) -> asyncio.Task[Tuple[WebTestResult, List[str]]]:
     return asyncio.create_task(_run_logic(agent, steps, screenshot_dir))
 
 
 async def _run_logic(
-        agent, steps: List[str], screenshot_dir: str
+    agent, steps: List[str], screenshot_dir: str
 ) -> Tuple[WebTestResult, List[str]]:
     response = await agent.ainvoke(
         {
@@ -204,27 +209,26 @@ async def _run_logic(
 
 # Execute a single scenario
 def run_scenario(
-        agent, scenario: dict, index: int, output_dir: str
+    agent, scenario: dict, index: int, output_dir: str
 ) -> asyncio.Task[Tuple[int, WebTestResult, List[str]]]:
     return asyncio.create_task(_run_scenario(agent, scenario, index, output_dir))
 
 
 async def _run_scenario(
-        agent,
-        scenario: dict,
-        index: int,
-        output_dir: str
+    agent, scenario: dict, index: int, output_dir: str
 ) -> Tuple[int, WebTestResult, List[str]]:
 
     # 시나리오 시작 시각 측정
     scenario_start = time.perf_counter()
 
     scenario_dir = os.path.join(output_dir, f"{index}")
-    screenshot_dir = os.path.join(scenario_dir, 'screenshots')
+    screenshot_dir = os.path.join(scenario_dir, "screenshots")
     os.makedirs(screenshot_dir, exist_ok=True)
 
     # AI 호출 및 결과 저장
-    result, screenshots = await _run_logic(agent, scenario.get('steps', []), screenshot_dir)
+    result, screenshots = await _run_logic(
+        agent, scenario.get("steps", []), screenshot_dir
+    )
 
     # 시나리오 종료 시각 측정 및 duration 덮어쓰기
     scenario_end = time.perf_counter()
@@ -239,11 +243,11 @@ async def _run_scenario(
 
 # Generate single combined HTML report at root of output_dir
 def generate_combined_html_report(
-        results: List[Tuple[int, WebTestResult, List[str]]],
-        output_dir: str,
-        test_start: datetime,
-        test_duration_ms: float,
-        test_id: str
+    results: List[Tuple[int, WebTestResult, List[str]]],
+    output_dir: str,
+    test_start: datetime,
+    test_duration_ms: float,
+    test_id: str,
 ):
     build_id = os.path.basename(output_dir)
     total_steps = len(results)
@@ -251,7 +255,7 @@ def generate_combined_html_report(
     failed_steps = total_steps - passed_steps
 
     # Inline CSS to embed directly in the HTML
-    css = '''
+    css = """
 /* Reset */
 * {
   box-sizing: border-box;
@@ -353,7 +357,7 @@ body {
     width: 100%;
   }
 }
-'''
+"""
 
     # Build HTML
     html = f"""<!DOCTYPE html>
@@ -437,12 +441,12 @@ body {
 
 # Main test runner
 async def run_test(
-        scenarios: List[dict],
-        build_num: int,
-        base_dir: str,
-        provider: str,
-        llm_model: str,
-        api_key: str,
+    scenarios: List[dict],
+    build_num: int,
+    base_dir: str,
+    provider: str,
+    llm_model: str,
+    api_key: str,
 ):
     test_start = datetime.now()
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -452,13 +456,9 @@ async def run_test(
 
     # Select LLM
     if provider == "anthropic":
-        model = ChatAnthropic(
-            model=llm_model, temperature=0, max_tokens=1000, api_key=api_key
-        )
+        model = ChatAnthropic(model=llm_model, temperature=0, api_key=api_key)
     elif provider == "openai":
-        model = ChatOpenAI(
-            model=llm_model, temperature=0, max_tokens=1000, api_key=api_key
-        )
+        model = ChatOpenAI(model=llm_model, temperature=0, api_key=api_key)
     else:
         raise ValueError(f"지원되지 않는 provider: {provider}")
 
