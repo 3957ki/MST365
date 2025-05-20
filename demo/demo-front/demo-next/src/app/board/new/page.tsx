@@ -29,9 +29,10 @@ const WritePage = () => {
     }
 
     try {
-      await createBoard({ title, content, userId }, token);
-      alert("게시글이 작성되었습니다.");
-      router.push("/board");
+      return;
+      // await createBoard({ title, content, userId }, token);
+      // alert("게시글이 작성되었습니다.");
+      // router.push("/board");
     } catch (err: any) {
       alert(`에러 발생: ${err.message}`);
     }
