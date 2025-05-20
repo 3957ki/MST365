@@ -16,6 +16,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.servlet.ServletException;
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
@@ -112,7 +116,9 @@ public class ScriptAction implements RootAction {
             mapper.writerWithDefaultPrettyPrinter().writeValue(writer, model);
         }
 
-        rsp.sendRedirect2(Jenkins.get().getRootUrl() + getUrlName());
+        // 포트 제거된 루트 URL 얻어서 리다이렉트
+        String base = getRootUrlWithoutPort();
+        rsp.sendRedirect2(base + "jenkins/" + getUrlName());
     }
 
     /**
@@ -145,7 +151,9 @@ public class ScriptAction implements RootAction {
         }
 
         // 저장/삭제 후 목록으로
-        rsp.sendRedirect2(Jenkins.get().getRootUrl() + getUrlName());
+        // 포트 제거된 루트 URL 얻어서 리다이렉트
+        String base = getRootUrlWithoutPort();
+        rsp.sendRedirect2(base + "jenkins/" + getUrlName());
     }
 
     /**
@@ -167,5 +175,42 @@ public class ScriptAction implements RootAction {
      */
     private String sanitize(String s) {
         return s.replaceAll("[\\\\/:*?\"<>|]", "_");
+    }
+
+    /**
+     * Jenkins.get().getRootUrl() 에서 포트 번호를 제거하고
+     * "https://호스트명/" 형태로 반환
+     */
+    private String getRootUrlWithoutPort() {
+        String root = Jenkins.get().getRootUrl();
+        if (root == null) {
+            return "/";
+        }
+        try {
+            // URL로 파싱해서 port를 -1로 설정
+            URI uri = new URI(root);
+            URI stripped = new URI(
+                    uri.getScheme(),
+                    uri.getUserInfo(),
+                    uri.getHost(),
+                    -1,
+                    uri.getPath(),
+                    uri.getQuery(),
+                    uri.getFragment()
+            );
+            String s = stripped.toString();
+            // ensure 끝에 슬래시
+            return s.endsWith("/") ? s : s + "/";
+        } catch (URISyntaxException e) {
+            // 실패하면 원본 리턴
+            try {
+                URL url = new URL(root);
+                String scheme = url.getProtocol();
+                String host   = url.getHost();
+                return scheme + "://" + host + "/";
+            } catch (MalformedURLException ex) {
+                return root;
+            }
+        }
     }
 }
