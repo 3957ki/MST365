@@ -120,30 +120,31 @@ public class ScriptAction implements RootAction {
      */
     @RequirePOST
     public void doSaveTxt(StaplerRequest req, StaplerResponse rsp)
-            throws IOException, ServletException {
+            throws IOException {
         req.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
-        String json = req.getParameter("jsonData");
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.readTree(json);
+        // JSON 대신 파라미터로 바로 읽습니다
+        String title   = req.getParameter("title");
+        String content = req.getParameter("content");
+        String action  = req.getParameter("action"); // null 또는 "delete"
 
-        String action = root.path("action").asText("save");
-        String title  = root.path("title").asText();
+        // 파일명 결정
         String fileName = sanitize(title) + ".txt";
         Path target = getDir().toPath().resolve(fileName);
 
         if ("delete".equals(action)) {
             Files.deleteIfExists(target);
         } else {
-            String content = root.path("content").asText("");
+            // 순수 텍스트를 UTF-8로 저장
             Files.write(
                     target,
-                    content.getBytes(StandardCharsets.UTF_8),
+                    content != null ? content.getBytes(StandardCharsets.UTF_8) : new byte[0],
                     StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING
             );
         }
 
+        // 저장/삭제 후 목록으로
         rsp.sendRedirect2(Jenkins.get().getRootUrl() + getUrlName());
     }
 

@@ -11,30 +11,27 @@
             <link rel="stylesheet"
                   href="${rootURL}/plugin/playwright-e2e-test/io/jenkins/extensions/ScriptAction/input_txt.css"
                   type="text/css"/>
-            <script src="${rootURL}/plugin/playwright-e2e-test/io/jenkins/extensions/ScriptAction/input_txt.js"
-                    type="text/javascript"></script>
         </l:head>
 
         <l:main-panel>
-            <f:form method="post" action="saveTxt">
+            <!-- saveTxt 핸들러로 title,content 그대로 POST, cssClass로 패딩 적용 -->
+            <f:form method="post" action="saveTxt" cssClass="pane">
                 <f:entry title="스크립트 제목">
-                    <input type="text" id="txtTitle" class="txt-title" name="title"
-                           value="${m.title}"/>
+                    <input type="text" name="title" class="txt-title" value="${m.title}"/>
                 </f:entry>
 
                 <f:entry title="시나리오">
-                    <textarea id="txtContent" class="txt-content" name="content">${m.content}</textarea>
+                    <textarea name="content" class="txt-content" rows="10">${m.content}</textarea>
                 </f:entry>
 
                 <input type="hidden" name="jsonData" id="jsonData"/>
                 <input type="hidden" name="action" id="action" value="save"/>
 
-                <button type="submit" id="saveButton">저장</button>
-                <j:if test="${m.title}"><button type="button" id="deleteButton">삭제</button></j:if>
+                <button type="submit">저장</button>
+                <j:if test="${m.title}">
+                    <button type="submit" name="action" value="delete">삭제</button>
+                </j:if>
             </f:form>
-
-            <!-- 모델 JSON을 data-json 속성에 담아서 escape 문제 제거 -->
-            <div id="modelData" style="display:none;" data-json='${m.toJson()}'></div>
         </l:main-panel>
     </l:layout>
 </j:jelly>
