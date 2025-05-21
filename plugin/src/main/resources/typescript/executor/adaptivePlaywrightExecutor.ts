@@ -1300,169 +1300,165 @@ ${this.testReport.steps
 
     console.log(`HTML 리포트 생성 위치: ${htmlReportDir}`);
 
+    // 전체 실행 시간을 초 단위로 변환 (소수점 첫째자리)
+    const totalDurationSec = (this.testReport.duration / 1000).toFixed(1);
+
     try {
-      // 테스트 실행 결과를 HTML 파일로 변환
+      // 각 단계 HTML 생성: ms→s 변환
       const stepsHtml = this.testReport.steps
-        .map((step, index) => {
-          const statusClass = step.status === "success" ? "success" : "failure";
-          const screenshotHtml = step.screenshot
-            ? `<div class="screenshot"><img src="screenshot?build=${
-                  path.basename(
-                      this.testRunDir
-                  )
-              }&scenario=1&file=${path.basename(
-                step.screenshot
-              )}" alt="Screenshot" width="800" /></div>`
-            : "";
+          .map((step, index) => {
+            const statusClass = step.status === "success" ? "success" : "failure";
+            const durationSec = (step.duration / 1000).toFixed(1);
+            const screenshotHtml = step.screenshot
+                ? `<div class="screenshot">
+               <img src="screenshot?build=${path.basename(this.testRunDir)}&scenario=1&file=${path.basename(step.screenshot)}" 
+                    alt="Screenshot" width="800" />
+             </div>`
+                : "";
 
-          return `
-          <div class="test-step ${statusClass}">
-            <h3>Step ${index + 1}: ${step.step.description}</h3>
-            <div class="step-details">
-              <p><strong>Action:</strong> ${step.step.action}</p>
-              <p><strong>Target:</strong> ${step.step.target || "N/A"}</p>
-              <p><strong>Value:</strong> ${step.step.value || "N/A"}</p>
-              <p><strong>Status:</strong> ${step.status}</p>
-              <p><strong>Duration:</strong> ${step.duration}ms</p>
-              ${
-                step.error
-                  ? `<p class="error"><strong>Error:</strong> ${step.error}</p>`
-                  : ""
-              }
-            </div>
-            ${screenshotHtml}
-            <div class="ai-comment">
-              <h4>AI Analysis:</h4>
-              <p>${step.aiComment || "No analysis available"}</p>
-            </div>
+            return `
+        <div class="test-step ${statusClass}">
+          <h3>Step ${index + 1}: ${step.step.description}</h3>
+          <div class="step-details">
+            <p><strong>Action:</strong> ${step.step.action}</p>
+            <p><strong>Target:</strong> ${step.step.target || "N/A"}</p>
+            <p><strong>Value:</strong> ${step.step.value || "N/A"}</p>
+            <p><strong>Status:</strong> ${step.status}</p>
+            <p><strong>Duration:</strong> ${durationSec}s</p>
           </div>
-        `;
-        })
-        .join("");
-
-      // HTML 템플릿 생성
-      const htmlTemplate = `
-      <!DOCTYPE html>
-      <html lang="ko">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${this.testReport.testName} - 테스트 결과</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-          }
-          h1, h2, h3 {
-            color: #2c3e50;
-          }
-          .test-summary {
-            background-color: #f8f9fa;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 30px;
-          }
-          .test-step {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 20px;
-            margin-bottom: 20px;
-          }
-          .success {
-            border-left: 5px solid #28a745;
-          }
-          .failure {
-            border-left: 5px solid #dc3545;
-          }
-          .step-details {
-            margin-bottom: 15px;
-          }
-          .screenshot {
-            margin: 15px 0;
-            text-align: center;
-          }
-          .screenshot img {
-            max-width: 100%;
-            border: 1px solid #ddd;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-          }
-          .ai-comment {
-            background-color: #f0f7ff;
-            padding: 15px;
-            border-radius: 5px;
-            margin-top: 15px;
-          }
-          .error {
-            color: #dc3545;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-          }
-          table, th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-          }
-          th {
-            background-color: #f2f2f2;
-            text-align: left;
-          }
-          tr:nth-child(even) {
-            background-color: #f9f9f9;
-          }
-        </style>
-      </head>
-      <body>
-        <h1>${this.testReport.testName}</h1>
-        
-        <div class="test-summary">
-          <h2>테스트 요약</h2>
-          <table>
-            <tr>
-              <th>시작 시간</th>
-              <td>${new Date(this.testReport.startTime).toLocaleString()}</td>
-            </tr>
-            <tr>
-              <th>종료 시간</th>
-              <td>${new Date(this.testReport.endTime).toLocaleString()}</td>
-            </tr>
-            <tr>
-              <th>실행 시간</th>
-              <td>${this.testReport.duration}ms</td>
-            </tr>
-            <tr>
-              <th>총 단계</th>
-              <td>${this.testReport.totalSteps}</td>
-            </tr>
-            <tr>
-              <th>성공</th>
-              <td>${this.testReport.passedSteps}</td>
-            </tr>
-            <tr>
-              <th>실패</th>
-              <td>${this.testReport.failedSteps}</td>
-            </tr>
-          </table>
-          
-          <h3>최종 분석</h3>
+          ${screenshotHtml}
           <div class="ai-comment">
-            <p>${this.testReport.finalComment || "분석 정보가 없습니다."}</p>
+            <h4>AI Analysis:</h4>
+            <p>${step.aiComment || "No analysis available"}</p>
           </div>
         </div>
-        
-        <h2>테스트 단계</h2>
-        <div class="test-steps">
-          ${stepsHtml}
-        </div>
-      </body>
-      </html>
       `;
+          })
+          .join("");
 
-      // HTML 파일 저장
+      // HTML 템플릿
+      const htmlTemplate = `
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${this.testReport.testName} - 테스트 결과</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+        h1, h2, h3 {
+          color: #2c3e50;
+        }
+        .test-summary {
+          background-color: #f8f9fa;
+          border-radius: 5px;
+          padding: 15px;
+          margin-bottom: 30px;
+        }
+        .test-step {
+          border: 1px solid #ddd;
+          border-radius: 5px;
+          padding: 20px;
+          margin-bottom: 20px;
+        }
+        .success {
+          border-left: 5px solid #28a745;
+        }
+        .failure {
+          border-left: 5px solid #dc3545;
+        }
+        .step-details {
+          margin-bottom: 15px;
+        }
+        .screenshot {
+          margin: 15px 0;
+          text-align: center;
+        }
+        .screenshot img {
+          max-width: 100%;
+          border: 1px solid #ddd;
+          box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .ai-comment {
+          background-color: #f0f7ff;
+          padding: 15px;
+          border-radius: 5px;
+          margin-top: 15px;
+        }
+        .error {
+          color: #dc3545;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        table, th, td {
+          border: 1px solid #ddd;
+          padding: 8px;
+        }
+        th {
+          background-color: #f2f2f2;
+          text-align: left;
+        }
+        tr:nth-child(even) {
+          background-color: #f9f9f9;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>${this.testReport.testName}</h1>
+      
+      <div class="test-summary">
+        <h2>테스트 요약</h2>
+        <table>
+          <tr>
+            <th>시작 시간</th>
+            <td>${new Date(this.testReport.startTime).toLocaleString()}</td>
+          </tr>
+          <tr>
+            <th>종료 시간</th>
+            <td>${new Date(this.testReport.endTime).toLocaleString()}</td>
+          </tr>
+          <tr>
+            <th>실행 시간</th>
+            <td>${totalDurationSec}s</td>
+          </tr>
+          <tr>
+            <th>총 단계</th>
+            <td>${this.testReport.totalSteps}</td>
+          </tr>
+          <tr>
+            <th>성공</th>
+            <td>${this.testReport.passedSteps}</td>
+          </tr>
+          <tr>
+            <th>실패</th>
+            <td>${this.testReport.failedSteps}</td>
+          </tr>
+        </table>
+        
+        <h3>최종 분석</h3>
+        <div class="ai-comment">
+          <p>${this.testReport.finalComment || "분석 정보가 없습니다."}</p>
+        </div>
+      </div>
+      
+      <h2>테스트 단계</h2>
+      <div class="test-steps">
+        ${stepsHtml}
+      </div>
+    </body>
+    </html>
+    `;
+
+      // 파일로 저장
       const htmlFilePath = path.join(htmlReportDir, "report.html");
       await fs.writeFile(htmlFilePath, htmlTemplate);
 
