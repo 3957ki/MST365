@@ -29,13 +29,13 @@ public class CoreLogicStep extends Step {
     private final String input;
     /** .env 파일을 저장해 둔 File Credential의 ID */
     private String envFileCredentialsId;
-    /** 실행할 스크립트 언어 (python | typescript) */
-    private String language;
+    /** 실행할 포맷 (text | json) */
+    private String format;
 
     @DataBoundConstructor
     public CoreLogicStep(String input) {
         this.input = input;
-        this.language = "python"; // 기본값
+        this.format = "json"; // 기본값은 json
     }
 
     public String getInput() {
@@ -51,13 +51,13 @@ public class CoreLogicStep extends Step {
         this.envFileCredentialsId = envFileCredentialsId;
     }
 
-    public String getLanguage() {
-        return language;
+    public String getFormat() {
+        return format;
     }
 
     @DataBoundSetter
-    public void setLanguage(String language) {
-        this.language = language;
+    public void setFormat(String format) {
+        this.format = format;
     }
 
     @Override
@@ -66,23 +66,22 @@ public class CoreLogicStep extends Step {
     }
 
     @Extension
-    @Symbol("runCoreLogic")
+    @Symbol("runMST")
     public static class DescriptorImpl extends StepDescriptor {
         @Override
         public String getFunctionName() {
-            return "runCoreLogic";
+            return "runMST";
         }
 
         @Override
         public String getDisplayName() {
-            return "Run Core Logic";
+            return "Run MST";
         }
 
         @Override
         public Set<Class<?>> getRequiredContext() {
             return Set.of(Run.class, TaskListener.class, FilePath.class, Launcher.class);
         }
-
     }
 }
 
