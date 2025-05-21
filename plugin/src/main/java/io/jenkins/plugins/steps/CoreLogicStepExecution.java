@@ -40,16 +40,13 @@ public class CoreLogicStepExecution extends SynchronousNonBlockingStepExecution<
     @Override
     protected Void run() throws Exception {
         FilePath workspace = getContext().get(FilePath.class);
-        if (workspace == null) {
-            throw new IllegalStateException("워크스페이스를 가져올 수 없습니다");
-        }
         TaskListener listener = getContext().get(TaskListener.class);
         Run<?, ?> run = getContext().get(Run.class);
 
-        // 시나리오 파일명 결정 (Python: .json, TS: .txt)
         String scenarioName = step.getInput();
-        String lang = step.getLanguage() != null ? step.getLanguage() : "python";
-        if ("typescript".equalsIgnoreCase(lang)) {
+        // format 값이 text면 .txt, 그 외(json)면 .json
+        String fmt = step.getFormat() != null ? step.getFormat() : "json";
+        if ("text".equalsIgnoreCase(fmt)) {
             if (!scenarioName.endsWith(".txt")) scenarioName += ".txt";
         } else {
             if (!scenarioName.endsWith(".json")) scenarioName += ".json";
@@ -68,12 +65,17 @@ public class CoreLogicStepExecution extends SynchronousNonBlockingStepExecution<
             listener.getLogger().println("▶ WARNING: results 디렉터리 생성 실패: " + resultsDir);
         }
 
-        // 언어별 분기 실행
-        if ("typescript".equalsIgnoreCase(lang)) {
+        // format이 text이면 TS 브랜치, 그 외(json)이면 Python 브랜치
+        if ("text".equalsIgnoreCase(fmt)) {
             runTypeScriptBranch(workspace, listener, scenarioFile);
         } else {
             runPythonBranch(workspace, listener, scenarioFile, run, resultsDir);
+            // 성공/실패 기록
+            String result = (getContext().get(Run.class) != null) ? "SUCCESS" : "FAIL";
+            run.addAction(new BuildReportAction(step.getInput(), result));
+            run.save();
         }
+
         return null;
     }
 
