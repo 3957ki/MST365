@@ -1,50 +1,105 @@
-## 브랜치 전략
+# MST365
 
-```
-- master
-- develop
-- release-v1.0
-- 개인 브랜치
-	- EX) feat/fe/도메인
-```
+- LLM과 MCP(Model Context Protocol)을 활용한 자연어 기반 E2E 자동화 테스트 프로그램
+- 기간: 2025.04.18 ~ 2025.05.23
 
-## 커밋 메시지 컨벤션
+---
 
-| **emoji** | **code**                      | **커밋 유형**  | **의미**                                            |
-| --------- | ----------------------------- | -------------- | --------------------------------------------------- |
-| ✨        | `:sparkles:`                  | **`feat`**     | 새로운 기능 추가                                    |
-| ♻️        | `:recycle:`                   | **`refactor`** | 코드 수정 / 리팩토링                                |
-| 🐛        | `:bug:`                       | **`fix`**      | 버그 수정                                           |
-| 📝        | `:memo:`                      | **`docs`**     | 문서 수정                                           |
-| 🎉        | `:tada:`                      | **`init`**     | 프로젝트 시작 / 초기화                              |
-| 🎨        | `:art:`                       | **`style`**    | UI/스타일 파일 수가/수정                            |
-| ✅        | `:white_check_mark:`          | **`test`**     | 테스트 코드, 리팩토링 테스트 코드 추가              |
-| 🚀        | `:rocket:`                    | **`deploy`**   | 배포                                                |
-| 📦        | `:wrench:`                    | **`chore`**    | 리소스, 설정 파일 수정 ex) .gitignore, package.json |
-| 💡        | `:bulb:`                      | **`comment`**  | 필요한 주석 추가 및 변경                            |
-| 🚚        | `:truck:`                     | **`rename`**   | 파일 또는 폴더 명을 수정하거나 옮기는 작업만인 경우 |
-| 🔥        | `:fire:`                      | **`remove`**   | 파일을 삭제하는 작업만 수행한 경우                  |
-| ⏪        | `:rewind:`                    | **`rewind`**   | 변경 사항 되돌리기                                  |
-| 🔀        | `:twisted_rightwards_arrows:` | **`merge`**    | 브랜치 합병                                         |
-| 🗃️        | `:card_file_box:`             | **`db`**       | 데이터베이스 관련 수정                              |
-| 🚑        | `:ambulance:`                 | **`!HOTFIX`**  | 급하게 치명적인 버그를 고쳐야 하는 경우             |
+## 팀원 소개
 
-### 예시) git commit -m “:sparkles: [feat] 내용 이슈키”
+| **김정우**                               | **백승훈**                | **전희성**                     | **장은정**                       | **이은선**                       | **김우영**                     |
+| ---------------------------------------- | ------------------------- | ------------------------------ | -------------------------------- | -------------------------------- | ------------------------------ |
+| - 팀장<br>- 백엔드 개발<br>- host 개발 | - 젠킨스 플러그인 개발| - host 개발 <br>- 플러그인 개발 | - 프론트 개발<br>- 백엔드 개발 | - 인프라<br>- host 개발 | - 프론트 개발<br>- 백엔드 개발 |
 
-### 2. 제목과 본문을 빈행으로 분리
+---
 
-- 커밋 유형 이후 제목과 본문은 한글로 작성하여 내용이 잘 전달될 수 있도록 할 것
-- 본문에는 변경한 내용과 이유 설명 (어떻게보다는 무엇 & 왜를 설명)
-- global config username은 한글이름으로하기
+## 기술 스택
 
-### 한 커밋에는 한 가지 문제만!
+---
 
-- 추적 가능하게 유지해주기
-- 너무 많은 문제를 한 커밋에 담으면 추적하기 어렵다.
+### Frontend
+<img src="https://img.shields.io/badge/JavaScript-ES6-F7DF1E?style=for-the-badge&logo=JavaScript&logoColor=white" alt="JavaScript"><img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React"><img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js"><img src="https://img.shields.io/badge/Vue.js-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white" alt="Vue.js"><img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS">
 
-### MR 규칙
+### Backend
+<img src="https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot"><img src="https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white" alt="JWT"><img src="https://img.shields.io/badge/Spring_Security-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white" alt="Spring Security"><img src="https://img.shields.io/badge/JPA-59666C?style=for-the-badge&logo=hibernate&logoColor=white" alt="JPA">
 
-```markdown
-MR 올리고 10분간은 피드백 타임
-이후에 자유롭게 머지할 것.
-```
+### DB
+<img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL">
+
+### Infra & DevOps
+<img src="https://img.shields.io/badge/Amazon_EC2-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white" alt="Amazon EC2"><img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white" alt="Nginx"><img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"><img src="https://img.shields.io/badge/Jenkins-D24939?style=for-the-badge&logo=jenkins&logoColor=white" alt="Jenkins"><img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux">
+
+### Collaboration Tools
+<img src="https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white" alt="Notion"> <img src="https://img.shields.io/badge/Jira-0052CC?style=for-the-badge&logo=jira&logoColor=white" alt="Jira"> <img src="https://img.shields.io/badge/Mattermost-0058CC?style=for-the-badge&logo=mattermost&logoColor=white" alt="Mattermost">
+---
+
+## 주요 기능
+1. **데모 웹사이트**
+    - 플러그인 테스트를 위한 데모 웹사이트 제공
+    - 다양한 라이브러리, 프레임워크로 제작되어 있음.
+    - 기본적인 CRUD 기능과 무한 스크롤 등 다양한 기능을 제공함으로 우리 플러그인을 통해 직접 테스트 해볼 수 있음
+2. **Jenkins Plugin**
+    - 공개 되어 있는 소스 코드를 통해 Jenkins에 마운트 가능한 hpi 형태의 플러그인 제공
+3. **스크립트 작성 기능**
+    - Jenkins plugin 설치 시, Jenkins UI를 통해 플러그인에 필요한 자연어 스크립트를 작성하는 기능을 제공함.
+4. **자연어 기반 자동화 E2E 테스트 기능**
+    - 자연어 스크립트를 기반으로 LLM (chat gpt, claude 등)과 MCP를 사용하여 E2E 테스트가 필요한 웹 사이트에 대하여 자동화 E2E 테스트를 제공하는 기능을 함.
+5. **테스트 결과 리포트 열람 기능**
+    - Jenkins 내부 UI를 통해 HTML 형태로  리포트를 생성하여 E2E 테스트에 대한 상세 리포트를 제공함.
+
+---
+
+## 파일 구조 및 CI/CD 파이프라인 설명
+- demo 폴더 내부 각 프레임워크, 라이브러리에 따라 구분된 폴더 별로 dockerfile, jenkinsfile 위치
+- 따라서, 각 프론트엔드 프레임워크 별로 pipeline이 존재하고 필요할 경우 각 파이프라인 빌드를 통해 배포된 웹사이트의 프레임워크를 바꿔서 사용하는 형태
+- gitlab push 이벤트 발생 시 hook
+
+1. **demo**
+- demo-back
+    - Spring boot 데모 웹사이트를 위한 Spring boot 프로젝트 폴더
+- demo-front
+    - demo-react, demo-next 등 프레임워크 별 프로젝트 폴더
+
+2. **mcp host**
+- host 개발을 맡은 담당자들의 host 프로젝트 폴더
+3. **plugin**
+- Jenkins plugin 개발 용 폴더
+
+## ERD
+---
+![mysql_erd.png](assets/mysql_erd.png)
+---
+## 화면 예시
+---
+### Jenkins UI
+- Jenkins UI 추가 예시
+![ui.png](assets/ui.png)
+- 스크립트 목록
+![script_list.png](assets/script_list.png)
+- 스크립트 생성,작성 및 수정
+![make_script.png](assets/make_script.png)
+- 리포트 리스트
+![reports.png](assets/reports.png)
+- 리포트 (python)
+![report_v1.png](assets/report_v1.png)
+- 리포트 (typescript)
+![report_v2.png](assets/report_v2.png)
+### 데모 웹사이트
+- 데모 메인 화면
+![demo_main.png](assets/demo_main.png)
+- 데모 로그인 화면
+![demo_login.png](assets/demo_login.png)
+- 데모 회원가입 화면
+![demo_signup.png](assets/demo_signup.png)
+- 데모 게시판 화면
+![demo_list.png](assets/demo_list.png)
+- 데모 게시글 화면
+![demo_text.png](assets/demo_text.png)
+- 데모 마이페이지 화면
+![demo_mypage.png](assets/demo_mypage.png)
+---
+## 링크
+---
+- **노션**:
+- **데모 웹사이트**:
+---
