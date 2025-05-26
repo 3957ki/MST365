@@ -16,29 +16,23 @@ The following items must be installed:
 
 - Python 3.12
 - Node.js (latest recommended)
+- Chromium
 
 ### ⚙️ Environment Setup
 
 - Configure the plugin environment
 
 ```bash
-set -e
+# install uv
+pip install uv
 
-echo "🔧 Setting up apt sources..."
-echo -e "deb http://deb.debian.org/debian bullseye main\n\
-deb http://security.debian.org/ bullseye-security main\n\
-deb http://deb.debian.org/debian bullseye-updates main" > /etc/apt/sources.list
+# venv setting
+uv sync
 
-echo "Running apt update & upgrade..."
-apt update
-apt upgrade -y
-
-echo "Installing Python 3, venv, pip..."
-apt install python3 python3-venv python3-pip -y
-
-echo "Installing Node.js LTS..."
-curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
-apt install -y nodejs
+# npm install
+cd mcp
+npm install
+cd ..
 ```
 
 ### Create .env File
@@ -64,11 +58,11 @@ LLM_API_KEY={API key}
 pipeline {
   agent any
   stages {
-    stage('CoreLogic') {
+    stage('RunMST') {
       steps {
         // Pass the script title and credentialsId
-        runCoreLogic input: 'script title', envFileCredentialsId: 'credentialsId'
-        echo ">>> CoreLogic was invoked!"
+        runMST input: 'script title', envFileCredentialsId: 'credentialsId'
+        echo ">>> RunMST was invoked!"
       }
     }
   }
