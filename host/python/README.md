@@ -41,16 +41,25 @@ LLM_API_KEY={API 키}
 
 ### 테스트 방법
 
-- Linux
+- 가상환경 활성화 후 실행
 
 ```
-source .venv/bin/activate
-python .\main_logic.py --build {빌드 번호} --file {사용자 시나리오 json 경로} --output_dir {결과 저장 경로}
+python .\main.py --build {빌드 번호} --file {사용자 시나리오 json 경로} --output_dir {결과 저장 경로} --language {응답 언어}
 ```
 
-- Window
+- 응답 언어 목록
 
 ```
-call .venv\Scripts\activate
-python .\main_logic.py --build {빌드 번호} --file {사용자 시나리오 json 경로} --output_dir {결과 저장 경로}
+LANGUAGE_MAPPING = {
+    "en": "English",
+    "ko": "Korean",
+    "ja": "Japanese",
+    "zh": "Chinese",
+    "es": "Spanish",
+    "fr": "French",
+    "de": "German",
+    "ru": "Russian",
+    "pt": "Portuguese",
+    "it": "Italian",
+}
 ```
