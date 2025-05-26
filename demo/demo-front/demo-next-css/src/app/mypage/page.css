@@ -1,0 +1,71 @@
+.mypage-container {
+  @apply container mx-auto p-8;
+}
+
+.header-container {
+  @apply flex items-center justify-between mb-6;
+}
+
+.logo-title-container {
+  @apply flex items-center;
+}
+
+.logo-image {
+  @apply mr-5 cursor-pointer;
+}
+
+.page-title {
+  @apply text-3xl font-bold text-black;
+}
+
+.user-info-card {
+  @apply bg-white p-6 rounded-lg shadow-md mb-6;
+}
+
+.user-info-flex {
+  @apply flex items-center;
+}
+
+.profile-image-placeholder {
+  @apply w-24 h-24 bg-gray-300 rounded-full mr-6 flex items-center justify-center text-gray-500;
+}
+
+.user-info-text-container {
+  @apply text-left;
+}
+
+.user-name {
+  @apply text-2xl font-semibold mb-1 text-black;
+}
+
+.welcome-message {
+  @apply text-gray-600;
+}
+
+.button-group-right {
+  @apply mt-6 text-right;
+}
+
+.password-change-button {
+  @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-5;
+}
+
+.withdraw-button {
+  @apply bg-gray-400 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded;
+}
+
+.withdraw-button-loading {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.withdraw-error-message {
+  @apply text-red-500 text-sm mt-2 text-right;
+}
+
+.loading-text {
+  @apply text-center text-gray-600 my-4;
+}
+
+.error-text {
+  @apply text-center text-red-500 my-4;
+}

@@ -1,0 +1,32 @@
+<?jelly escape-by-default='true' encoding='UTF-8'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="lib/layout">
+    <l:layout>
+        <l:main-panel>
+            <h1>스크립트 목록</h1>
+            <div style="margin-bottom:1em;">
+                <a href="input" class="model-link">+ 새 json 스크립트</a>
+                <a href="input_txt" class="model-link">+ 새 txt 시나리오</a>
+            </div>
+            <table class="pane">
+                <tr><th>제목</th><th>수정일</th></tr>
+                <j:forEach items="${it.scripts}" var="s">
+                    <tr>
+                        <td>
+                            <j:choose>
+                                <!-- .txt 확장자는 input_txt 뷰로 -->
+                                <j:when test="${s.fileName.endsWith('.txt')}">
+                                    <a href="input_txt?script=${s.fileName}">${s.title}</a>
+                                </j:when>
+                                <!-- 그 외(.json)는 기존 input 뷰로 -->
+                                <j:otherwise>
+                                    <a href="input?script=${s.fileName}">${s.title}</a>
+                                </j:otherwise>
+                            </j:choose>
+                        </td>
+                        <td>${s.modified}</td>
+                    </tr>
+                </j:forEach>
+            </table>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

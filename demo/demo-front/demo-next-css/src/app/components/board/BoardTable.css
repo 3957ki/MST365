@@ -1,0 +1,43 @@
+.board-table {
+  @apply w-full border-collapse border border-gray-300 mb-4 text-black;
+}
+
+.table-header {
+  @apply bg-gray-100;
+}
+
+.table-header-cell {
+  @apply border p-2;
+}
+
+.table-header-cell-id {
+  @apply border p-2 w-16;
+}
+
+.table-header-cell-author {
+  @apply border p-2 w-32;
+}
+
+.table-header-cell-date {
+  @apply border p-2 w-32;
+}
+
+.table-header-cell-views {
+  @apply border p-2 w-20;
+}
+
+.table-body-row-hover:hover {
+  @apply bg-gray-50;
+}
+
+.table-body-cell {
+  @apply border p-2 text-center;
+}
+
+.table-body-cell-title {
+  @apply border p-2 hover:underline;
+}
+
+.no-posts-cell {
+  @apply text-center p-4 border;
+}

@@ -1,0 +1,63 @@
+.signup-page-container {
+  @apply min-h-screen flex flex-col justify-center items-center;
+}
+
+.signup-form-container {
+  @apply max-w-md w-full bg-blue-50 p-10 rounded-lg shadow-md;
+}
+
+.logo-title-container {
+  @apply mb-6 flex justify-center items-center;
+}
+
+.logo-image {
+  @apply mr-3 cursor-pointer;
+}
+
+.page-title {
+  @apply text-center text-2xl font-bold text-black;
+}
+
+.form-group {
+  @apply mb-4;
+}
+
+.form-label {
+  @apply block mb-1 text-sm font-medium text-gray-700;
+}
+
+.form-input {
+  @apply w-full p-2 border border-gray-300 rounded box-border text-black;
+}
+
+.form-group-mb-1 {
+  @apply mb-1;
+}
+
+.form-input-error {
+  @apply border-red-500;
+}
+
+.password-error-message {
+  @apply text-red-500 text-xs mt-1;
+}
+
+.api-error-message {
+  @apply text-red-500 text-sm mt-2 text-center;
+}
+
+.signup-button {
+  @apply w-full mt-4 py-2 px-4 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75 transition-colors;
+}
+
+.signup-button-loading {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.login-link-container {
+  @apply mt-4 text-center text-sm;
+}
+
+.login-link {
+  @apply text-blue-600 hover:underline;
+}
