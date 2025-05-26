@@ -1,0 +1,22 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+__pycache__
+
+# Virtual environments
+.venv
+node_modules
+
+# Environment variables
+.env
+
+# macOS
+.DS_Store
+
+# Data
+results/
+config.json

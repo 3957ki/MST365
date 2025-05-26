@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+    environment {
+        SPRING_IMAGE = "spring:latest"
+        SPRING_CONTAINER = "spring"
+        REACT_IMAGE = "react:latest"
+        REACT_CONTAINER = "react"
+        SPRING_CONFIG_PATH = "/var/jenkins_home/application.properties"
+        ENV_FILE_PATH = "/var/jenkins_home/.env"
+    }
+    stages {
+        stage('Build Spring Docker Image') {
+            steps {
+                sh '''
+                docker image rm -f ${SPRING_IMAGE} || true
+                cd demo/demo-back
+                mkdir -p src/main/resources
+                cp ${SPRING_CONFIG_PATH} src/main/resources/application.properties
+                docker build -t ${SPRING_IMAGE} .
+                '''
+            }
+        }
+        stage('Run Spring Docker Container') {
+            steps {
+                sh '''
+                docker stop ${SPRING_CONTAINER} || true
+                docker rm ${SPRING_CONTAINER} || true
+                docker run -d --name ${SPRING_CONTAINER} \
+                    --network my-network \
+                    -p 43817:8080 \
+                    ${SPRING_IMAGE}
+                '''
+            }
+        }
+        stage('Build React Docker Image') {
+            steps {
+                sh '''
+                docker image rm -f ${REACT_IMAGE} || true
+                cd demo/demo-front/demo-next-css
+                cp ${ENV_FILE_PATH} .env
+                docker build -t ${REACT_IMAGE} .
+                '''
+            }
+        }
+        stage('Run React Docker Container') {
+            steps {
+                sh '''
+                docker stop ${REACT_CONTAINER} || true
+                docker rm ${REACT_CONTAINER} || true
+                docker run -d --name ${REACT_CONTAINER} \
+                    --network my-network \
+                    --env-file ${ENV_FILE_PATH} \
+                    -p 51329:3000 \
+                    ${REACT_IMAGE}
+                '''
+            }
+        }
+    }
+}

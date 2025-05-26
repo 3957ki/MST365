@@ -1,0 +1,55 @@
+.board-container {
+  @apply container mx-auto p-8;
+}
+
+.header-container {
+  @apply flex items-center justify-between mb-6;
+}
+
+.logo-title-container {
+  @apply flex items-center;
+}
+
+.logo-image {
+  @apply mr-5 cursor-pointer;
+}
+
+.board-title {
+  @apply text-3xl font-bold text-black;
+}
+
+.user-actions-container {
+  @apply flex items-center space-x-3;
+}
+
+.mypage-button {
+  @apply bg-green-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm;
+}
+
+.loading-text-container {
+  @apply text-center py-10;
+}
+
+.error-alert-container {
+  @apply bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4;
+}
+
+.font-bold-text {
+  @apply font-bold;
+}
+
+.block-sm-inline {
+  @apply block sm:inline;
+}
+
+.no-posts-text {
+  @apply text-center py-10 text-gray-500;
+}
+
+.loading-more-text-container {
+  @apply text-center py-4;
+}
+
+.no-more-posts-text {
+  @apply text-center py-4 text-gray-500;
+}
